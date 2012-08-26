@@ -11,8 +11,44 @@ define(function(require, exports) {
       graph = require('./graph'),
       symtab = require('./symtab');
 
-  function buildFlowGraph(ast) {
-    var flow_graph = new graph.Graph();
+  function buildOneShotCallGraph(ast, flow_graph) {
+    flow_graph = flow_graph || new graph.Graph();
+    astutil.visit(ast, function(nd, visit) {
+      switch(nd.type) {
+      case 'CallExpression':
+      case 'NewExpression':
+        var callee = nd.callee;
+        if(callee.type === 'FunctionExpression') {
+          // one-shot call
+          for(var i=0;i<nd.arguments.length;++i) {
+            if(i >= callee.params.length)
+              break;
+            flow_graph.addEdge(argVertex(nd, i+1), parmVertex(callee, i+1));
+          }
+          flow_graph.addEdge(retVertex(callee), resVertex(nd));
+          visit(callee.body);
+          return false;
+        } else {
+          // not a one-shot call
+          for(var i=0;i<=nd.arguments.length;++i)
+            flow_graph.addEdge(argVertex(nd, i), unknownVertex());
+          flow_graph.addEdge(unknownVertex(), resVertex(nd));
+        }
+        break;
+      case 'FunctionExpression':
+      case 'FunctionDeclaration':
+        // not a one-shot closure
+        for(var i=0;i<=nd.params.length;++i)
+          flow_graph.addEdge(unknownVertex(), parmVertex(nd, i));
+        flow_graph.addEdge(retVertex(nd), unknownVertex());
+        break;
+      }
+    });
+    return flow_graph;
+  }
+
+  function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
+    flow_graph = flow_graph || new graph.Graph();
     astutil.visit(ast, function(nd) {
       switch(nd.type) {
       case 'ArrayExpression':
@@ -222,6 +258,7 @@ define(function(require, exports) {
            });
   }
   
-  exports.buildFlowGraph = buildFlowGraph;
+  exports.buildOneShotCallGraph = buildOneShotCallGraph;
+  exports.addIntraproceduralFlowGraphEdges = addIntraproceduralFlowGraphEdges;
   return exports;
 });
