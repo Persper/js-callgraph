@@ -108,9 +108,8 @@ define(function(require, exports) {
         || (nd.attr.var_vertex = {
              type: 'VarVertex',
              node: 'nd',
-             attr: { node_pp: 'Var(' + nd.name + '@' + astutil.ppPos(nd) + ')' }
+             attr: { pp: function() { return 'Var(' + nd.name + '@' + astutil.ppPos(nd) + ')'; } }
            });
-    return nd;
   }
   
   var propVertices = new symtab.Symtab();
@@ -125,11 +124,11 @@ define(function(require, exports) {
 
     return propVertices.get(p, { type: 'PropertyVertex',
                                  name: p,
-                                 attr: { node_pp: 'Prop(' + p + ')' } });
+                                 attr: { pp: function() { return 'Prop(' + p + ')'; } } });
   }
   
   var theUnknownVertex = { type: 'UnknownVertex',
-                           attr: { node_pp: 'Unknown' } };
+                           attr: { pp: function() { return 'Unknown'; } } };
   function unknownVertex() {
     return theUnknownVertex;
   }
@@ -141,9 +140,8 @@ define(function(require, exports) {
         || (fn.attr.func_vertex = {
              type: 'FuncVertex',
              node: fn,
-             attr: { node_pp: 'Func(' + astutil.ppPos(fn) + ')' }
+             attr: { pp: function() { return 'Func(' + astutil.ppPos(fn) + ')'; } }
            });
-    return fn;
   }
   
   function parmVertex(fn, i) {
@@ -166,7 +164,7 @@ define(function(require, exports) {
         || (fn.attr.ret_vertex = {
               type: 'ReturnVertex',
               node: fn,
-              attr: { node_pp: 'Ret(' + astutil.ppPos(fn) + ')' }
+              attr: { pp: function() { return 'Ret(' + astutil.ppPos(fn) + ')'; } }
            });
   }
   
@@ -178,7 +176,7 @@ define(function(require, exports) {
         || (nd.attr.callee_vertex = {
              type: 'CalleeVertex',
              node: nd,
-             attr: { node_pp: 'Callee(' + astutil.ppPos(nd) + ')' }
+             attr: { pp: function() { return 'Callee(' + astutil.ppPos(nd) + ')'; } }
            });
   }
   
@@ -190,14 +188,14 @@ define(function(require, exports) {
           || (nd.attr.receiver_vertex = {
                type: 'ArgumentVertex',
                node: nd,
-               attr: { node_pp: 'Arg(' + astutil.ppPos(nd) + ', 0)' }
+               attr: { pp: function() { return 'Arg(' + astutil.ppPos(nd) + ', 0)'; } }
              });
     } else {
       return nd.arguments[i-1].attr.arg_vertex
           || (nd.arguments[i-1].attr.arg_vertex = {
                type: 'ArgumentVertex',
                node: nd,
-               attr: { node_pp: 'Arg(' + astutil.ppPos(nd) + ', ' + i + ')' }
+               attr: { pp: function() { return 'Arg(' + astutil.ppPos(nd) + ', ' + i + ')'; } }
              });
     }
   }
@@ -209,7 +207,7 @@ define(function(require, exports) {
         || (nd.attr.res_vertex = {
              type: 'ResVertex',
              node: nd,
-             attr: { node_pp: 'Res(' + astutil.ppPos(nd) + ')' }
+             attr: { pp: function() { return 'Res(' + astutil.ppPos(nd) + ')'; } }
            });
   }
   
@@ -220,7 +218,7 @@ define(function(require, exports) {
         || (nd.attr.expr_vertex = {
              type: 'ExprVertex',
              node: nd,
-             attr: { node_pp: 'Expr(' + astutil.ppPos(nd) + ')' }
+             attr: { pp: function() { return 'Expr(' + astutil.ppPos(nd) + ')'; } }
            });
   }
   
