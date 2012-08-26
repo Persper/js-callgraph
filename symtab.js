@@ -14,8 +14,10 @@ define(function(require, exports) {
   }
   
   Symtab.prototype.get = function(name, deflt) {
-    if(this.has(name))
-      return this[mangle(name)];
+    var mangled = mangle(name);
+    if(!deflt || this.has(name))
+      return this[mangled];
+    this[mangled] = deflt;
     return deflt;
   };
   
