@@ -16,6 +16,9 @@ define(function(require, exports) {
     return id;
   }
 
+  /**
+   * Insert number x into sorted array a, and return the modified a.
+   */
   function insert(a, x) {
       var lo = 0, hi = a.length-1, mid, elt;
       while(lo <= hi) {
@@ -88,6 +91,11 @@ define(function(require, exports) {
     }
   };
 
+  /**
+   * Merge sorted arrays a and b and return the result, which is either the
+   * modified array a, or a newly allocated array; b is never modified.
+   * Both a and b may be singleton numbers instead of arrays.
+   */
   function merge(a, b) {
     if(typeof a === 'number') {
       if(typeof b === 'number') {
@@ -97,32 +105,19 @@ define(function(require, exports) {
           return [b, a];
         return a;
       } else {
-        return merge(b, a);
+        return insert(b.slice(0), a);
       }
     }
 
     // 'a' must be an array; check 'b'
+    var l1 = a.length;
+    if(l1 === 0)
+      return b;
+
     if(typeof b === 'number') {
-      var l = a.length;
-
-      if(l == 0)
-        return b;
-
-      var res = new Array(l+1);
-      var i = 0, k = 0;
-      while(i < l && a[i] <= b)
-        res[k++] = a[i++];
-      if(b !== res[k-1])
-        res[k++] = b;
-      while(i < l)
-        res[k++] = a[i++];
-      res.length = k;
-      return res;
+      return insert(a, b);
     } else {
-      var l1 = a.length, l2 = b.length;
-
-      if(l1 === 0)
-        return b;
+      var l2 = b.length;
       if(l2 === 0)
         return a;
 
