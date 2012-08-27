@@ -8,40 +8,47 @@ define(function(require, exports) {
   
   function addBindings(ast) {
     var global_scope = new symtab.Symtab();
+    global_scope.global = true;
     var scope = global_scope;
-    var decl_scope = null;
+    var decl_scope = scope;
     astutil.visit(ast,
     function enter(nd, visit) {
       switch(nd.type) {
       case 'FunctionDeclaration':
-        if(decl_scope)
-          decl_scope.set(nd.id.name, nd.id);
+        decl_scope.set(nd.id.name, nd.id);
+        visit(nd.id);
         // FALL THROUGH
       case 'FunctionExpression':
         var old_decl_scope = decl_scope;
         scope = decl_scope = new symtab.Symtab(scope);
+        scope.global = false;
         
         nd.attr.scope = scope;
-        if(nd.type === 'FunctionExpression' && nd.id)
+        if(nd.type === 'FunctionExpression' && nd.id) {
           decl_scope.set(nd.id.name, nd.id);
+          visit(nd.id);
+        }
         decl_scope.set('this', { type: 'Identifier',
                                  name: 'this',
                                  loc: nd.loc,
                                  range: nd.range,
-                                 attr: {} });
-        for(var i=0;i<nd.params.length;++i)
+                                 attr: { enclosingFile: nd.attr.enclosingFile,
+                                         scope: decl_scope } });
+        for(var i=0;i<nd.params.length;++i) {
           decl_scope.set(nd.params[i].name, nd.params[i]);
+          visit(nd.params[i]);
+        }
         
-        // don't visit function name and parameters, just the body
         visit(nd.body);
         
         // restore previous scope
-        if(!decl_scope.has('arguments'))
+        if(!decl_scope.hasOwn('arguments'))
           decl_scope.set('arguments', { type: 'Identifier',
                                         name: 'arguments',
                                         loc: nd.loc,
                                         range: nd.range,
-                                        attr: {} });
+                                        attr: { enclosingFile: nd.attr.enclosingFile,
+                                                scope: decl_scope } });
         scope = scope.outer;
         decl_scope = old_decl_scope;
         
@@ -49,8 +56,10 @@ define(function(require, exports) {
         
       case 'CatchClause':
         scope = new symtab.Symtab(scope);
+        scope.global = false;
+        scope.set(nd.param.name, nd.param);
         
-        // don't visit the parameter
+        visit(nd.param);
         visit(nd.body);
         
         scope = scope.outer;
@@ -58,7 +67,7 @@ define(function(require, exports) {
         
       case 'Identifier':
       case 'ThisExpression':
-        nd.attr.scope = decl_scope || global_scope;
+        nd.attr.scope = decl_scope;
         break;
         
       case 'MemberExpression':
@@ -68,11 +77,9 @@ define(function(require, exports) {
         return false;
         
       case 'VariableDeclarator':
-        if(decl_scope)
+        if(!decl_scope.hasOwn(nd.id.name))
           decl_scope.set(nd.id.name, nd.id);
-        visit(nd.id);
-        visit(nd.init);
-        return false;
+        break;
         
       case 'Property':
         // don't visit nd.key

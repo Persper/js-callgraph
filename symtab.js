@@ -6,6 +6,10 @@ define(function(require, exports) {
   function mangle(name) {
     return '$' + name;
   }
+
+  function isMangled(name) {
+    return name && name[0] === '$';
+  }
   
   function Symtab(outer) {
     var self = Object.create(outer || Symtab.prototype);
@@ -24,9 +28,21 @@ define(function(require, exports) {
   Symtab.prototype.has = function(name) {
     return mangle(name) in this;
   };
+
+  Symtab.prototype.hasOwn = function(name) {
+    return this.hasOwnProperty(mangle(name));
+  };
   
   Symtab.prototype.set = function(name, value) {
     return this[mangle(name)] = value;
+  };
+
+  Symtab.prototype.values = function() {
+    var values = [];
+    for(var p in this)
+      if(isMangled(p))
+        values[values.length] = this[p];
+    return values;
   };
   
   exports.Symtab = Symtab;

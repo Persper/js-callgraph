@@ -69,6 +69,52 @@ define(function(require, exports) {
           cb(from, id2node[succ[j]]);
     }
   };
+
+  Graph.prototype.reachability = function(nodePred) {
+    var self = this;
+    var tc = [];
+
+    function computeTC(src_id) {
+      if(src_id in tc)
+        return tc[src_id];
+
+      tc[src_id] = [src_id];
+      if(nodePred && !nodePred(id2node[src_id]))
+        return tc[src_id];
+
+      var succ = self.succ[src_id];
+      if(typeof succ === 'number') {
+        var succ_succ = computeTC(succ);
+        for(var j=0;j<succ_succ.length;++j)
+          if(tc[src_id].indexOf(succ_succ[j]) === -1)
+            tc[src_id].push(succ_succ[j]);
+      } else if(succ && typeof succ === 'object') {
+        for(var i=0;i<succ.length;++i) {
+          var succ_succ = computeTC(succ[i]);
+          for(var j=0;j<succ_succ.length;++j)
+            if(tc[src_id].indexOf(succ_succ[j]) === -1)
+              tc[src_id].push(succ_succ[j]);
+        }
+      }
+      return tc[src_id];
+    }
+
+    return {
+      getReachable: function(src) {
+        var src_id = nodeId(src);
+        computeTC(src_id);
+        return tc[src_id].map(function(dest_id) { return id2node[dest_id]; });
+      },
+      reaches: function(src, dest) {
+        var src_id = nodeId(src), dest_id = nodeId(dest);
+        computeTC(src_id);
+        for(var i=0;i<tc[src_id].length;++i)
+          if(tc[src_id][i] === dest_id)
+            return true;
+        return false;
+      }
+    };
+  };
   
   exports.Graph = Graph;
   return exports;

@@ -79,7 +79,7 @@ define(function(require, exports) {
         flow_graph.addEdge(vertexFor(nd.alternate), vertexFor(nd));
         break;
       case 'FunctionDeclaration':
-        flow_graph.addEdge(funcVertex(nd), varVertex(nd.id));
+        flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id));
         break;
       case 'FunctionExpression':
         flow_graph.addEdge(funcVertex(nd), exprVertex(nd));
@@ -114,6 +114,8 @@ define(function(require, exports) {
         break;
       case 'WithStatement':
         throw new Error("'with' statement not supported");
+      case 'TryStatement':
+        debugger;
       }
     });
     return flow_graph;
@@ -123,7 +125,7 @@ define(function(require, exports) {
     switch(nd.type) {
     case 'Identifier':
       var decl = nd.attr.scope.get(nd.name);
-      return decl ? varVertex(decl) : propVertex(nd);
+      return decl && !decl.attr.scope.global ? varVertex(decl) : propVertex(nd);
     case 'ThisExpression':
       var decl = nd.attr.scope.get('this');
       return decl ? varVertex(decl) : exprVertex(nd);
@@ -144,7 +146,7 @@ define(function(require, exports) {
         || (nd.attr.var_vertex = {
              type: 'VarVertex',
              node: 'nd',
-             attr: { pp: function() { return 'Var(' + nd.name + '@' + astutil.ppPos(nd) + ')'; } }
+             attr: { pp: function() { return 'Var(' + nd.name + ', ' + astutil.ppPos(nd) + ')'; } }
            });
   }
   
@@ -162,6 +164,17 @@ define(function(require, exports) {
                                  name: p,
                                  attr: { pp: function() { return 'Prop(' + p + ')'; } } });
   }
+
+  var nativeVertices = new symtab.Symtab();
+  function nativeVertex(name) {
+    return nativeVertices.get(name, { type: 'NativeVertex',
+                                      name: name,
+                                      attr: { pp: function() { return name; } } });
+  }
+
+  function getNativeVertices() {
+    return nativeVertices.values();
+  }
   
   var theUnknownVertex = { type: 'UnknownVertex',
                            attr: { pp: function() { return 'Unknown'; } } };
@@ -175,7 +188,7 @@ define(function(require, exports) {
     return fn.attr.func_vertex
         || (fn.attr.func_vertex = {
              type: 'FuncVertex',
-             node: fn,
+             func: fn,
              attr: { pp: function() { return 'Func(' + astutil.ppPos(fn) + ')'; } }
            });
   }
@@ -211,7 +224,7 @@ define(function(require, exports) {
     return nd.attr.callee_vertex
         || (nd.attr.callee_vertex = {
              type: 'CalleeVertex',
-             node: nd,
+             call: nd,
              attr: { pp: function() { return 'Callee(' + astutil.ppPos(nd) + ')'; } }
            });
   }
@@ -260,5 +273,10 @@ define(function(require, exports) {
   
   exports.buildOneShotCallGraph = buildOneShotCallGraph;
   exports.addIntraproceduralFlowGraphEdges = addIntraproceduralFlowGraphEdges;
+  exports.funcVertex = funcVertex;
+  exports.unknownVertex = unknownVertex;
+  exports.propVertex = propVertex;
+  exports.nativeVertex = nativeVertex;
+  exports.getNativeVertices = getNativeVertices;
   return exports;
 });
