@@ -20,11 +20,24 @@ define(function(require, exports) {
     if(typeof succ === 'undefined') {
       succ = toId;
     } else if(typeof succ === 'number') {
-      if(succ !== toId)
+      if(succ < toId)
         succ = [succ, toId];
+      else if(succ > toId)
+        succ = [toId, succ];
     } else {
-      if(succ.indexOf(toId) === -1)
-        succ[succ.length] = toId;
+      var lo = 0, hi = succ.length-1, mid, elt;
+      while(lo <= hi) {
+        mid = (lo+hi) >> 1;
+        elt = succ[mid];
+        if(elt < toId) {
+          lo = mid+1;
+        } else if(elt > toId) {
+          hi = mid-1;
+        } else {
+          return succ;
+        }
+      }
+      succ.splice(lo, 0, toId);
     }    
     return succ;
   }
