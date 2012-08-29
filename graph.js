@@ -3,6 +3,8 @@ if(typeof define !== 'function') {
 }
 
 define(function(require, exports) {
+  var numset = require('./numset');
+
   function Graph() {
     this.succ = [];
   };
@@ -16,45 +18,11 @@ define(function(require, exports) {
     return id;
   }
 
-  /**
-   * Insert number x into sorted array a, and return the modified a.
-   */
-  function insert(a, x) {
-      var lo = 0, hi = a.length-1, mid, elt;
-      while(lo <= hi) {
-        mid = (lo+hi) >> 1;
-        elt = a[mid];
-        if(elt < x) {
-          lo = mid+1;
-        } else if(elt > x) {
-          hi = mid-1;
-        } else {
-          return a;
-        }
-      }
-      a.splice(lo, 0, x);
-      return a;
-  }
-  
-  function addSucc(succ, toId) {
-    if(typeof succ === 'undefined') {
-      succ = toId;
-    } else if(typeof succ === 'number') {
-      if(succ < toId)
-        succ = [succ, toId];
-      else if(succ > toId)
-        succ = [toId, succ];
-    } else {
-      insert(succ, toId);
-    }    
-    return succ;
-  }
-  
   Graph.prototype.addEdge = function(from, to) {
     var fromId = nodeId(from), toId = nodeId(to);
     if(fromId === toId)
       return;
-    this.succ[fromId] = addSucc(this.succ[fromId], toId);
+    this.succ[fromId] = numset.add(this.succ[fromId], toId);
   };
   
   Graph.prototype.addEdges = function(from, tos) {
@@ -69,10 +37,10 @@ define(function(require, exports) {
         continue;
       var succ = this.succ[i];
       if(typeof succ === 'number')
-        inv.succ[succ] = addSucc(inv.succ[succ], i);
+        inv.succ[succ] = sumset.add(inv.succ[succ], i);
       else
         for(var j=0;j<succ.length;++j)
-          inv.succ[succ[j]] = addSucc(inv.succ[succ[j]], i);
+          inv.succ[succ[j]] = numset.add(inv.succ[succ[j]], i);
     }
     return inv;
   };
@@ -91,51 +59,6 @@ define(function(require, exports) {
     }
   };
 
-  /**
-   * Merge sorted arrays a and b and return the result, which is either the
-   * modified array a, or a newly allocated array; b is never modified.
-   * Both a and b may be singleton numbers instead of arrays.
-   */
-  function merge(a, b) {
-    if(typeof a === 'number') {
-      if(typeof b === 'number') {
-        if(a < b)
-          return [a, b];
-        else if(a > b)
-          return [b, a];
-        return a;
-      } else {
-        return insert(b.slice(0), a);
-      }
-    }
-
-    // 'a' must be an array; check 'b'
-    var l1 = a.length;
-    if(l1 === 0)
-      return b;
-
-    if(typeof b === 'number') {
-      return insert(a, b);
-    } else {
-      var l2 = b.length;
-      if(l2 === 0)
-        return a;
-
-      var res = new Array(l1+l2);
-      var i = 0, j = 0, k = 0;
-      while(i < l1 || j < l2) {
-        while(i < l1 && (j >= l2 || a[i] <= b[j]))
-          res[k++] = a[i++];
-        while(k > 0 && j < l2 && b[j] === res[k-1])
-          ++j;
-        while(j < l2 && (i >= l1 || b[j] < a[i]))
-          res[k++] = b[j++];
-      }
-      res.length = k;
-      return res;
-    }
-  }
-
   Graph.prototype.reachability = function(nodePred) {
     var self = this;
     var tc = [];
@@ -152,11 +75,11 @@ define(function(require, exports) {
       var new_tc = tc[src_id];
       if(typeof succ === 'number') {
         var succ_succ = computeTC(succ);
-        new_tc = merge(new_tc, succ_succ);
+        new_tc = numset.addAll(new_tc, succ_succ);
       } else if(succ && typeof succ === 'object') {
         for(var i=0;i<succ.length;++i) {
           var succ_succ = computeTC(succ[i]);
-          new_tc = merge(new_tc, succ_succ);
+          new_tc = numset.addAll(new_tc, succ_succ);
         }
       }
       return tc[src_id] = new_tc;
