@@ -32,16 +32,11 @@ define(function(require, exports) {
   
   Graph.prototype.invert = function() {
     var inv = new Graph();
-    for(var i=0;i<this.succ.length;++i) {
-      if(!this.succ[i])
-        continue;
-      var succ = this.succ[i];
-      if(typeof succ === 'number')
-        inv.succ[succ] = sumset.add(inv.succ[succ], i);
-      else
-        for(var j=0;j<succ.length;++j)
-          inv.succ[succ[j]] = numset.add(inv.succ[succ[j]], i);
-    }
+    this.succ.forEach(function(succs, i) {
+      numset.iter(succs, function(succ) {
+        inv.succ[succ] = numset.add(inv.succ[succ], i);
+      });
+    });
     return inv;
   };
   
@@ -50,12 +45,9 @@ define(function(require, exports) {
       if(!this.succ[i])
         continue;
       var from = id2node[i];
-      var succ = this.succ[i];
-      if(typeof succ === 'number')
+      numset.iter(this.succ[i], function(succ) {
         cb(from, id2node[succ]);
-      else
-        for(var j=0;j<succ.length;++j)
-          cb(from, id2node[succ[j]]);
+      });
     }
   };
 
@@ -71,17 +63,11 @@ define(function(require, exports) {
       if(nodePred && !nodePred(id2node[src_id]))
         return tc[src_id];
 
-      var succ = self.succ[src_id];
       var new_tc = tc[src_id];
-      if(typeof succ === 'number') {
+      numset.iter(self.succ[src_id], function(succ) {
         var succ_succ = computeTC(succ);
         new_tc = numset.addAll(new_tc, succ_succ);
-      } else if(succ && typeof succ === 'object') {
-        for(var i=0;i<succ.length;++i) {
-          var succ_succ = computeTC(succ[i]);
-          new_tc = numset.addAll(new_tc, succ_succ);
-        }
-      }
+      });
       return tc[src_id] = new_tc;
     }
 
@@ -89,21 +75,12 @@ define(function(require, exports) {
       getReachable: function(src) {
         var src_id = nodeId(src);
         computeTC(src_id);
-        var reachable = tc[src_id];
-        if(typeof reachable === 'number')
-          return [id2node[reachable]];
-        return reachable.map(function(dest_id) { return id2node[dest_id]; });
+        return numset.map(tc[src_id], function(dest_id) { return id2node[dest_id]; });
       },
       reaches: function(src, dest) {
         var src_id = nodeId(src), dest_id = nodeId(dest);
         computeTC(src_id);
-        var reachable = tc[src_id];
-        if(typeof reachable === 'number')
-          return reachable === dest_id;
-        for(var i=0;i<reachable.length;++i)
-          if(reachable[i] === dest_id)
-            return true;
-        return false;
+        return numset.some(tc[src_id], function(id) { return id === dest_id; });
       }
     };
   };

@@ -78,14 +78,60 @@ define(function(require, exports) {
   }
 
   function iter(a, cb) {
-  	if(typeof a === 'number')
-  		cb(a);
-  	else if(a)
-  		cb.forEach(cb);
+  	if(a) {
+  		if(typeof a === 'number')
+  			cb(a);
+  		else
+  			a.forEach(cb);
+  	}
+  }
+
+  function map(a, f) {
+  	if(a) {
+  		if(typeof a === 'number')
+  			return [f(a)];
+  		else
+  			return a.map(f);
+  	} else {
+  		return [];
+  	}
+  }
+
+  function some(a, f) {
+  	var r = false;
+  	if(a) {
+  		if(typeof a === 'number')
+  			return f(a);
+  		else
+  			for(var i=0,l=a.length;i<l;++i) {
+  				r = f(a);
+  				if(r)
+  					return r;
+  			}
+  	}
+  	return r;
+  }
+
+  function all(a, f) {
+  	var r = true;
+  	if(a) {
+  		if(typeof a === 'number')
+  			return f(a);
+  		else
+  			for(var i=0,l=a.length;i<l;++i) {
+  				r = f(a);
+  				if(!r)
+  					return r;
+  			}
+  	}
+  	return r;
   }
 
   exports.add = add;
   exports.addAll = addAll;
   exports.iter = iter;
+  exports.map = map;
+  exports.some = some;
+  exports.all = all;
   return exports;
 });
