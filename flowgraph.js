@@ -114,8 +114,6 @@ define(function(require, exports) {
         break;
       case 'WithStatement':
         throw new Error("'with' statement not supported");
-      case 'TryStatement':
-        debugger;
       }
     });
     return flow_graph;
