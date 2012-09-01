@@ -26,8 +26,9 @@ var bindings = require('./bindings'),
 );
 
  argParser.addArgument(
- 	[ '--profile' ],
- 	{ help: 'profile by running the given number of times' }
+ 	[ '--time' ],
+ 	{ nargs: 0,
+ 	  help: 'print timings' }
 );
 
 var r = argParser.parseKnownArgs();
@@ -40,66 +41,23 @@ var sources = files.map(function(file) {
 });
 var times = [];
 
-for(var i=0,n=args.profile||1;i<n;++i) {
-	var parse_time = 0,
-	    bindings_time = 0,
-	    fg_time = 0,
-	    cg_time = 0;
+if(args.time) console.time("parsing");
+var ast = astutil.buildAST(sources);
+if(args.time) console.timeEnd("parsing");
 
-	stopwatch.start();
-	var ast = astutil.buildAST(sources);
-	parse_time = stopwatch.stop();
+if(args.time) console.time("bindings");
+bindings.addBindings(ast);
+if(args.time) console.timeEnd("bindings");
 
-	stopwatch.start();
-	bindings.addBindings(ast);
-	bindings_time = stopwatch.stop();
+if(args.time) console.time("flowgraph");
+var fg = flowgraph.buildOneShotCallGraph(ast);
+natives.addNativeFlowEdges(nativeFlows, fg);
+flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
+if(args.time) console.timeEnd("flowgraph");
 
-	stopwatch.start();
-	var fg = flowgraph.buildOneShotCallGraph(ast);
-	natives.addNativeFlowEdges(nativeFlows, fg);
-	flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
-	fg_time = stopwatch.stop();
-
-	stopwatch.start();
-	var cg = callgraph.extractCG(ast, fg);
-	cg_time = stopwatch.stop();
-
-	times.push({ parse: parse_time,
-	             bindings: bindings_time,
-	             fg: fg_time,
-	             cg: cg_time });
-}
-
-if(args.profile || !args.fg && !args.cg) {
-	function getProp(p) { return function(x) { return x[p]; }; }
-
-	function arithMean(a) {
-		if(a.length === 0)
-			return 0;
-		var sum = a.reduce(function(x, y) { return x+y; }, 0);
-		return sum/a.length;
-	}
-
-	function truncMean(a, p) {
-		var n = Math.floor(a.length*p);
-		a.sort(function(x, y) { return x-y; });
-		return arithMean(a.slice(n, a.length-n));
-	}
-
-	function ppTime(ms) {
-		return (ms/1000).toFixed(2) + " seconds";
-	}
-
-	var parse_times = times.map(getProp("parse"));
-	var bindings_times = times.map(getProp("bindings"));
-	var fg_times = times.map(getProp("fg"));
-	var cg_times = times.map(getProp("cg"));
-	debugger;
-	console.log("parsing  : " + ppTime(truncMean(parse_times, .05)));
-	console.log("bindings : " + ppTime(truncMean(bindings_times, .05)));
-	console.log("flowgraph: " + ppTime(truncMean(fg_times, .05)));
-	console.log("callgraph: " + ppTime(truncMean(cg_times, .05)));
-}
+if(args.time) console.time("callgraph");
+var cg = callgraph.extractCG(ast, fg);
+if(args.time) console.timeEnd("callgraph");
 
 if(args.fg) {
 	console.log("digraph FG {")
