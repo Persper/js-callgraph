@@ -5,7 +5,6 @@ if(typeof define !== 'function') {
 define(function(require, exports) {
   var esprima = require('./esprima');
     
-  var internalPropRegExp = /^(range|loc|attr|comments|raw)$/;
   function visit(root, visitor) {
     function doVisit(nd) {
       if(!nd || typeof nd !== 'object')
@@ -18,7 +17,7 @@ define(function(require, exports) {
       }
       
       for(var p in nd) {
-        if(!nd.hasOwnProperty(p) || p.match(internalPropRegExp))
+        if(!nd.hasOwnProperty(p) || p.match(/^(range|loc|attr|comments|raw)$/))
           continue;
         doVisit(nd[p]);
       }
