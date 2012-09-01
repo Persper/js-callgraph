@@ -14,7 +14,7 @@ define(function(require, exports) {
   function nodeId(nd) {
     var id = nd.attr.hasOwnProperty('node_id') ? nd.attr.node_id 
                                                : (nd.attr.node_id = nextNodeId++);
-    id2node[id] = nd;
+    id2node[+id] = nd;
     return id;
   }
 
