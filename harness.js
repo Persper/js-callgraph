@@ -1,4 +1,9 @@
-{
+if(typeof define !== 'function') {
+  var define = require('amdefine')(module);
+}
+
+define(function(require, exports) {
+  exports.nativeFlows = {
     "eval": "eval",
     "parseInt": "parseInt",
     "parseFloat": "parseFloat",
@@ -774,4 +779,7 @@
     "Node_prototype_attachEvent": "attachEvent",
     "Node_prototype_detachEvent": "detachEvent",
     "Node_prototype_doScroll": "doScroll"
-}
+  };
+
+  return exports;
+});

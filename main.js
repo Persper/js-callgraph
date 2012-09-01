@@ -4,6 +4,7 @@ var bindings = require('./bindings'),
     stopwatch = require('./stopwatch'),
     callgraph = require('./callgraph'),
     natives = require('./natives'),
+    nativeFlows = require('./harness').nativeFlows,
     fs = require('fs');
 
  var printFG = false,
@@ -14,7 +15,6 @@ var sources = [];
 for(var i=2;i<process.argv.length;++i)
 	sources.push({ filename: process.argv[i],
 	               program: fs.readFileSync(process.argv[i], 'utf-8') });
-var nativeFlows = JSON.parse(fs.readFileSync('./harness.json', 'utf-8'));
 
 stopwatch.start();
 var ast = astutil.buildAST(sources);
