@@ -3,20 +3,15 @@ if(typeof define !== 'function') {
 }
 
 define(function(require, exports) {
-	var start, quiet = false;
-
-	exports.setQuiet = function(q) {
-		quiet = q;
-	};
+	var start;
 
 	exports.start = function() {
 		start = +new Date();
 	};
 
-	exports.mark = function(task) {
+	exports.stop = function(task) {
 		end = +new Date();
-		if(!quiet)
-			console.log(task + " took " + ((end-start)/1000).toFixed(2) + " seconds");
+		return end-start;
 	};
 
 	return exports;
