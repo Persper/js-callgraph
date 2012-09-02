@@ -68,8 +68,17 @@ if(args.fg) {
 }
 
 if(args.cg) {
-	for(var call in cg.edges)
-		cg.edges[call].forEach(function(fn) {
-			console.log(call + " -> " + fn);
-		});
+  function pp(v) {
+    if(v.type === 'CalleeVertex')
+  	  return astutil.ppPos(v.call);
+  	if(v.type === 'FuncVertex')
+  	  return astutil.ppPos(v.func);
+  	if(v.type === 'NativeVertex')
+  	  return v.name;
+  	throw new Error("strange vertex: " + v);
+  }
+
+  cg.edges.iter(function(call, fn) {
+  	console.log(pp(call) + " -> " + pp(fn));
+  });
 }
