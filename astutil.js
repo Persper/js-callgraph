@@ -6,12 +6,12 @@ define(function(require, exports) {
   var esprima = require('./esprima');
     
   function visit(root, visitor) {
-    function doVisit(nd) {
+    function doVisit(nd, parent, childProp) {
       if(!nd || typeof nd !== 'object')
         return;
       
       if(nd.type) {
-        var res = visitor(nd, doVisit);
+        var res = visitor(nd, doVisit, parent, childProp);
         if(res === false)
           return;
       }
@@ -19,7 +19,7 @@ define(function(require, exports) {
       for(var p in nd) {
         if(!nd.hasOwnProperty(p) || p.match(/^(range|loc|attr|comments|raw)$/))
           continue;
-        doVisit(nd[p]);
+        doVisit(nd[p], nd, p);
       }
     }
     
@@ -30,7 +30,7 @@ define(function(require, exports) {
     var enclosingFunction = null, enclosingFile = null;
     root.attr.functions = [];
     root.attr.calls = [];
-    visit(root, function(nd, visit) {
+    visit(root, function(nd, visit, parent, childProp) {
       if(nd.type && !nd.attr)
         nd.attr = {};
       
@@ -44,6 +44,8 @@ define(function(require, exports) {
       
       if(nd.type === 'FunctionDeclaration' || nd.type === 'FunctionExpression') {
         root.attr.functions.push(nd);
+        nd.attr.parent = parent;
+        nd.attr.childProp = childProp;
         var old_enclosingFunction = enclosingFunction;
         enclosingFunction = nd;
         visit(nd.id);
