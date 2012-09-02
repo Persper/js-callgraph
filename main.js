@@ -1,7 +1,6 @@
 var bindings = require('./bindings'),
     flowgraph = require('./flowgraph'),
     astutil = require('./astutil'),
-    stopwatch = require('./stopwatch'),
     callgraph = require('./callgraph'),
     natives = require('./natives'),
     nativeFlows = require('./harness').nativeFlows,
