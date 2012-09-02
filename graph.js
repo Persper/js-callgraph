@@ -77,6 +77,11 @@ define(function(require, exports) {
         computeTC(src_id);
         return numset.map(tc[src_id], function(dest_id) { return id2node[dest_id]; });
       },
+      iterReachable: function(src, cb) {
+        var src_id = nodeId(src);
+        computeTC(src_id);
+        numset.iter(tc[src_id], function(dest_id) { cb(id2node[dest_id]); });
+      },
       reaches: function(src, dest) {
         var src_id = nodeId(src), dest_id = nodeId(dest);
         computeTC(src_id);

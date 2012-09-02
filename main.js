@@ -1,9 +1,6 @@
 var bindings = require('./bindings'),
-    flowgraph = require('./flowgraph'),
     astutil = require('./astutil'),
-    callgraph = require('./callgraph'),
-    natives = require('./natives'),
-    nativeFlows = require('./harness').nativeFlows,
+    pessimistic = require('./pessimistic'),
     fs = require('fs'),
     ArgumentParser = require('argparse').ArgumentParser;
 
@@ -48,14 +45,8 @@ if(args.time) console.time("bindings");
 bindings.addBindings(ast);
 if(args.time) console.timeEnd("bindings");
 
-if(args.time) console.time("flowgraph");
-var fg = flowgraph.buildOneShotCallGraph(ast);
-natives.addNativeFlowEdges(nativeFlows, fg);
-flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
-if(args.time) console.timeEnd("flowgraph");
-
 if(args.time) console.time("callgraph");
-var cg = callgraph.extractCG(ast, fg);
+var cg = pessimistic.buildCallGraph(ast);
 if(args.time) console.timeEnd("callgraph");
 
 if(args.fg) {

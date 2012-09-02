@@ -3,9 +3,10 @@ if(typeof define !== 'function') {
 }
 
 define(function(require, exports) {
-  var flowgraph = require('./flowgraph');
+  var flowgraph = require('./flowgraph'),
+      nativeFlows = require('./harness').nativeFlows;
 
-  function addNativeFlowEdges(nativeFlows, flow_graph) {
+  function addNativeFlowEdges(flow_graph) {
   	for(var native in nativeFlows) {
   		if(!nativeFlows.hasOwnProperty(native))
   			continue;

@@ -11,42 +11,6 @@ define(function(require, exports) {
       graph = require('./graph'),
       symtab = require('./symtab');
 
-  function buildOneShotCallGraph(ast, flow_graph) {
-    flow_graph = flow_graph || new graph.Graph();
-
-    // set up flow for one-shot calls
-    ast.attr.functions.forEach(function(fn) {
-      var parent = fn.attr.parent,
-          childProp = fn.attr.childProp;
-
-      if(childProp === 'callee' && parent &&
-         (parent.type === 'CallExpression' || parent.type === 'NewExpression')) {
-        // one-shot closure
-        parent.attr.oneshot = true;
-        for(var i=0,nargs=parent.arguments.length;i<nargs;++i) {
-          if(i >= fn.params.length)
-            break;
-          flow_graph.addEdge(argVertex(parent, i+1), parmVertex(fn, i+1));
-        }
-        flow_graph.addEdge(retVertex(fn), resVertex(parent));
-      } else {
-        // not a one-shot closure
-        for(var i=0,nparms=fn.params.length;i<=nparms;++i)
-          flow_graph.addEdge(unknownVertex(), parmVertex(fn, i));
-        flow_graph.addEdge(retVertex(fn), unknownVertex());
-      }
-    });
-
-    // set up flow for all other calls
-    ast.attr.calls.forEach(function(call) {
-      if(!call.attr.oneshot)
-        for(var i=0,nargs=call.arguments.length;i<=nargs;++i)
-          flow_graph.addEdge(argVertex(call, i), unknownVertex());
-        flow_graph.addEdge(unknownVertex(), resVertex(call));
-    });
-    return flow_graph;
-  }
-
   function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
     flow_graph = flow_graph || new graph.Graph();
     astutil.visit(ast, function(nd) {
@@ -269,12 +233,15 @@ define(function(require, exports) {
            });
   }
   
-  exports.buildOneShotCallGraph = buildOneShotCallGraph;
   exports.addIntraproceduralFlowGraphEdges = addIntraproceduralFlowGraphEdges;
   exports.funcVertex = funcVertex;
   exports.unknownVertex = unknownVertex;
   exports.propVertex = propVertex;
   exports.nativeVertex = nativeVertex;
   exports.getNativeVertices = getNativeVertices;
+  exports.parmVertex = parmVertex;
+  exports.argVertex = argVertex;
+  exports.retVertex = retVertex;
+  exports.resVertex = resVertex;
   return exports;
 });
