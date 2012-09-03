@@ -8,7 +8,43 @@ if(typeof define !== 'function') {
 }
 
 define(function(require, exports) {
-   /**
+  function size(a) {
+    if(typeof a === 'undefined')
+      return 0;
+
+    if(typeof a === 'number')
+      return 1;
+
+    return a.length;
+  }
+
+  /**
+   * Check whether set a contains number x.
+   */
+  function contains(a, x) {
+    if(typeof a === 'undefined')
+      return false;
+
+    if(typeof a === 'number')
+      return a === x;
+
+    var lo = 0, hi = a.length-1, mid, elt;
+    while(lo <= hi) {
+      mid = (lo+hi) >> 1;
+      elt = a[mid];
+      if(elt === x) {
+        return true;
+      } else if(elt < x) {
+        lo = mid+1;
+      } else {
+        hi = mid-1;
+      }
+    }
+
+    return false;  
+  }
+
+  /**
    * Add number x to set a, and return the possibly modified a.
    */
   function add(a, x) {
@@ -127,6 +163,8 @@ define(function(require, exports) {
   	return r;
   }
 
+  exports.size = size;
+  exports.contains = contains;
   exports.add = add;
   exports.addAll = addAll;
   exports.iter = iter;

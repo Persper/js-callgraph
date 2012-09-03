@@ -41,10 +41,11 @@ define(function(require, exports) {
     });
   }
 
-  function buildCallGraph(ast) {
+  function buildCallGraph(ast, noOneShot) {
   	var fg = new graph.Graph();
   	natives.addNativeFlowEdges(fg);
-  	addOneShotEdges(ast, fg);
+  	if(!noOneShot)
+  	  addOneShotEdges(ast, fg);
   	flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
   	return callgraph.extractCG(ast, fg);
   }

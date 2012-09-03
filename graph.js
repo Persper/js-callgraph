@@ -51,24 +51,33 @@ define(function(require, exports) {
     }
   };
 
+  Graph.prototype.hasEdge = function(from, to) {
+    var fromId = nodeId(from), toId = nodeId(to);
+    return numset.contains(this.succ[fromId], toId);    
+  }
+
   Graph.prototype.reachability = function(nodePred) {
     var self = this;
-    var tc = [];
+    var tc = [], touched = [];
 
     function computeTC(src_id) {
-      if(src_id in tc)
+      if(src_id in tc) {
+        touched[src_id] = true;
         return tc[src_id];
+      }
 
       tc[src_id] = src_id;
       if(nodePred && !nodePred(id2node[src_id]))
         return tc[src_id];
 
-      var new_tc = tc[src_id];
-      numset.iter(self.succ[src_id], function(succ) {
-        var succ_succ = computeTC(succ);
-        new_tc = numset.addAll(new_tc, succ_succ);
-      });
-      return tc[src_id] = new_tc;
+      do {
+        var oldsz = numset.size(tc[src_id]);
+        touched[src_id] = false;
+        numset.iter(self.succ[src_id], function(succ) {
+          tc[src_id] = numset.addAll(tc[src_id], computeTC(succ));
+        });
+      } while(oldsz < numset.size(tc[src_id]) && touched[src_id]);
+      return tc[src_id];
     }
 
     return {

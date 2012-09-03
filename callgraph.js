@@ -37,7 +37,8 @@ define(function(require, exports) {
     return {
     	edges: edges,
     	escaping: escaping,
-    	unknown: unknown
+    	unknown: unknown,
+      fg: flow_graph
     };
   }
 

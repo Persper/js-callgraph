@@ -1,6 +1,8 @@
 var bindings = require('./bindings'),
     astutil = require('./astutil'),
     pessimistic = require('./pessimistic'),
+    semioptimistic = require('./semioptimistic'),
+    diagnostics = require('./diagnostics'),
     fs = require('fs'),
     ArgumentParser = require('argparse').ArgumentParser;
 
@@ -27,9 +29,24 @@ var bindings = require('./bindings'),
  	  help: 'print timings' }
 );
 
+ argParser.addArgument(
+ 	[ '--strategy' ],
+ 	{ help: 'interprocedural propagation strategy; one of NONE, ONESHOT (default), DEMAND, and FULL (not yet implemented) '}
+ );
+
 var r = argParser.parseKnownArgs();
 var args = r[0],
     files = r[1];
+
+args.strategy = args.strategy || 'ONESHOT';
+if(!args.strategy.match(/^(NONE|ONESHOT|DEMAND|FULL)$/)) {
+	argParser.printHelp();
+	process.exit(-1);
+}
+if(args.strategy === 'FULL') {
+	console.warn('strategy FULL not implemented yet; using DEMAND instead');
+	args.strategy = 'DEMAND';
+}
 
 var sources = files.map(function(file) {
 	return { filename: file,
@@ -46,16 +63,15 @@ bindings.addBindings(ast);
 if(args.time) console.timeEnd("bindings");
 
 if(args.time) console.time("callgraph");
-var cg = pessimistic.buildCallGraph(ast);
+var cg;
+if(args.strategy === 'NONE' || args.strategy === 'ONESHOT')
+  cg = pessimistic.buildCallGraph(ast, args.strategy === 'NONE');
+else if(args.strategy === 'DEMAND')
+  cg = semioptimistic.buildCallGraph(ast);
 if(args.time) console.timeEnd("callgraph");
 
-if(args.fg) {
-	console.log("digraph FG {")
-	fg.iter(function(from, to) {
-		console.log('"' + from.attr.pp() + '" -> "' + to.attr.pp() + '";');
-	});
-	console.log("}");
-}
+if(args.fg)
+  console.log(cg.fg.dotify());
 
 if(args.cg) {
   function pp(v) {
