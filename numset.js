@@ -115,6 +115,73 @@ define(function(require, exports) {
     }
   }
 
+  function remove(a, x) {
+    if(typeof a === 'undefined')
+      return a;
+
+    if(typeof a === 'number')
+      return a === x ? void(0) : a;
+
+    var lo = 0, hi = a.length-1, mid, elt;
+
+    if(lo === hi)
+      return a[0] === x ? void(0) : a;
+
+    while(lo <= hi) {
+      mid = (lo+hi) >> 1;
+      elt = a[mid];
+      if(elt < x) {
+        lo = mid+1;
+      } else if(elt > x) {
+        hi = mid-1;
+      } else {
+        a.splice(mid, 1);
+        return a;
+      }
+    }
+    return a;
+  }
+
+  function removeAll(a, b) {
+    if(typeof a === 'undefined' || typeof b === 'undefined')
+      return a;
+
+    if(typeof a === 'number')
+      return contains(b, a) ? void(0) : a;
+
+    if(typeof b === 'number')
+      return remove(a, b);
+
+    var i = 0, j = 0, k = 0, m = a.length, n = b.length;
+    while(i < m && j < n) {
+      while(i < m && a[i] < b[j])
+        a[k++] = a[i++];
+
+      if(i < m && a[i] === b[j])
+        ++i;
+
+      if(i < m)
+        while(j < n && a[i] > b[j])
+          ++j;
+    }
+    while(i < m)
+      a[k++] = a[i++];
+
+    if(k) {
+      a.length = k;
+      return a;
+    } else {
+      return void(0);
+    }
+  }
+
+  function copy(a) {
+    if(typeof a === 'undefined' || typeof a === 'number')
+      return a;
+
+    return a.slice(0);
+  }
+
   function iter(a, cb) {
   	if(a) {
   		if(typeof a === 'number')
@@ -165,10 +232,13 @@ define(function(require, exports) {
   	return r;
   }
 
+  exports.copy = copy;
   exports.size = size;
   exports.contains = contains;
   exports.add = add;
   exports.addAll = addAll;
+  exports.remove = remove;
+  exports.removeAll = removeAll;
   exports.iter = iter;
   exports.map = map;
   exports.some = some;

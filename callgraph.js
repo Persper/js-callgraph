@@ -5,7 +5,8 @@ if(typeof define !== 'function') {
 define(function(require, exports) {
 	var graph = require('./graph'),
       flowgraph = require('./flowgraph'),
-	    astutil = require('./astutil');
+	    astutil = require('./astutil'),
+      dftc = require('./dftc');
 
   function extractCG(ast, flow_graph) {
   	var edges = new graph.Graph(),
