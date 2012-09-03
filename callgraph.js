@@ -6,7 +6,7 @@ define(function(require, exports) {
 	var graph = require('./graph'),
       flowgraph = require('./flowgraph'),
 	    astutil = require('./astutil'),
-      _ = require('./heuristictc');
+      _ = require('./dftc');
 
   function extractCG(ast, flow_graph) {
   	var edges = new graph.Graph(),

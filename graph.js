@@ -16,7 +16,7 @@ define(function(require, exports) {
                                                : (nd.attr.node_id = nextNodeId++);
     id2node[+id] = nd;
     return id;
-  }
+  };
 
   Graph.prototype.addEdge = function(from, to) {
     var fromId = nodeId(from), toId = nodeId(to);
