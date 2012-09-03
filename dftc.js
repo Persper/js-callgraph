@@ -19,14 +19,14 @@ define(function(require, exports) {
     function visit1(v) {
       visited = numset.add(visited, v);
 
-      var changed;
-      do {
-        changed = false;
-
+      if(!nodePred || nodePred(self.id2node[v]))
+        // TODO: think through whether we need to do this loop more than once;
+        // the paper isn't very clear on this
         numset.iter(self.succ[v], function(w) {
+          if(nodePred && !nodePred(self.id2node[w]))
+            return;
           if(numset.contains(m[v], w) || numset.contains(t[v], w))
             return;
-          changed = true;
 
           if(!numset.contains(visited, w))
             visit1(w);
@@ -38,7 +38,6 @@ define(function(require, exports) {
             t[v] = numset.add(t[v], w);
           }
         });
-      } while(changed);
 
       if(numset.contains(t[v], v)) {
         if(numset.size(t[v]) === 1) {
@@ -58,11 +57,13 @@ define(function(require, exports) {
     function visit2(v) {
       visited2 = numset.add(visited2, v);
 
-      numset.iter(self.succ[v], function(w) {
-        if(numset.contains(visited2, w) || numset.size(t[w]) === 0)
-          return;
-        visit2(w);
-      });
+      if(!nodePred || nodePred(self.id2node[v]))
+        numset.iter(self.succ[v], function(w) {
+          if(nodePred && !nodePred(self.id2node[w]))
+            return;
+          if(!numset.contains(visited2, w) && numset.size(t[w]) !== 0)
+            visit2(w);
+        });
 
       m[v] = numset.copy(global);
       t[v] = void(0);
