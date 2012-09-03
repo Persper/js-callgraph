@@ -82,6 +82,8 @@ define(function(require, exports) {
   function addAll(a, b) {
   	if(typeof a === 'undefined')
   		return b;
+    if(typeof b === 'undefined')
+      return a;
 
     if(typeof a === 'number' && typeof b === 'object')
     	return add(b.slice(0), a);
