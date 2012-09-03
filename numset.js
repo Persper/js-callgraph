@@ -81,7 +81,7 @@ define(function(require, exports) {
    */
   function addAll(a, b) {
   	if(typeof a === 'undefined')
-  		return b;
+  		return copy(b);
     if(typeof b === 'undefined')
       return a;
 
@@ -91,7 +91,7 @@ define(function(require, exports) {
     // 'a' must be an array; check 'b'
     var l1 = a.length;
     if(l1 === 0)
-      return b;
+      return copy(b);
 
     if(typeof b === 'number') {
       return add(a, b);
