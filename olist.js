@@ -232,6 +232,16 @@ define(function(require, exports) {
   	return r;
   }
 
+  function fromArray(ary) {
+    var a;
+    ary.forEach(function(x) { a = add(a, x); });
+    return a;
+  }
+
+  function toArray(a) {
+    return map(a, function f(x) { return x; });
+  }
+
   exports.copy = copy;
   exports.size = size;
   exports.contains = contains;
@@ -243,5 +253,7 @@ define(function(require, exports) {
   exports.map = map;
   exports.some = some;
   exports.all = all;
+  exports.fromArray = fromArray;
+  exports.toArray = toArray;
   return exports;
 });
