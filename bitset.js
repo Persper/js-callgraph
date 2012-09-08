@@ -98,7 +98,7 @@ define(function(require, exports) {
     // both a and b must be bitsets
     for(var i=0;i<b.length;++i)
       if(b[i])
-        a[i] = (a[i] || 0) || b[i];
+        a[i] = (a[i] || 0) | b[i];
     return a;
   }
 
@@ -159,7 +159,7 @@ define(function(require, exports) {
   		else {
         var res = [];
         iter(a, function(x) {
-          res[res.length] = x;
+          res[res.length] = f(x);
         })
   			return res;
       }
