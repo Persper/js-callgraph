@@ -54,13 +54,13 @@ var sources = files.map(function(file) {
 });
 var times = [];
 
-if(args.time) console.time("parsing");
+if(args.time) console.time("parsing  ");
 var ast = astutil.buildAST(sources);
-if(args.time) console.timeEnd("parsing");
+if(args.time) console.timeEnd("parsing  ");
 
-if(args.time) console.time("bindings");
+if(args.time) console.time("bindings ");
 bindings.addBindings(ast);
-if(args.time) console.timeEnd("bindings");
+if(args.time) console.timeEnd("bindings ");
 
 if(args.time) console.time("callgraph");
 var cg;
