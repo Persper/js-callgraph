@@ -13,12 +13,9 @@ define(function(require, exports) {
   	natives.addNativeFlowEdges(fg);
   	flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
 
-  	var changed;  //var iter = 0;
+  	var changed;
   	do {
   	  changed = false;
-
-      //console.log("iteration #" + (++iter));
-      //fg.writeDOTFile("/home/mschaefer/tmp/fg" + iter + ".dot");
 
   	  var reach = fg.reachability(function(nd) { return nd.type !== 'UnknownVertex'; });
 
@@ -39,13 +36,9 @@ define(function(require, exports) {
   	  	for(var i=0;i<=nparams;++i) {
   	  	  var param = flowgraph.parmVertex(fn, i);
   	  	  if(!param.attr.interesting) {
-            //if(i > 0) {
-            //  console.log("parameter " + param.attr.pp() + " flows into " + reach.getReachable(param).map(function(nd) { return nd.attr.pp(); }));
-            //}
   	  	    reach.iterReachable(param, function(nd) {
   	  	  	  if(nd.type === 'CalleeVertex') {
   	  	  	  	param.attr.interesting = true;
-                //console.log(param.attr.pp() + " is interesting");
               }
   	  	    });
           }
@@ -61,7 +54,6 @@ define(function(require, exports) {
   	  	      if(!fg.hasEdge(ret, res)) {
   	  	      	changed = true;
   	  	      	fg.addEdge(ret, res);
-                //console.log("adding " + ret.attr.pp() + " -> " + res.attr.pp());
   	  	      }
   	  	    }
 
@@ -76,7 +68,6 @@ define(function(require, exports) {
   	  	  	  	  if(!fg.hasEdge(arg, param)) {
   	  	  	  	  	changed = true;
   	  	  	  	  	fg.addEdge(arg, param);
-                    //console.log("adding " + arg.attr.pp() + " -> " + param.attr.pp());
   	  	  	  	  }
   	  	  	  	}
   	  	  	  }
