@@ -1,8 +1,11 @@
+/* This module contains a list of native functions and the
+ * properties they are originally stored in. */
 if(typeof define !== 'function') {
   var define = require('amdefine')(module);
 }
 
 define(function(require, exports) {
+  // maps canonical name of native function to the property it is stored in
   exports.nativeFlows = {
     "eval": "eval",
     "parseInt": "parseInt",

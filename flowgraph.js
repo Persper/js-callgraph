@@ -11,6 +11,7 @@ define(function(require, exports) {
       graph = require('./graph'),
       symtab = require('./symtab');
 
+  /* Set up intraprocedural flow */
   function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
     flow_graph = flow_graph || new graph.Graph();
     astutil.visit(ast, function(nd) {
@@ -82,16 +83,20 @@ define(function(require, exports) {
     });
     return flow_graph;
   }
-  
+
+  /* Return the flow graph vertex corresponding to a given AST node. */  
   function vertexFor(nd) {
     switch(nd.type) {
     case 'Identifier':
+      // global variables use a property vertex, local variables a var vertex
       var decl = nd.attr.scope.get(nd.name);
       return decl && !decl.attr.scope.global ? varVertex(decl) : propVertex(nd);
     case 'ThisExpression':
+      // 'this' is treated like a variable
       var decl = nd.attr.scope.get('this');
       return decl ? varVertex(decl) : exprVertex(nd);
     case 'MemberExpression':
+      // ignore dynamic property accesses
       if(!nd.computed)
         return propVertex(nd.property);
       // FALL THROUGH
@@ -100,6 +105,7 @@ define(function(require, exports) {
     }
   }
   
+  // variable vertices are cached at the variable declarations
   function varVertex(nd) {
     if(nd.type !== 'Identifier')
       throw new Error("invalid variable vertex");
@@ -112,7 +118,10 @@ define(function(require, exports) {
            });
   }
   
+  // global cache of property vertices
   var propVertices = new symtab.Symtab();
+
+  // retrieve property vertex from cache, or create new one
   function propVertex(nd) {
     var p;
     if(nd.type === 'Identifier')
@@ -127,6 +136,7 @@ define(function(require, exports) {
                                  attr: { pp: function() { return 'Prop(' + p + ')'; } } });
   }
 
+  // vertices representing well-known native functions
   var nativeVertices = new symtab.Symtab();
   function nativeVertex(name) {
     return nativeVertices.get(name, { type: 'NativeVertex',
@@ -138,12 +148,14 @@ define(function(require, exports) {
     return nativeVertices.values();
   }
   
+  // special ``unknown'' vertex representing flow that is not explicitly modelled
   var theUnknownVertex = { type: 'UnknownVertex',
                            attr: { pp: function() { return 'Unknown'; } } };
   function unknownVertex() {
     return theUnknownVertex;
   }
-  
+ 
+  // function vertex 
   function funcVertex(fn) {
     if(fn.type !== 'FunctionDeclaration' && fn.type !== 'FunctionExpression')
       throw new Error("invalid function vertex");
@@ -154,7 +166,8 @@ define(function(require, exports) {
              attr: { pp: function() { return 'Func(' + astutil.ppPos(fn) + ')'; } }
            });
   }
-  
+
+  // parameter vertex
   function parmVertex(fn, i) {
     if(fn.type !== 'FunctionDeclaration' && fn.type !== 'FunctionExpression')
       throw new Error("invalid function vertex");
@@ -167,6 +180,7 @@ define(function(require, exports) {
     return vertex;
   }
   
+  // vertex representing function return value
   function retVertex(fn) {
     if(fn.type !== 'FunctionDeclaration' && fn.type !== 'FunctionExpression')
       throw new Error("invalid return vertex");
@@ -179,6 +193,7 @@ define(function(require, exports) {
            });
   }
   
+  // vertex representing callee at a call site
   function calleeVertex(nd) {
     if(nd.type !== 'CallExpression' && nd.type !== 'NewExpression')
       throw new Error("invalid callee vertex");
@@ -191,6 +206,7 @@ define(function(require, exports) {
            });
   }
   
+  // vertex representing the ith argument at a call site; 0th argument is receiver
   function argVertex(nd, i) {
     if(nd.type !== 'CallExpression' && nd.type !== 'NewExpression')
       throw new Error("invalid callee vertex");
@@ -211,6 +227,7 @@ define(function(require, exports) {
     }
   }
   
+  // vertex representing result of a call
   function resVertex(nd) {
     if(nd.type !== 'CallExpression' && nd.type !== 'NewExpression')
       throw new Error("invalid result vertex");
@@ -222,6 +239,7 @@ define(function(require, exports) {
            });
   }
   
+  // vertex representing some other expression
   function exprVertex(nd) {
     if(!nd.type)
       throw new Error("invalid expression vertex");

@@ -1,3 +1,7 @@
+/* Optimistic call graph builder that tries to be clever about
+ * which interprocedural flows to propagate: it only propagates
+ * along edges that lead to a function call. */
+
 if(typeof define !== 'function') {
   var define = require('amdefine')(module);
 }

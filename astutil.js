@@ -1,3 +1,5 @@
+/* This module provides an AST visitor function, and several
+ * other utility functions. */
 if(typeof define !== 'function') {
   var define = require('amdefine')(module);
 }
@@ -5,6 +7,7 @@ if(typeof define !== 'function') {
 define(function(require, exports) {
   var esprima = require('./esprima');
     
+  /* AST visitor */
   function visit(root, visitor) {
     function doVisit(nd, parent, childProp) {
       if(!nd || typeof nd !== 'object')
@@ -17,6 +20,7 @@ define(function(require, exports) {
       }
       
       for(var p in nd) {
+	// skip over magic properties
         if(!nd.hasOwnProperty(p) || p.match(/^(range|loc|attr|comments|raw)$/))
           continue;
         doVisit(nd[p], nd, p);
@@ -26,8 +30,12 @@ define(function(require, exports) {
     doVisit(root);
   }
   
+  /* Set up `attr` field that can be used to attach attributes to
+   * nodes, and fill in `enclosingFunction` and `enclosingFile`
+   * attributes. */
   function init(root) {
     var enclosingFunction = null, enclosingFile = null;
+    // global collections containing all functions and all call sites
     root.attr.functions = [];
     root.attr.calls = [];
     visit(root, function(nd, visit, parent, childProp) {
@@ -60,6 +68,7 @@ define(function(require, exports) {
     });
   }
 
+  /* Simple version of UNIX basename. */
   function basename(filename) {
     if(!filename)
       return "<???>";
@@ -69,10 +78,12 @@ define(function(require, exports) {
     return filename.substring(idx+1);
   }
   
+  /* Pretty-print position. */
   function ppPos(nd) {
     return basename(nd.attr.enclosingFile) + "@" + nd.loc.start.line + ":" + nd.range[0] + "-" + nd.range[1];
   }
 
+  /* Build an AST from a collection of source files. */
   function buildAST(sources) {
     var ast = {
       type: 'ProgramCollection',

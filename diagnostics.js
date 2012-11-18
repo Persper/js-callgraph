@@ -1,3 +1,4 @@
+/* Module for converting a graph into DOT format. */
 if(typeof define !== 'function') {
   var define = require('amdefine')(module);
 }

@@ -1,3 +1,4 @@
+/* Module for extracting a call graph from a flow graph. */
 if(typeof define !== 'function') {
   var define = require('amdefine')(module);
 }
@@ -8,6 +9,7 @@ define(function(require, exports) {
 	    astutil = require('./astutil'),
       _ = require('./dftc');
 
+  // extract a call graph from a flow graph by collecting all function vertices that are inversely reachable from a callee vertex
   function extractCG(ast, flow_graph) {
   	var edges = new graph.Graph(),
   	    escaping = [], unknown = [];

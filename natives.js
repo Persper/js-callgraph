@@ -1,3 +1,5 @@
+/* Module for adding standard library/DOM modelling to flow graph. */
+
 if(typeof define !== 'function') {
   var define = require('amdefine')(module);
 }

@@ -1,3 +1,4 @@
+/* Pessimistic call graph builder. */
 if(typeof define !== 'function') {
   var define = require('amdefine')(module);
 }
@@ -42,7 +43,7 @@ define(function(require, exports) {
   }
 
   function buildCallGraph(ast, noOneShot) {
-  	var fg = new graph.Graph();
+	var fg = new graph.Graph();
   	natives.addNativeFlowEdges(fg);
   	if(!noOneShot)
   	  addOneShotEdges(ast, fg);

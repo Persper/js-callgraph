@@ -1,3 +1,5 @@
+/* Simple implementation of symbol tables. Uses
+ * prototypal inheritance to model scoping. */
 if(typeof define !== 'function') {
   var define = require('amdefine')(module);
 }
@@ -13,6 +15,7 @@ define(function(require, exports) {
   
   function Symtab(outer) {
     var self = Object.create(outer || Symtab.prototype);
+    // every scope has a pointer to its outer scope, which may be null
     self.outer = outer;
     return self;
   }
