@@ -19,3 +19,8 @@ The remaining modules define key data structures, in several variants.
 Module `graph.js` implements graphs using adjacency sets, using sets of numbers as implemented by `numset.js`. The latter includes either `olist.js` to implement sets as ordered lists of numbers, or `bitset.js` to use bitsets (with disappointing performance, so we use ordered lists by default).
 
 Modules `dftc.js`, `heuristictc.js` and `nuutila.js` implement several transitive closure algorithms used by `callgraph.js`. By default, we use `dftc.js` which uses a simple, depth first-search based algorithm. `heuristictc.js` does something even simpler, which is very fast but unsound. Finally, `nuutila.js` implements Nuutila's algorithm for transitive closure, which for our graphs is usually slower than the depth first-based ones.
+
+
+# License #
+
+This code is licensed under the [Eclipse Public License (v1.0)](http://www.eclipse.org/legal/epl-v10.html), a copy of which is included in this repository in file `epl-v10.html`.
