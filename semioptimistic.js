@@ -91,7 +91,7 @@ define(function (require, exports) {
                     }
                 });
             });
-        } while (changed);
+        } while (changed); // until fixpoint
 
         return callgraph.extractCG(ast, fg);
     }
