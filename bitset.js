@@ -13,224 +13,228 @@
  * Implementation of sets of non-negative integers as bitsets.
  */
 
-if(typeof define !== 'function') {
-  var define = require('amdefine')(module);
+if (typeof define !== 'function') {
+    var define = require('amdefine')(module);
 }
 
-define(function(require, exports) {
-  // Wegner's algorithm
-  function countBitsInWord(w) {
-    var cnt = 0;
-    while(w) {
-      ++cnt;
-      w &= w-1;
+define(function (require, exports) {
+    // Wegner's algorithm
+    function countBitsInWord(w) {
+        var cnt = 0;
+        while (w) {
+            ++cnt;
+            w &= w - 1;
+        }
+        return cnt;
     }
-    return cnt;
-  }
 
-  function countBits(a) {
-    var cnt = 0;
-    a.forEach(function(w) {
-      cnt += countBitsInWord(w);
-    });
-    return cnt;
-  }
+    function countBits(a) {
+        var cnt = 0;
+        a.forEach(function (w) {
+            cnt += countBitsInWord(w);
+        });
+        return cnt;
+    }
 
-  function size(a) {
-    if(typeof a === 'undefined')
-      return 0;
+    function size(a) {
+        if (typeof a === 'undefined')
+            return 0;
 
-    if(typeof a === 'number')
-      return 1;
+        if (typeof a === 'number')
+            return 1;
 
-    return countBits(a);
-  }
+        return countBits(a);
+    }
 
-  /**
-   * Check whether set a contains number x.
-   */
-  function contains(a, x) {
-    if(typeof a === 'undefined')
-      return false;
+    /**
+     * Check whether set a contains number x.
+     */
+    function contains(a, x) {
+        if (typeof a === 'undefined')
+            return false;
 
-    if(typeof a === 'number')
-      return a === x;
+        if (typeof a === 'number')
+            return a === x;
 
-    var word_off = x >> 5,
-        word_idx = x % 32;
+        var word_off = x >> 5,
+            word_idx = x % 32;
 
-    if(word_off >= a.length)
-      return false;
+        if (word_off >= a.length)
+            return false;
 
-    return !!(a[word_off] & (1 << word_idx));
-  }
+        return !!(a[word_off] & (1 << word_idx));
+    }
 
-  function createSingletonBitset(x) {
-    var word_off = x >> 5,
-        word_idx = x % 32;
-    var a = new Array(word_off+1);
-    a[word_off] = (1 << word_idx);
-    return a;
-  }
+    function createSingletonBitset(x) {
+        var word_off = x >> 5,
+            word_idx = x % 32;
+        var a = new Array(word_off + 1);
+        a[word_off] = (1 << word_idx);
+        return a;
+    }
 
-  /**
-   * Add number x to set a, and return the possibly modified a.
-   */
-  function add(a, x) {
-    if(typeof a === 'undefined')
-      return x;
-    
-    if(typeof a === 'number')
-      a = createSingletonBitset(a);
+    /**
+     * Add number x to set a, and return the possibly modified a.
+     */
+    function add(a, x) {
+        if (typeof a === 'undefined')
+            return x;
 
-    var word_off = x >> 5,
-        word_idx = x % 32;
-    a[word_off] = (a[word_off] || 0) | (1 << word_idx);
-    return a;
-  }
+        if (typeof a === 'number')
+            a = createSingletonBitset(a);
 
-  /**
-   * Add all elements in set b to set a, returning the resulting set.
-   * While set a may be modified, set b never is.
-   */
-  function addAll(a, b) {
-  	if(typeof a === 'undefined')
-  		return copy(b);
+        var word_off = x >> 5,
+            word_idx = x % 32;
+        a[word_off] = (a[word_off] || 0) | (1 << word_idx);
+        return a;
+    }
 
-    if(typeof b === 'undefined')
-      return a;
+    /**
+     * Add all elements in set b to set a, returning the resulting set.
+     * While set a may be modified, set b never is.
+     */
+    function addAll(a, b) {
+        if (typeof a === 'undefined')
+            return copy(b);
 
-    if(typeof b === 'number')
-      return add(a, b);
+        if (typeof b === 'undefined')
+            return a;
 
-    if(typeof a === 'number')
-    	return add(copy(b), a);
+        if (typeof b === 'number')
+            return add(a, b);
 
-    // both a and b must be bitsets
-    for(var i=0;i<b.length;++i)
-      if(b[i])
-        a[i] = (a[i] || 0) | b[i];
-    return a;
-  }
+        if (typeof a === 'number')
+            return add(copy(b), a);
 
-  function remove(a, x) {
-    if(typeof a === 'undefined')
-      return a;
+        // both a and b must be bitsets
+        for (var i = 0; i < b.length; ++i)
+            if (b[i])
+                a[i] = (a[i] || 0) | b[i];
+        return a;
+    }
 
-    if(typeof a === 'number')
-      return a === x ? void(0) : a;
+    function remove(a, x) {
+        if (typeof a === 'undefined')
+            return a;
 
-    var word_off = x >> 5,
-        word_idx = x % 32;
-    a[word_off] = (a[word_off] || 0) & ~(1 << word_idx);
-    return a;
-  }
+        if (typeof a === 'number')
+            return a === x ? void(0) : a;
 
-  function removeAll(a, b) {
-    if(typeof a === 'undefined' || typeof b === 'undefined')
-      return a;
+        var word_off = x >> 5,
+            word_idx = x % 32;
+        a[word_off] = (a[word_off] || 0) & ~(1 << word_idx);
+        return a;
+    }
 
-    if(typeof a === 'number')
-      return contains(b, a) ? void(0) : a;
+    function removeAll(a, b) {
+        if (typeof a === 'undefined' || typeof b === 'undefined')
+            return a;
 
-    if(typeof b === 'number')
-      return remove(a, b);
+        if (typeof a === 'number')
+            return contains(b, a) ? void(0) : a;
 
-    a.forEach(function(w, i) {
-      if(b[i])
-        a[i] = a[i] & ~b[i];
-    });
-    return a;
-  }
+        if (typeof b === 'number')
+            return remove(a, b);
 
-  function copy(a) {
-    if(typeof a === 'undefined' || typeof a === 'number')
-      return a;
+        a.forEach(function (w, i) {
+            if (b[i])
+                a[i] = a[i] & ~b[i];
+        });
+        return a;
+    }
 
-    return a.slice(0);
-  }
+    function copy(a) {
+        if (typeof a === 'undefined' || typeof a === 'number')
+            return a;
 
-  function iter(a, cb) {
-  	if(a) {
-  		if(typeof a === 'number')
-  			cb(a);
-  		else
-        a.forEach(function(w, i) {
-          for(var j=0;j<32;++j)
-            if(w & (1 << j))
-              cb(32*i + j);
-        }); 
-  	}
-  }
+        return a.slice(0);
+    }
 
-  function map(a, f) {
-  	if(a) {
-  		if(typeof a === 'number')
-  			return [f(a)];
-  		else {
-        var res = [];
-        iter(a, function(x) {
-          res[res.length] = f(x);
-        })
-  			return res;
-      }
-  	} else {
-  		return [];
-  	}
-  }
+    function iter(a, cb) {
+        if (a) {
+            if (typeof a === 'number')
+                cb(a);
+            else
+                a.forEach(function (w, i) {
+                    for (var j = 0; j < 32; ++j)
+                        if (w & (1 << j))
+                            cb(32 * i + j);
+                });
+        }
+    }
 
-  function some(a, f) {
-  	if(a) {
-  		if(typeof a === 'number')
-  			return f(a);
-  		else
-  			for(var i=0;i<a.length;++i)
-          if(a[i])
-            for(var j=0;j<32;++j)
-              if(a[i] & (1 << j))
-                if(f(32*i + j))
-                  return true;
-  	}
-  	return false;
-  }
+    function map(a, f) {
+        if (a) {
+            if (typeof a === 'number')
+                return [f(a)];
+            else {
+                var res = [];
+                iter(a, function (x) {
+                    res[res.length] = f(x);
+                })
+                return res;
+            }
+        } else {
+            return [];
+        }
+    }
 
-  function all(a, f) {
-  	if(a) {
-  		if(typeof a === 'number')
-  			return f(a);
-  		else
-        for(var i=0;i<a.length;++i)
-          if(a[i])
-            for(var j=0;j<32;++j)
-              if(a[i] & (1 << j))
-                if(!f(32*i + j))
-                  return false;
-  	}
-  	return true;
-  }
+    function some(a, f) {
+        if (a) {
+            if (typeof a === 'number')
+                return f(a);
+            else
+                for (var i = 0; i < a.length; ++i)
+                    if (a[i])
+                        for (var j = 0; j < 32; ++j)
+                            if (a[i] & (1 << j))
+                                if (f(32 * i + j))
+                                    return true;
+        }
+        return false;
+    }
 
-  function fromArray(ary) {
-    var a;
-    ary.forEach(function(x) { a = add(a, x); });
-    return a;
-  }
+    function all(a, f) {
+        if (a) {
+            if (typeof a === 'number')
+                return f(a);
+            else
+                for (var i = 0; i < a.length; ++i)
+                    if (a[i])
+                        for (var j = 0; j < 32; ++j)
+                            if (a[i] & (1 << j))
+                                if (!f(32 * i + j))
+                                    return false;
+        }
+        return true;
+    }
 
-  function toArray(a) {
-    return map(a, function f(x) { return x; });
-  }
+    function fromArray(ary) {
+        var a;
+        ary.forEach(function (x) {
+            a = add(a, x);
+        });
+        return a;
+    }
 
-  exports.copy = copy;
-  exports.size = size;
-  exports.contains = contains;
-  exports.add = add;
-  exports.addAll = addAll;
-  exports.remove = remove;
-  exports.removeAll = removeAll;
-  exports.iter = iter;
-  exports.map = map;
-  exports.some = some;
-  exports.all = all;
-  exports.fromArray = fromArray;
-  exports.toArray = toArray;
-  return exports;
+    function toArray(a) {
+        return map(a, function f(x) {
+            return x;
+        });
+    }
+
+    exports.copy = copy;
+    exports.size = size;
+    exports.contains = contains;
+    exports.add = add;
+    exports.addAll = addAll;
+    exports.remove = remove;
+    exports.removeAll = removeAll;
+    exports.iter = iter;
+    exports.map = map;
+    exports.some = some;
+    exports.all = all;
+    exports.fromArray = fromArray;
+    exports.toArray = toArray;
+    return exports;
 });

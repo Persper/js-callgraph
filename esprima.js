@@ -1,41 +1,41 @@
 /*
-  Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
-  Copyright (C) 2012 Mathias Bynens <mathias@qiwi.be>
-  Copyright (C) 2012 Joost-Wim Boekesteijn <joost-wim@boekesteijn.nl>
-  Copyright (C) 2012 Kris Kowal <kris.kowal@cixar.com>
-  Copyright (C) 2012 Yusuke Suzuki <utatane.tea@gmail.com>
-  Copyright (C) 2012 Arpad Borsos <arpad.borsos@googlemail.com>
-  Copyright (C) 2011 Ariya Hidayat <ariya.hidayat@gmail.com>
+ Copyright (C) 2012 Ariya Hidayat <ariya.hidayat@gmail.com>
+ Copyright (C) 2012 Mathias Bynens <mathias@qiwi.be>
+ Copyright (C) 2012 Joost-Wim Boekesteijn <joost-wim@boekesteijn.nl>
+ Copyright (C) 2012 Kris Kowal <kris.kowal@cixar.com>
+ Copyright (C) 2012 Yusuke Suzuki <utatane.tea@gmail.com>
+ Copyright (C) 2012 Arpad Borsos <arpad.borsos@googlemail.com>
+ Copyright (C) 2011 Ariya Hidayat <ariya.hidayat@gmail.com>
 
-  Redistribution and use in source and binary forms, with or without
-  modification, are permitted provided that the following conditions are met:
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
 
-    * Redistributions of source code must retain the above copyright
-      notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above copyright
-      notice, this list of conditions and the following disclaimer in the
-      documentation and/or other materials provided with the distribution.
+ * Redistributions of source code must retain the above copyright
+ notice, this list of conditions and the following disclaimer.
+ * Redistributions in binary form must reproduce the above copyright
+ notice, this list of conditions and the following disclaimer in the
+ documentation and/or other materials provided with the distribution.
 
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-  ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
-  DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
-  (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
-  LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
-  ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-  (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
-  THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-*/
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> BE LIABLE FOR ANY
+ DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+ (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+ LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 /*jslint bitwise:true plusplus:true */
 /*global esprima:true, define:true, exports:true, window: true,
-throwError: true, createLiteral: true, generateStatement: true,
-parseAssignmentExpression: true, parseBlock: true, parseExpression: true,
-parseFunctionDeclaration: true, parseFunctionExpression: true,
-parseFunctionSourceElements: true, parseVariableIdentifier: true,
-parseLeftHandSideExpression: true,
-parseStatement: true, parseSourceElement: true */
+ throwError: true, createLiteral: true, generateStatement: true,
+ parseAssignmentExpression: true, parseBlock: true, parseExpression: true,
+ parseFunctionDeclaration: true, parseFunctionExpression: true,
+ parseFunctionSourceElements: true, parseVariableIdentifier: true,
+ parseLeftHandSideExpression: true,
+ parseStatement: true, parseSourceElement: true */
 
 (function (factory) {
     'use strict';
@@ -140,39 +140,39 @@ parseStatement: true, parseSourceElement: true */
 
     // Error messages should be identical to V8.
     Messages = {
-        UnexpectedToken:  'Unexpected token %0',
-        UnexpectedNumber:  'Unexpected number',
-        UnexpectedString:  'Unexpected string',
-        UnexpectedIdentifier:  'Unexpected identifier',
-        UnexpectedReserved:  'Unexpected reserved word',
-        UnexpectedEOS:  'Unexpected end of input',
-        NewlineAfterThrow:  'Illegal newline after throw',
+        UnexpectedToken: 'Unexpected token %0',
+        UnexpectedNumber: 'Unexpected number',
+        UnexpectedString: 'Unexpected string',
+        UnexpectedIdentifier: 'Unexpected identifier',
+        UnexpectedReserved: 'Unexpected reserved word',
+        UnexpectedEOS: 'Unexpected end of input',
+        NewlineAfterThrow: 'Illegal newline after throw',
         InvalidRegExp: 'Invalid regular expression',
-        UnterminatedRegExp:  'Invalid regular expression: missing /',
-        InvalidLHSInAssignment:  'Invalid left-hand side in assignment',
-        InvalidLHSInForIn:  'Invalid left-hand side in for-in',
+        UnterminatedRegExp: 'Invalid regular expression: missing /',
+        InvalidLHSInAssignment: 'Invalid left-hand side in assignment',
+        InvalidLHSInForIn: 'Invalid left-hand side in for-in',
         MultipleDefaultsInSwitch: 'More than one default clause in switch statement',
-        NoCatchOrFinally:  'Missing catch or finally after try',
+        NoCatchOrFinally: 'Missing catch or finally after try',
         UnknownLabel: 'Undefined label \'%0\'',
         Redeclaration: '%0 \'%1\' has already been declared',
         IllegalContinue: 'Illegal continue statement',
         IllegalBreak: 'Illegal break statement',
         IllegalReturn: 'Illegal return statement',
-        StrictModeWith:  'Strict mode code may not include a with statement',
-        StrictCatchVariable:  'Catch variable may not be eval or arguments in strict mode',
-        StrictVarName:  'Variable name may not be eval or arguments in strict mode',
-        StrictParamName:  'Parameter name eval or arguments is not allowed in strict mode',
+        StrictModeWith: 'Strict mode code may not include a with statement',
+        StrictCatchVariable: 'Catch variable may not be eval or arguments in strict mode',
+        StrictVarName: 'Variable name may not be eval or arguments in strict mode',
+        StrictParamName: 'Parameter name eval or arguments is not allowed in strict mode',
         StrictParamDupe: 'Strict mode function may not have duplicate parameter names',
-        StrictFunctionName:  'Function name may not be eval or arguments in strict mode',
-        StrictOctalLiteral:  'Octal literals are not allowed in strict mode.',
-        StrictDelete:  'Delete of an unqualified identifier in strict mode.',
-        StrictDuplicateProperty:  'Duplicate data property in object literal not allowed in strict mode',
-        AccessorDataProperty:  'Object literal may not have data and accessor property with the same name',
-        AccessorGetSet:  'Object literal may not have multiple get/set accessors with the same name',
-        StrictLHSAssignment:  'Assignment to eval or arguments is not allowed in strict mode',
-        StrictLHSPostfix:  'Postfix increment/decrement may not have eval or arguments operand in strict mode',
-        StrictLHSPrefix:  'Prefix increment/decrement may not have eval or arguments operand in strict mode',
-        StrictReservedWord:  'Use of future reserved word in strict mode'
+        StrictFunctionName: 'Function name may not be eval or arguments in strict mode',
+        StrictOctalLiteral: 'Octal literals are not allowed in strict mode.',
+        StrictDelete: 'Delete of an unqualified identifier in strict mode.',
+        StrictDuplicateProperty: 'Duplicate data property in object literal not allowed in strict mode',
+        AccessorDataProperty: 'Object literal may not have data and accessor property with the same name',
+        AccessorGetSet: 'Object literal may not have multiple get/set accessors with the same name',
+        StrictLHSAssignment: 'Assignment to eval or arguments is not allowed in strict mode',
+        StrictLHSPostfix: 'Postfix increment/decrement may not have eval or arguments operand in strict mode',
+        StrictLHSPrefix: 'Prefix increment/decrement may not have eval or arguments operand in strict mode',
+        StrictReservedWord: 'Use of future reserved word in strict mode'
     };
 
     // See also tools/generate-unicode-regex.py.
@@ -221,7 +221,7 @@ parseStatement: true, parseSourceElement: true */
         return (ch === ' ') || (ch === '\u0009') || (ch === '\u000B') ||
             (ch === '\u000C') || (ch === '\u00A0') ||
             (ch.charCodeAt(0) >= 0x1680 &&
-             '\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\uFEFF'.indexOf(ch) >= 0);
+                '\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\uFEFF'.indexOf(ch) >= 0);
     }
 
     // 7.3 Line Terminators
@@ -250,14 +250,14 @@ parseStatement: true, parseSourceElement: true */
     function isFutureReservedWord(id) {
         switch (id) {
 
-        // Future reserved words.
-        case 'class':
-        case 'enum':
-        case 'export':
-        case 'extends':
-        case 'import':
-        case 'super':
-            return true;
+            // Future reserved words.
+            case 'class':
+            case 'enum':
+            case 'export':
+            case 'extends':
+            case 'import':
+            case 'super':
+                return true;
         }
 
         return false;
@@ -266,17 +266,17 @@ parseStatement: true, parseSourceElement: true */
     function isStrictModeReservedWord(id) {
         switch (id) {
 
-        // Strict Mode reserved words.
-        case 'implements':
-        case 'interface':
-        case 'package':
-        case 'private':
-        case 'protected':
-        case 'public':
-        case 'static':
-        case 'yield':
-        case 'let':
-            return true;
+            // Strict Mode reserved words.
+            case 'implements':
+            case 'interface':
+            case 'package':
+            case 'private':
+            case 'protected':
+            case 'public':
+            case 'static':
+            case 'yield':
+            case 'let':
+                return true;
         }
 
         return false;
@@ -291,30 +291,30 @@ parseStatement: true, parseSourceElement: true */
     function isKeyword(id) {
         var keyword = false;
         switch (id.length) {
-        case 2:
-            keyword = (id === 'if') || (id === 'in') || (id === 'do');
-            break;
-        case 3:
-            keyword = (id === 'var') || (id === 'for') || (id === 'new') || (id === 'try');
-            break;
-        case 4:
-            keyword = (id === 'this') || (id === 'else') || (id === 'case') || (id === 'void') || (id === 'with');
-            break;
-        case 5:
-            keyword = (id === 'while') || (id === 'break') || (id === 'catch') || (id === 'throw');
-            break;
-        case 6:
-            keyword = (id === 'return') || (id === 'typeof') || (id === 'delete') || (id === 'switch');
-            break;
-        case 7:
-            keyword = (id === 'default') || (id === 'finally');
-            break;
-        case 8:
-            keyword = (id === 'function') || (id === 'continue') || (id === 'debugger');
-            break;
-        case 10:
-            keyword = (id === 'instanceof');
-            break;
+            case 2:
+                keyword = (id === 'if') || (id === 'in') || (id === 'do');
+                break;
+            case 3:
+                keyword = (id === 'var') || (id === 'for') || (id === 'new') || (id === 'try');
+                break;
+            case 4:
+                keyword = (id === 'this') || (id === 'else') || (id === 'case') || (id === 'void') || (id === 'with');
+                break;
+            case 5:
+                keyword = (id === 'while') || (id === 'break') || (id === 'catch') || (id === 'throw');
+                break;
+            case 6:
+                keyword = (id === 'return') || (id === 'typeof') || (id === 'delete') || (id === 'switch');
+                break;
+            case 7:
+                keyword = (id === 'default') || (id === 'finally');
+                break;
+            case 8:
+                keyword = (id === 'function') || (id === 'continue') || (id === 'debugger');
+                break;
+            case 10:
+                keyword = (id === 'instanceof');
+                break;
         }
 
         if (keyword) {
@@ -322,15 +322,15 @@ parseStatement: true, parseSourceElement: true */
         }
 
         switch (id) {
-        // Future reserved words.
-        // 'const' is specialized as Keyword in V8.
-        case 'const':
-            return true;
+            // Future reserved words.
+            // 'const' is specialized as Keyword in V8.
+            case 'const':
+                return true;
 
-        // For compatiblity to SpiderMonkey and ES.next
-        case 'yield':
-        case 'let':
-            return true;
+            // For compatiblity to SpiderMonkey and ES.next
+            case 'yield':
+            case 'let':
+                return true;
         }
 
         if (strict && isStrictModeReservedWord(id)) {
@@ -409,7 +409,7 @@ parseStatement: true, parseSourceElement: true */
                 ++index;
             } else if (isLineTerminator(ch)) {
                 ++index;
-                if (ch ===  '\r' && source[index] === '\n') {
+                if (ch === '\r' && source[index] === '\n') {
                     ++index;
                 }
                 ++lineNumber;
@@ -876,66 +876,66 @@ parseStatement: true, parseSourceElement: true */
                 ch = nextChar();
                 if (!isLineTerminator(ch)) {
                     switch (ch) {
-                    case 'n':
-                        str += '\n';
-                        break;
-                    case 'r':
-                        str += '\r';
-                        break;
-                    case 't':
-                        str += '\t';
-                        break;
-                    case 'u':
-                    case 'x':
-                        restore = index;
-                        unescaped = scanHexEscape(ch);
-                        if (unescaped) {
-                            str += unescaped;
-                        } else {
-                            index = restore;
-                            str += ch;
-                        }
-                        break;
-                    case 'b':
-                        str += '\b';
-                        break;
-                    case 'f':
-                        str += '\f';
-                        break;
-                    case 'v':
-                        str += '\v';
-                        break;
-
-                    default:
-                        if (isOctalDigit(ch)) {
-                            code = '01234567'.indexOf(ch);
-
-                            // \0 is not octal escape sequence
-                            if (code !== 0) {
-                                octal = true;
+                        case 'n':
+                            str += '\n';
+                            break;
+                        case 'r':
+                            str += '\r';
+                            break;
+                        case 't':
+                            str += '\t';
+                            break;
+                        case 'u':
+                        case 'x':
+                            restore = index;
+                            unescaped = scanHexEscape(ch);
+                            if (unescaped) {
+                                str += unescaped;
+                            } else {
+                                index = restore;
+                                str += ch;
                             }
+                            break;
+                        case 'b':
+                            str += '\b';
+                            break;
+                        case 'f':
+                            str += '\f';
+                            break;
+                        case 'v':
+                            str += '\v';
+                            break;
 
-                            if (index < length && isOctalDigit(source[index])) {
-                                octal = true;
-                                code = code * 8 + '01234567'.indexOf(nextChar());
+                        default:
+                            if (isOctalDigit(ch)) {
+                                code = '01234567'.indexOf(ch);
 
-                                // 3 digits are only allowed when string starts
-                                // with 0, 1, 2, 3
-                                if ('0123'.indexOf(ch) >= 0 &&
+                                // \0 is not octal escape sequence
+                                if (code !== 0) {
+                                    octal = true;
+                                }
+
+                                if (index < length && isOctalDigit(source[index])) {
+                                    octal = true;
+                                    code = code * 8 + '01234567'.indexOf(nextChar());
+
+                                    // 3 digits are only allowed when string starts
+                                    // with 0, 1, 2, 3
+                                    if ('0123'.indexOf(ch) >= 0 &&
                                         index < length &&
                                         isOctalDigit(source[index])) {
-                                    code = code * 8 + '01234567'.indexOf(nextChar());
+                                        code = code * 8 + '01234567'.indexOf(nextChar());
+                                    }
                                 }
+                                str += String.fromCharCode(code);
+                            } else {
+                                str += ch;
                             }
-                            str += String.fromCharCode(code);
-                        } else {
-                            str += ch;
-                        }
-                        break;
+                            break;
                     }
                 } else {
                     ++lineNumber;
-                    if (ch ===  '\r' && source[index] === '\n') {
+                    if (ch === '\r' && source[index] === '\n') {
                         ++index;
                     }
                 }
@@ -1807,6 +1807,7 @@ parseStatement: true, parseSourceElement: true */
 
         return expr;
     }
+
     // 11.8 Relational Operators
 
     function parseRelationalExpression() {
@@ -2702,49 +2703,49 @@ parseStatement: true, parseSourceElement: true */
 
         if (token.type === Token.Punctuator) {
             switch (token.value) {
-            case ';':
-                return parseEmptyStatement();
-            case '{':
-                return parseBlock();
-            case '(':
-                return parseExpressionStatement();
-            default:
-                break;
+                case ';':
+                    return parseEmptyStatement();
+                case '{':
+                    return parseBlock();
+                case '(':
+                    return parseExpressionStatement();
+                default:
+                    break;
             }
         }
 
         if (token.type === Token.Keyword) {
             switch (token.value) {
-            case 'break':
-                return parseBreakStatement();
-            case 'continue':
-                return parseContinueStatement();
-            case 'debugger':
-                return parseDebuggerStatement();
-            case 'do':
-                return parseDoWhileStatement();
-            case 'for':
-                return parseForStatement();
-            case 'function':
-                return parseFunctionDeclaration();
-            case 'if':
-                return parseIfStatement();
-            case 'return':
-                return parseReturnStatement();
-            case 'switch':
-                return parseSwitchStatement();
-            case 'throw':
-                return parseThrowStatement();
-            case 'try':
-                return parseTryStatement();
-            case 'var':
-                return parseVariableStatement();
-            case 'while':
-                return parseWhileStatement();
-            case 'with':
-                return parseWithStatement();
-            default:
-                break;
+                case 'break':
+                    return parseBreakStatement();
+                case 'continue':
+                    return parseContinueStatement();
+                case 'debugger':
+                    return parseDebuggerStatement();
+                case 'do':
+                    return parseDoWhileStatement();
+                case 'for':
+                    return parseForStatement();
+                case 'function':
+                    return parseFunctionDeclaration();
+                case 'if':
+                    return parseIfStatement();
+                case 'return':
+                    return parseReturnStatement();
+                case 'switch':
+                    return parseSwitchStatement();
+                case 'throw':
+                    return parseThrowStatement();
+                case 'try':
+                    return parseTryStatement();
+                case 'var':
+                    return parseVariableStatement();
+                case 'while':
+                    return parseWhileStatement();
+                case 'with':
+                    return parseWithStatement();
+                default:
+                    break;
             }
         }
 
@@ -3006,13 +3007,13 @@ parseStatement: true, parseSourceElement: true */
 
         if (token.type === Token.Keyword) {
             switch (token.value) {
-            case 'const':
-            case 'let':
-                return parseConstLetDeclaration(token.value);
-            case 'function':
-                return parseFunctionDeclaration();
-            default:
-                return parseStatement();
+                case 'const':
+                case 'let':
+                    return parseConstLetDeclaration(token.value);
+                case 'function':
+                    return parseFunctionDeclaration();
+                default:
+                    return parseStatement();
             }
         }
 
@@ -3204,7 +3205,7 @@ parseStatement: true, parseSourceElement: true */
                 ++index;
             } else if (isLineTerminator(ch)) {
                 ++index;
-                if (ch ===  '\r' && source[index] === '\n') {
+                if (ch === '\r' && source[index] === '\n') {
                     ++index;
                 }
                 ++lineNumber;
