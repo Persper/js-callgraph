@@ -19,7 +19,7 @@ define(function (require, exports) {
 
     function Graph() {
         this.succ = [];
-    };
+    }
 
     var id2node = Graph.prototype.id2node = [];
     var nextNodeId = 1;
@@ -56,7 +56,7 @@ define(function (require, exports) {
     Graph.prototype.hasEdge = function (from, to) {
         var fromId = nodeId(from), toId = nodeId(to);
         return numset.contains(this.succ[fromId], toId);
-    }
+    };
 
     exports.Graph = Graph;
     return exports;

@@ -15,6 +15,7 @@ var bindings = require('./bindings'),
     semioptimistic = require('./semioptimistic'),
     diagnostics = require('./diagnostics'),
     fs = require('fs'),
+    callbackCounter = require('./callbackCounter'),
     ArgumentParser = require('argparse').ArgumentParser;
 
 var argParser = new ArgumentParser({
@@ -43,6 +44,13 @@ argParser.addArgument(
 argParser.addArgument(
     [ '--strategy' ],
     { help: 'interprocedural propagation strategy; one of NONE, ONESHOT (default), DEMAND, and FULL (not yet implemented) '}
+);
+
+argParser.addArgument(
+    [ '--countCB' ],
+    { nargs: 0,
+        help: 'Counts the number of callbacks.'
+    }
 );
 
 var r = argParser.parseKnownArgs();
@@ -83,6 +91,9 @@ if (args.time) console.timeEnd("callgraph");
 
 if (args.fg)
     console.log(cg.fg.dotify());
+
+if (args.countCB)
+    callbackCounter.countCallbacks(ast);
 
 if (args.cg) {
     function pp(v) {
