@@ -8,20 +8,36 @@ define(function(require, exports) {
 
     function countCallbacks(ast) {
         var callbacks = [];
-        astutil.visit(ast, function (node) {
+        var enclosingFunctionParameters = [];
+        var functionDeclarationParameter = 0, functionExpressionParameter = 0;
+        astutil.visit(ast, function(node) {
             switch (node.type) {
-                case 'CallExpression':
-                //FIND ARGUMENT AS PARAMETER IN ENCLOSING FUNCTION.
-                var callee = node.callee, functionName = callee.name;
-                if (findEnclosingFunction(callee, functionName) !== null) {
-                    callbacks.push(node);
-                }
+                case 'CallExpression' :
+                    //FIND ARGUMENT AS PARAMETER IN ENCLOSING FUNCTION.
+                    var callee = node.callee, functionName = callee.name;
+                    var enclosingFunctionParameter = findEnclosingFunctionParameter(callee, functionName);
+                    if (enclosingFunctionParameter !== null && enclosingFunctionParameters.indexOf(enclosingFunctionParameter) === -1) {
+                        callbacks.push(node);
+                        enclosingFunctionParameters.push(enclosingFunctionParameter);
+                    }
+                break;
+
+                case 'FunctionDeclaration' :
+                    functionDeclarationParameter += node.params.length;
+                break;
+
+                case 'FunctionExpression' :
+                    functionExpressionParameter += node.params.length;
+                break;
             }
         });
-        console.log("I found " + callbacks.length + " callbacks.");
+        var totalParameters = functionDeclarationParameter + functionExpressionParameter;
+        var callbackPercentage = callbacks.length / totalParameters * 100;
+        console.log("I found " + callbacks.length + " callback usages. In total we have " + functionDeclarationParameter + " function declaration parameters and " + functionExpressionParameter + " function expression parameters.");
+        console.log("This makes a total of " + totalParameters + " parameters. Which means that (counting each function once as a callback) " + callbackPercentage + " percent of parameters are callbacks.");
     }
 
-    function findEnclosingFunction(node, functionName) {
+    function findEnclosingFunctionParameter(node, functionName) {
         var enclosingFunction = node.attr.enclosingFunction;
         if (!enclosingFunction) {
             return null;
@@ -32,7 +48,7 @@ define(function(require, exports) {
             return matchingParameter;
         }
 
-        return findEnclosingFunction(enclosingFunction, functionName);
+        return findEnclosingFunctionParameter(enclosingFunction, functionName);
     }
 
     function findFirst(array, predicate) {
