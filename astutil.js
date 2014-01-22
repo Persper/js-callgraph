@@ -17,6 +17,7 @@ if (typeof define !== 'function') {
 
 define(function (require, exports) {
     var esprima = require('./esprima');
+    var sloc  = require('sloc');
 
     /* AST visitor */
     function visit(root, visitor) {
@@ -103,10 +104,16 @@ define(function (require, exports) {
         };
         sources.forEach(function (source) {
             var prog = esprima.parse(source.program, { loc: true, range: true });
-            prog.attr = { filename: source.filename };
+            prog.attr = { filename: source.filename, sloc : sloc(source.program, "javascript").sloc};
             ast.programs.push(prog);
         });
         init(ast);
+        ast.attr.sloc = ast.programs
+            .map(function(program){
+                return program.attr.sloc;
+            }).reduce(function(previous, current) {
+            return previous + current;
+        });
         return ast;
     }
 
