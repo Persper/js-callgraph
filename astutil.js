@@ -17,6 +17,7 @@ if (typeof define !== 'function') {
 
 define(function (require, exports) {
     var esprima = require('./esprima');
+    var fs = require('fs');
     var sloc  = require('sloc');
 
     /* AST visitor */
@@ -96,7 +97,12 @@ define(function (require, exports) {
     }
 
     /* Build an AST from a collection of source files. */
-    function buildAST(sources) {
+    function buildAST(files) {
+        var sources = files.map(function (file) {
+            return { filename: file,
+                program: fs.readFileSync(file, 'utf-8') };
+        });
+
         var ast = {
             type: 'ProgramCollection',
             programs: [],

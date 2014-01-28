@@ -1,0 +1,58 @@
+if (typeof define !== 'function') {
+    var define = require('amdefine')(module);
+}
+
+define(function(require, exports) {
+
+    var assert = require('assert'),
+        astutil = require('./astutil'),
+        _ = require('./underscore');
+
+
+    function makeRequireJsGraph(ast) {
+        assert.equal(1, ast.programs.length, "Can only have one starting point at the moment.");
+
+        var rx = /^.*\\(.+\\)*(.+)\.(.+)$/g;
+        var regexParse = rx.exec(ast.programs[0].attr.filename);
+        var partialFileName = regexParse[2]  + ".js",
+            fileName = "./" + partialFileName,
+            folder = regexParse[0].split(partialFileName)[0];
+        var dependencyGraph = [];
+        astutil.visit(ast, function(node) {
+            switch (node.type) {
+                case 'CallExpression' :
+                    if (node.callee.name === "define" || node.callee.name === "require") {
+                        var dependencies = [], argument = node.arguments[0];
+                        if (argument.type === "ArrayExpression") {
+                            argument.elements.forEach(function(element) {
+                                dependencies.push(element.value + ".js");
+                            });
+                        } else if (argument.type === "Literal") {
+                            dependencies.push(argument.value + ".js");
+                        }
+                        dependencies.forEach(function(dependency) {
+                            dependencyGraph.push(new Dependency(fileName, dependency));
+                        });
+                    }
+                break;
+            }
+        });
+        dependencyGraph.map(function(dep){return dep.to}).forEach(function(outgoingDep) {
+            var normOutgoingDep = outgoingDep.split("./")[1];
+            var referencedAST = astutil.buildAST([folder + normOutgoingDep]);
+            dependencyGraph = dependencyGraph.concat(makeRequireJsGraph(referencedAST))
+        });
+        return dependencyGraph;
+    }
+
+    function Dependency(from, to) {
+        this.from = from;
+        this.to = to;
+
+        this.toString = function() {
+            return this.from + "->" + this.to;
+        }
+    }
+    exports.makeRequireJsGraph = makeRequireJsGraph;
+    return exports;
+});

@@ -6,8 +6,8 @@ define(function(require, exports) {
     var astutil = require('./astutil'),
         graph = require('./graph');
 
-    function countCallbacks(ast) {
-        var callbacks = [];
+    exports.countCallbacks = function(ast) {
+        var callbacks = [], callbackUses = 0;
         var enclosingFunctionParameters = [];
         var functionDeclarationParameter = 0, functionExpressionParameter = 0;
         astutil.visit(ast, function(node) {
@@ -16,9 +16,12 @@ define(function(require, exports) {
                     //FIND ARGUMENT AS PARAMETER IN ENCLOSING FUNCTION.
                     var callee = node.callee, functionName = callee.name;
                     var enclosingFunctionParameter = findEnclosingFunctionParameter(callee, functionName);
-                    if (enclosingFunctionParameter !== null && enclosingFunctionParameters.indexOf(enclosingFunctionParameter) === -1) {
-                        callbacks.push(node);
-                        enclosingFunctionParameters.push(enclosingFunctionParameter);
+                    if (enclosingFunctionParameter !== null) {
+                        callbackUses++;
+                        if (enclosingFunctionParameters.indexOf(enclosingFunctionParameter) === -1) {
+                            callbacks.push(node);
+                            enclosingFunctionParameters.push(enclosingFunctionParameter);
+                        }
                     }
                 break;
 
@@ -33,10 +36,10 @@ define(function(require, exports) {
         });
         var totalParameters = functionDeclarationParameter + functionExpressionParameter;
         var callbackPercentage = callbacks.length / totalParameters * 100;
-        console.log("I found " + callbacks.length + " callback usages. In total we have " + functionDeclarationParameter + " function declaration parameters and " + functionExpressionParameter + " function expression parameters.");
+        console.log("I found " + callbacks.length + " callbacks and " + callbackUses + " call back uses. In total we have " + functionDeclarationParameter + " function declaration parameters and " + functionExpressionParameter + " function expression parameters.");
         console.log("This makes a total of " + totalParameters + " parameters. Which means that (counting each function once as a callback) " + callbackPercentage + " percent of parameters are callbacks.");
         console.log("The total SLOC is " + ast.attr.sloc);
-    }
+    };
 
     function findEnclosingFunctionParameter(node, functionName) {
         var enclosingFunction = node.attr.enclosingFunction;
@@ -69,6 +72,5 @@ define(function(require, exports) {
         };
     }
 
-    exports.countCallbacks = countCallbacks;
     return exports;
 });

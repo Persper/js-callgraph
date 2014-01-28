@@ -14,8 +14,8 @@ var bindings = require('./bindings'),
     pessimistic = require('./pessimistic'),
     semioptimistic = require('./semioptimistic'),
     diagnostics = require('./diagnostics'),
-    fs = require('fs'),
     callbackCounter = require('./callbackCounter'),
+    requireJsGraph = require('./requireJsGraph');
     ArgumentParser = require('argparse').ArgumentParser;
 
 var argParser = new ArgumentParser({
@@ -53,6 +53,13 @@ argParser.addArgument(
     }
 );
 
+argParser.addArgument(
+    [ '--reqJs' ],
+    { nargs: 0,
+        help: 'Make a RequireJS dependency graph.'
+    }
+);
+
 var r = argParser.parseKnownArgs();
 var args = r[0],
     files = r[1];
@@ -67,14 +74,10 @@ if (args.strategy === 'FULL') {
     args.strategy = 'DEMAND';
 }
 
-var sources = files.map(function (file) {
-    return { filename: file,
-        program: fs.readFileSync(file, 'utf-8') };
-});
-var times = [];
 
+var times = [];
 if (args.time) console.time("parsing  ");
-var ast = astutil.buildAST(sources);
+var ast = astutil.buildAST(files);
 if (args.time) console.timeEnd("parsing  ");
 
 if (args.time) console.time("bindings ");
@@ -94,6 +97,11 @@ if (args.fg)
 
 if (args.countCB)
     callbackCounter.countCallbacks(ast);
+
+if (args.reqJs)
+    requireJsGraph.makeRequireJsGraph(ast).forEach(function(edge){
+        console.log(edge.toString());
+    });
 
 if (args.cg) {
     function pp(v) {
