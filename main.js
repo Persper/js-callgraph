@@ -99,7 +99,7 @@ if (args.countCB)
     callbackCounter.countCallbacks(ast);
 
 if (args.reqJs)
-    requireJsGraph.makeRequireJsGraph(ast).forEach(function(edge){
+    requireJsGraph.makeRequireJsGraph(ast).forEach(function(edge) {
         console.log(edge.toString());
     });
 

@@ -6,7 +6,8 @@ define(function(require, exports) {
 
     var assert = require('assert'),
         astutil = require('./astutil'),
-        _ = require('./underscore');
+        _ = require('./underscore'),
+        fs = require('fs');
 
 
     function makeRequireJsGraph(ast) {
@@ -41,8 +42,13 @@ define(function(require, exports) {
             var normOutgoingDep = outgoingDep.replace(/^.\//, "");
             normOutgoingDep = normOutgoingDep.replace(/^\//, "");
             normOutgoingDep = normOutgoingDep.replace(/\//, "\\");
-            var referencedAST = astutil.buildAST([folder + normOutgoingDep]);
-            dependencyGraph = dependencyGraph.concat(makeRequireJsGraph(referencedAST))
+            var newStart = folder + normOutgoingDep;
+            if (fs.existsSync(newStart)) {
+                var referencedAST = astutil.buildAST([newStart]);
+                dependencyGraph = dependencyGraph.concat(makeRequireJsGraph(referencedAST))
+            } else {
+                console.log("WARN - " + newStart + " cannot be opened. Possibly this is an external library");
+            }
         });
         return dependencyGraph;
     }
