@@ -16,7 +16,7 @@ define(function(require, exports) {
         var regexParse = rx.exec(ast.programs[0].attr.filename);
         var partialFileName = regexParse[2]  + ".js",
             fileName = "./" + partialFileName,
-            folder = regexParse[0].split(partialFileName)[0];
+            folder = regexParse[0].split(/[a-zA-Z]+\.js/)[0].replace(/\/$/, "\\");
         var dependencyGraph = [];
         astutil.visit(ast, function(node) {
             switch (node.type) {
