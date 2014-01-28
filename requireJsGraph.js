@@ -38,7 +38,9 @@ define(function(require, exports) {
             }
         });
         dependencyGraph.map(function(dep){return dep.to}).forEach(function(outgoingDep) {
-            var normOutgoingDep = outgoingDep.split("./")[1];
+            var normOutgoingDep = outgoingDep.replace(/^.\//, "");
+            normOutgoingDep = normOutgoingDep.replace(/^\//, "");
+            normOutgoingDep = normOutgoingDep.replace(/\//, "\\");
             var referencedAST = astutil.buildAST([folder + normOutgoingDep]);
             dependencyGraph = dependencyGraph.concat(makeRequireJsGraph(referencedAST))
         });
