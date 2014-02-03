@@ -46,11 +46,11 @@ define(function(require, exports) {
             if (fs.existsSync(newStart)) {
                 var referencedAST = astutil.buildAST([newStart]);
                 dependencyGraph = dependencyGraph.concat(makeRequireJsGraph(referencedAST))
-            } else {
-                console.log("WARN - " + newStart + " cannot be opened. Possibly this is an external library");
             }
         });
-        return dependencyGraph;
+        return _.uniq(dependencyGraph, function(edge) {
+            return edge.toString();
+        });
     }
 
     function Dependency(from, to) {
@@ -58,7 +58,11 @@ define(function(require, exports) {
         this.to = to;
 
         this.toString = function() {
-            return this.from + "->" + this.to;
+            return removeLeadingPointSlash(this.from) + " -> " + removeLeadingPointSlash(this.to);
+        };
+
+        function removeLeadingPointSlash(path) {
+            return path.replace(/^\.?\//, "");
         }
     }
     exports.makeRequireJsGraph = makeRequireJsGraph;
