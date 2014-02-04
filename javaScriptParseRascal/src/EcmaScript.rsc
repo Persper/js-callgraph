@@ -43,7 +43,7 @@ syntax Statement
   | breakNoLabel: "break" ";"
   | breakLabel: "break" Id $   
   | breakNoLabel: "break" $
-  | returnExp: "return" Expression ";"? 
+  | returnExp: "return" NoLineTerminator Expression ";"? 
   | returnNoExp: "return" ";"?
   | throwExp: "throw" Expression ";"? 
   | throwNoExp: "throw"  ";"?
@@ -344,6 +344,10 @@ lexical RegularExpressionFlags
 lexical Whitespace
   = [\t-\n\r\ ]
   ;
+  
+lexical NoLineTerminator
+  = ![\n]+
+  ;
 
 lexical LAYOUT 
   = Whitespace  
@@ -463,6 +467,13 @@ Statement breakLabel("break" _, LAYOUTLIST l, Id id, LAYOUTLIST _, ";" _) {
 }
 
 //Parsing
+public Source parse(loc file) = parse(#Source, file);
+public Source parse(str txt) = parse(#Source, txt);
 
-public Source parse(str txt) = parse(#Source, txt); 
-public Source load(str txt) = implode(#Source, parse(txt)); 
+public void testje(Tree parseTree) {
+	visit(parseTree) {
+		case (Statement)`return NoLineTerminator <Expression a>`:{
+			int i = 0;
+		}
+	}
+}
