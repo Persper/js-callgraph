@@ -49,7 +49,7 @@ syntax Statement
   | returnExp: "return" Expression ";"
   | returnExp2: "return" Expression () !>> ";"
   | returnNoExp: "return" ";"
-  | returnNoExp: "return" () !>> ";"
+  | returnNoExp2: "return" () !>> ";"
   | throwExp: "throw" Expression ";"? 
   | throwNoExp: "throw"  ";"?
   | withDo: "with" "(" Expression ")" Statement
