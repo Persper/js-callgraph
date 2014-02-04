@@ -46,8 +46,10 @@ syntax Statement
   | breakNoLabel: "break" ";"
   | breakLabel: "break" Id $   
   | breakNoLabel: "break" $
-  | returnExp: "return" Expression << ";"? 
-  | returnNoExp: "return" ";"?
+  | returnExp: "return" Expression ";"
+  | returnExp2: "return" Expression () !>> ";"
+  | returnNoExp: "return" ";"
+  | returnNoExp: "return" () !>> ";"
   | throwExp: "throw" Expression ";"? 
   | throwNoExp: "throw"  ";"?
   | withDo: "with" "(" Expression ")" Statement
@@ -59,6 +61,11 @@ syntax Statement
        "catch" "(" Id ")" "{" Statement* "}" "finally" "{" Statement* "}"
   | debugger: "debugger" ";"?
   ;
+
+
+//Expression returnExp("return" _, _, Expression e, Tree l, ";"? _) {
+//  //if (/\n/ := "<l>" 
+//}
 
 syntax ExpressionNoIn // inlining this doesn't work.
   = Expression!inn
@@ -465,11 +472,25 @@ Statement breakLabel("break" _, LAYOUTLIST l, Id id, LAYOUTLIST _, ";" _) {
   fail;
 }
 
+Expression returnExp("return" _, LAYOUTLIST l, Expression exp, LAYOUTLIST _) {
+	println("TEST");
+}
+
 //Parsing
 public Source parse(loc file) = parse(#Source, file);
 public Source parse(str txt) = parse(#Source, txt);
-public void parseAndView(loc file) = render(visParsetree(parse(file)));
-public void parseAndView(str txt) = render(visParsetree(parse(txt)));
+public void parseAndView(loc file) {
+	render(visParsetree(parse(file)));
+}
+public void parseAndView(str txt) {
+	render(space(visParsetree(parse(txt)),std(gap(8,30)),std(resizable(true))));
+	//render(
+	//	box(
+	//		box(
+	//			visParsetree(parse(txt)), size(100,50), fillColor("lightGray")
+	//		), grow(6), fillColor("blue"))
+	//);
+}
 
 public Source tryToParse(content) {
 	try
