@@ -46,7 +46,7 @@ syntax Statement
   | breakNoLabel: "break" ";"
   | breakLabel: "break" Id $   
   | breakNoLabel: "break" $
-  | returnExp: "return" Expression ";"? 
+  | returnExp: "return" Expression << ";"? 
   | returnNoExp: "return" ";"?
   | throwExp: "throw" Expression ";"? 
   | throwNoExp: "throw"  ";"?
@@ -470,6 +470,13 @@ public Source parse(loc file) = parse(#Source, file);
 public Source parse(str txt) = parse(#Source, txt);
 public void parseAndView(loc file) = render(visParsetree(parse(file)));
 public void parseAndView(str txt) = render(visParsetree(parse(txt)));
+
+public Source tryToParse(content) {
+	try
+		return parse(content);
+	catch ParseError(loc l):
+		println("I found a parse error at line <l.begin.line>, column <l.begin.column>");
+}
 
 public void testje(Tree parseTree) {
 	visit(parseTree) {
