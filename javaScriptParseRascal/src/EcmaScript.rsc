@@ -2,6 +2,9 @@ module EcmaScript
 
 import ParseTree;
 import IO;
+import vis::Figure;
+import vis::ParseTree;
+import vis::Render;
 
 /*
  * TODO
@@ -43,7 +46,7 @@ syntax Statement
   | breakNoLabel: "break" ";"
   | breakLabel: "break" Id $   
   | breakNoLabel: "break" $
-  | returnExp: "return" NoLineTerminator Expression ";"? 
+  | returnExp: "return" Expression ";"? 
   | returnNoExp: "return" ";"?
   | throwExp: "throw" Expression ";"? 
   | throwNoExp: "throw"  ";"?
@@ -119,8 +122,8 @@ syntax Expression
   | Expression "[" Expression "]"
   | Expression "." Id
   > "new" Expression
-  > Expression !>> [\n] "++"
-  | Expression !>> [\n] "--"
+  > Expression !>> [\n\r] "++" 
+  | Expression !>> [\n\r] "--"
   > "delete" Expression
     | "void" Expression
     | "typeof" Expression
@@ -344,10 +347,6 @@ lexical RegularExpressionFlags
 lexical Whitespace
   = [\t-\n\r\ ]
   ;
-  
-lexical NoLineTerminator
-  = ![\n]+
-  ;
 
 lexical LAYOUT 
   = Whitespace  
@@ -469,11 +468,22 @@ Statement breakLabel("break" _, LAYOUTLIST l, Id id, LAYOUTLIST _, ";" _) {
 //Parsing
 public Source parse(loc file) = parse(#Source, file);
 public Source parse(str txt) = parse(#Source, txt);
+public void parseAndView(loc file) = render(visParsetree(parse(file)));
+public void parseAndView(str txt) = render(visParsetree(parse(txt)));
 
 public void testje(Tree parseTree) {
 	visit(parseTree) {
-		case (Statement)`return NoLineTerminator <Expression a>`:{
-			int i = 0;
+		case statement:(Statement)`return <Expression a>`: {
+			println("bovenste");
+			//str unparsed = unparse(statement);
+			//if (/return [\n]+/ := unparsed) {
+			//	println("Contains newlines!");
+			//	println("Adapted: return; <a>");
+			//}
+			return;
+		}
+		case (Statement)`return;`: {
+			println("Onderste");
 		}
 	}
 }
