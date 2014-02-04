@@ -62,11 +62,6 @@ syntax Statement
   | debugger: "debugger" ";"?
   ;
 
-
-//Expression returnExp("return" _, _, Expression e, Tree l, ";"? _) {
-//  //if (/\n/ := "<l>" 
-//}
-
 syntax ExpressionNoIn // inlining this doesn't work.
   = Expression!inn
   ;
@@ -472,8 +467,9 @@ Statement breakLabel("break" _, LAYOUTLIST l, Id id, LAYOUTLIST _, ";" _) {
   fail;
 }
 
-Expression returnExp("return" _, LAYOUTLIST l, Expression exp, LAYOUTLIST _) {
-	println("TEST");
+Expression returnExp("return" _, _, Expression e, Tree l, ";" _) {
+	println("Break");
+	fail;
 }
 
 //Parsing
