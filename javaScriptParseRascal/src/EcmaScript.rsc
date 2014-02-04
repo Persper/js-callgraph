@@ -5,6 +5,7 @@ import IO;
 import vis::Figure;
 import vis::ParseTree;
 import vis::Render;
+import String;
 
 /*
  * TODO
@@ -40,18 +41,26 @@ syntax Statement
   | forDo: "for" "(" ExpressionNoIn? ";" Expression? ";" Expression? ")" Statement
   | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
-  | continueLabel: "continue"  Id ";"?// not strong enough if there's first a space.
-  | continueNoLabel: "continue" ";"?
-  | breakLabel: "break" Id ";"   
+  
+  | continueLabel: "continue"  Id ";" 
+  | continueNoLabel: "continue" ";"
+  | breakLabel: "break" Id ";"
   | breakNoLabel: "break" ";"
-  | breakLabel: "break" Id $   
-  | breakNoLabel: "break" $
   | returnExp: "return" Expression ";"
-  | returnExp2: "return" Expression () !>> ";"
   | returnNoExp: "return" ";"
-  | returnNoExp2: "return" () !>> ";"
-  | throwExp: "throw" Expression ";"? 
-  | throwNoExp: "throw"  ";"?
+  | throwExp: "throw" Expression ";" 
+  | throwNoExp: "throw" ";"
+  
+  | continueLabelNoSemi: "continue"  Id  
+  | continueNoLabelNoSemi: "continue" 
+  | breakLabelNoSemi: "break" Id 
+  | breakNoLabelNoSemi: "break" 
+  | returnExpNoSemi: "return" Expression 
+  | returnNoExpNoSemi: "return" 
+  | throwExpNoSemi: "throw" Expression  
+  | throwNoExpNoSemi: "throw" 
+  
+  
   | withDo: "with" "(" Expression ")" Statement
   | switchCase: "switch" "(" Expression ")" CaseBlock
   | labeled: Id ":" Statement
@@ -61,6 +70,7 @@ syntax Statement
        "catch" "(" Id ")" "{" Statement* "}" "finally" "{" Statement* "}"
   | debugger: "debugger" ";"?
   ;
+  
 
 syntax ExpressionNoIn // inlining this doesn't work.
   = Expression!inn
@@ -350,6 +360,24 @@ lexical Whitespace
   = [\t-\n\r\ ]
   ;
 
+lexical Comment 
+  = MultLineComment
+  | SingleLineComment
+  ;
+  
+lexical MultLineComment = @category="Comment"  "/*" CommentChar* "*/";
+lexical SingleLineComment =  @category="Comment"  "//" ![\n]* [\n];
+
+lexical CommentChar 
+  = ![*] 
+  | Asterisk 
+  ;
+
+lexical Asterisk 
+  = [*] !>> [/] 
+  ;
+
+
 lexical LAYOUT 
   = Whitespace  
   | Comment
@@ -362,19 +390,6 @@ layout LAYOUTLIST
   !>> "/*" 
   !>> "//" ;
 
-lexical Comment 
-  = @category="Comment"  "/*" CommentChar* "*/"
-  | @category="Comment"  "//" ![\n]* [\n]
-  ;
-
-lexical CommentChar 
-  = ![*] 
-  | Asterisk 
-  ;
-
-lexical Asterisk 
-  = [*] !>> [/] 
-  ;
 
 lexical Id 
   = ([a-zA-Z$_0-9] !<< IdStart IdPart* !>> [a-zA-Z$_0-9]) \ Reserved
@@ -451,26 +466,56 @@ keyword Reserved =
     "false"
   ;
 
-/*
-  | breakLabel: "break" !>> [\n] Id ";"   
-  | breakNoLabel: "break" ";"
-  | breakLabel: "break" !>> [\n] Id $   
-  | breakNoLabel: "break" $
-*/
   
-Statement breakLabel("break" _, LAYOUTLIST l, Id id, LAYOUTLIST _, ";" _) {
-  println("LAYOUT = \'<l>\'");
-  if (/\n/ := unparse(l)) {
+Statement forceSingleLine(Tree l1, Tree l2) {
+  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
     println("filtering");
     filter;
   }
   fail;
 }
 
-Expression returnExp("return" _, _, Expression e, Tree l, ";" _) {
-	println("filtering not yet implemented");
-	fail;
+Statement forceSingleLine(Tree l1) {
+  if (findFirst(unparse(l1), "\n") != -1 ) {
+    println("filtering");
+    filter;
+  }
+  fail;
 }
+
+// Todo: throw, and others?
+
+Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) 
+  = forceSingleLine(l1, l2);
+
+Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) 
+  = forceSingleLine(l1);
+
+Statement continueLabel("continue" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) 
+  = forceSingleLine(l1, l2);
+
+Statement continueNoLabel("break" _, LAYOUTLIST l1, ";" _) 
+  = forceSingleLine(l1);
+
+Statement returnExp("return" _, LAYOUTLIST l1, Expression _, LAYOUTLIST l2, ";" _) 
+  = forceSingleLine(l1, l2);
+
+Statement returnNoExp("return" _, LAYOUTLIST l1, ";" _) 
+  = forceSingleLine(l1);
+
+Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) 
+  = forceSingleLine(l1, l2);
+
+Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) 
+  = forceSingleLine(l1);
+
+Statement continueLabelNoSemi("continue" _, LAYOUTLIST l1, Id id) 
+  = forceSingleLine(l1);
+
+Statement returnExpNoSemi("return" _, LAYOUTLIST l1, Expression _) 
+  = forceSingleLine(l1);
+
+
 
 //Parsing
 public Source parse(loc file) = parse(#Source, file);
