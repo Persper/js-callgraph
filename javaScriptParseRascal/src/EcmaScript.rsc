@@ -26,52 +26,6 @@ syntax FunctionDeclaration
   = "function" Id "(" {Id ","}* ")" "{" SourceElement* "}"
   ;
 
-syntax Statement 
-  = block: "{" Statement* "}"
-  | variable: "var" {VariableDeclaration ","}+ 
-//  var x = 3, y = 4 is amb with =/, expr
-// TODO: need semantic action
-  | returnExp: "return" Expression ";"
-  | returnExpNoSemi: "return" Expression () !>> ";" $
-  | returnNoExp: "return" ";" //correct
-  | returnNoExpNoSemi: "return" () !>> ";" $
-  | empty: ";"
-  | expression: ^ [{]!<< "function" !<< Expression ";"
-  | expression: [{]!<< "function" !<< Expression $
-  | ifThen: "if" "(" Expression ")" Statement !>> "else"
-  | ifThenElse: "if" "(" Expression ")" Statement "else" Statement
-  | doWhile: "do" Statement "while" "(" Expression ")" ";"? 
-  | whileDo: "while" "(" Expression ")" Statement
-  | forDo: "for" "(" ExpressionNoIn? ";" Expression? ";" Expression? ")" Statement
-  | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement
-  | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
-  
-  | continueLabel: "continue"  Id ";" 
-  | continueNoLabel: "continue" ";"
-  | breakLabel: "break" Id ";"
-  | breakNoLabel: "break" ";"
-  | throwExp: "throw" Expression ";" 
-  | throwNoExp: "throw" ";"
-  
-  | continueLabelNoSemi: "continue"  Id  
-  | continueNoLabelNoSemi: "continue" 
-  | breakLabelNoSemi: "break" Id 
-  | breakNoLabelNoSemi: "break" 
-  | throwExpNoSemi: "throw" Expression  
-  | throwNoExpNoSemi: "throw" 
-  
-  
-  | withDo: "with" "(" Expression ")" Statement
-  | switchCase: "switch" "(" Expression ")" CaseBlock
-  | labeled: Id ":" Statement
-  | tryCatch: "try" "{" SourceElement* "}" "catch" "(" Id ")" "{" Statement* "}"
-  | tryFinally: "try" "{" Statement* "}" "finally" "{" Statement* "}"
-  | tryCatchFinally: "try" "{" Statement* "}" 
-       "catch" "(" Id ")" "{" Statement* "}" "finally" "{" Statement* "}"
-  | debugger: "debugger" ";"?
-  ;
-  
-
 syntax ExpressionNoIn // inlining this doesn't work.
   = Expression!inn
   ;
@@ -105,8 +59,6 @@ syntax CaseClause
 syntax DefaultClause 
   = "default" ":" Statement*
   ;
-
-
 
 // TODO: should be copied/ renaming Expression to ExpressionNoIN
 // and removing instanceof.
@@ -229,8 +181,8 @@ syntax Boolean
   ;
 
 syntax Numeric
-  = Decimal
-  | HexInteger
+  = [a-zA-Z$_0-9] !<< Decimal
+  | [a-zA-Z$_0-9] !<< HexInteger
   ;
 
 lexical Decimal
@@ -354,16 +306,6 @@ lexical RegularExpressionClassChar
 lexical RegularExpressionFlags
   = IdPart*
   ;
-
-
-lexical Whitespace
-  = [\t-\n\r\ ]
-  ;
-
-lexical Comment 
-  = MultLineComment
-  | SingleLineComment
-  ;
   
 lexical MultLineComment = @category="Comment"  "/*" CommentChar* "*/";
 lexical SingleLineComment =  @category="Comment"  "//" ![\n]* [\n];
@@ -377,19 +319,25 @@ lexical Asterisk
   = [*] !>> [/] 
   ;
 
+lexical Whitespace
+  = [\t-\n\r\ ]
+  ;
+
+lexical Comment 
+  = MultLineComment
+  | SingleLineComment
+  ;
 
 lexical LAYOUT 
   = Whitespace  
   | Comment
   ;
 
-
 layout LAYOUTLIST 
   = LAYOUT* 
-  !>> [\t-\r\ ] 
+  !>> [\t-\n\r\ ] 
   !>> "/*" 
   !>> "//" ;
-
 
 lexical Id 
   = ([a-zA-Z$_0-9] !<< IdStart IdPart* !>> [a-zA-Z$_0-9]) \ Reserved
@@ -465,125 +413,3 @@ keyword Reserved =
     "true" |
     "false"
   ;
-
-// Todo: throw, and others?
-
-Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
-	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement continueLabel("continue" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
-	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement continueNoLabel("break" _, LAYOUTLIST l1, ";" _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement returnExp("return" _, LAYOUTLIST l1, Expression _, LAYOUTLIST l2, ";" _) { 
-  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
-    println("filtering");
-    filter;
-  }
-  fail;
-  }
-
-Statement returnNoExp("return" _, LAYOUTLIST l1, ";" _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
-	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement continueLabelNoSemi("continue" _, LAYOUTLIST l1, Id id) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement returnExpNoSemi("return" _, LAYOUTLIST l1, Expression _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-//Parsing
-public Source parse(loc file) = parse(#Source, file);
-public Source parse(str txt) = parse(#Source, txt);
-public void parseAndView(loc file) {
-	render(visParsetree(parse(file)));
-}
-public void parseAndView(str txt) {
-	render(space(visParsetree(parse(txt)),std(gap(8,30)),std(resizable(true))));
-	//render(
-	//	box(
-	//		box(
-	//			visParsetree(parse(txt)), size(100,50), fillColor("lightGray")
-	//		), grow(6), fillColor("blue"))
-	//);
-}
-
-public Source tryToParse(content) {
-	try
-		return parse(content);
-	catch ParseError(loc l):
-		println("I found a parse error at line <l.begin.line>, column <l.begin.column>");
-}
-
-public void testje(Tree parseTree) {
-	visit(parseTree) {
-		case statement:(Statement)`return <Expression a>`: {
-			println("bovenste");
-			//str unparsed = unparse(statement);
-			//if (/return [\n]+/ := unparsed) {
-			//	println("Contains newlines!");
-			//	println("Adapted: return; <a>");
-			//}
-			return;
-		}
-		case (Statement)`return;`: {
-			println("Onderste");
-		}
-	}
-}
