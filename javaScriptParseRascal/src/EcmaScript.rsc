@@ -229,8 +229,8 @@ syntax Boolean
   ;
 
 syntax Numeric
-  = Decimal
-  | HexInteger
+  = [a-zA-Z$_0-9] !<< Decimal
+  | [a-zA-Z$_0-9] !<< HexInteger
   ;
 
 lexical Decimal
