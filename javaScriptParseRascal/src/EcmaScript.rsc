@@ -18,7 +18,7 @@ start syntax Source
   ;
 
 syntax SourceElement
-  = Statement
+  = stat:Statement
   | FunctionDeclaration
   ;
 
@@ -31,8 +31,12 @@ syntax Statement
   | variable: "var" {VariableDeclaration ","}+ 
 //  var x = 3, y = 4 is amb with =/, expr
 // TODO: need semantic action
-  | empty: ";"
-  | expression: [{]!<< "function" !<< Expression ";"
+  > returnExp: "return" Expression ";"
+  | returnExpNoSemi: "return" Expression () !>> ";"
+  > returnNoExp: "return" ";"
+  | returnNoExpNoSemi: "return" () !>> ";" $
+  > empty: ";"
+  | expression: ^ [{]!<< "function" !<< Expression ";"
   | expression: [{]!<< "function" !<< Expression $
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement
@@ -46,8 +50,6 @@ syntax Statement
   | continueNoLabel: "continue" ";"
   | breakLabel: "break" Id ";"
   | breakNoLabel: "break" ";"
-  | returnExp: "return" Expression ";"
-  | returnNoExp: "return" ";"
   | throwExp: "throw" Expression ";" 
   | throwNoExp: "throw" ";"
   
@@ -55,8 +57,6 @@ syntax Statement
   | continueNoLabelNoSemi: "continue" 
   | breakLabelNoSemi: "break" Id 
   | breakNoLabelNoSemi: "break" 
-  | returnExpNoSemi: "return" Expression 
-  | returnNoExpNoSemi: "return" 
   | throwExpNoSemi: "throw" Expression  
   | throwNoExpNoSemi: "throw" 
   
@@ -466,56 +466,87 @@ keyword Reserved =
     "false"
   ;
 
-  
-Statement forceSingleLine(Tree l1, Tree l2) {
+// Todo: throw, and others?
+
+Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
+	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
+	    println("filtering");
+	    filter;
+	  }
+	  fail;
+  }
+
+Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) {
+	  if (findFirst(unparse(l1), "\n") != -1 ) {
+	    println("filtering");
+	    filter;
+	  }
+	  fail;
+  }
+
+Statement continueLabel("continue" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
+	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
+	    println("filtering");
+	    filter;
+	  }
+	  fail;
+  }
+
+Statement continueNoLabel("break" _, LAYOUTLIST l1, ";" _) {
+	  if (findFirst(unparse(l1), "\n") != -1 ) {
+	    println("filtering");
+	    filter;
+	  }
+	  fail;
+  }
+
+Statement returnExp("return" _, LAYOUTLIST l1, Expression _, LAYOUTLIST l2, ";" _) { 
   if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
     println("filtering");
     filter;
   }
   fail;
-}
-
-Statement forceSingleLine(Tree l1) {
-  if (findFirst(unparse(l1), "\n") != -1 ) {
-    println("filtering");
-    filter;
   }
-  fail;
-}
 
-// Todo: throw, and others?
+Statement returnNoExp("return" _, LAYOUTLIST l1, ";" _) {
+	  if (findFirst(unparse(l1), "\n") != -1 ) {
+	    println("filtering");
+	    filter;
+	  }
+	  fail;
+  }
 
-Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) 
-  = forceSingleLine(l1, l2);
+Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
+	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
+	    println("filtering");
+	    filter;
+	  }
+	  fail;
+  }
 
-Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) 
-  = forceSingleLine(l1);
+Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) {
+	  if (findFirst(unparse(l1), "\n") != -1 ) {
+	    println("filtering");
+	    filter;
+	  }
+	  fail;
+  }
 
-Statement continueLabel("continue" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) 
-  = forceSingleLine(l1, l2);
+Statement continueLabelNoSemi("continue" _, LAYOUTLIST l1, Id id) {
+	  if (findFirst(unparse(l1), "\n") != -1 ) {
+	    println("filtering");
+	    filter;
+	  }
+	  fail;
+  }
 
-Statement continueNoLabel("break" _, LAYOUTLIST l1, ";" _) 
-  = forceSingleLine(l1);
-
-Statement returnExp("return" _, LAYOUTLIST l1, Expression _, LAYOUTLIST l2, ";" _) 
-  = forceSingleLine(l1, l2);
-
-Statement returnNoExp("return" _, LAYOUTLIST l1, ";" _) 
-  = forceSingleLine(l1);
-
-Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) 
-  = forceSingleLine(l1, l2);
-
-Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) 
-  = forceSingleLine(l1);
-
-Statement continueLabelNoSemi("continue" _, LAYOUTLIST l1, Id id) 
-  = forceSingleLine(l1);
-
-Statement returnExpNoSemi("return" _, LAYOUTLIST l1, Expression _) 
-  = forceSingleLine(l1);
-
-
+Statement returnExpNoSemi("return" _, LAYOUTLIST l1, Expression _) {
+	  if (findFirst(unparse(l1), "\n") != -1 ) {
+	    println("filtering");
+	    filter;
+	  }
+	  fail;
+  }
 
 //Parsing
 public Source parse(loc file) = parse(#Source, file);
