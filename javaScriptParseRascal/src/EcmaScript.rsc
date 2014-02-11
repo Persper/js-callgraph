@@ -54,12 +54,12 @@ syntax Statement
   // | returnExp2: "return" NoEnter Expression !>> (NoEnter Expression) NewLineOrSemiColon
   //| returnExpWithSinglelineExpression: "return" NoEnter Expression !>> (NoEnter Expression) $
   //| returnExpWithMultilineExpression: "return" NoEnter Expression NoEnter !>> Expression $
-  | returnExp: "return" NoEnter Expression !>> Expression NoEnter NewLineOrSemiColon
+  | returnExp: "return" NoEnter Expression NoPrecedingEnter NewLineOrSemiColon
   
   //| returnExpEnter: "return" NoEnter Expression !>> (Expression) $
   //| returnExpNoSemi: "return" Expression Term
   | returnNoExp: "return" NoEnter ";"
-  | returnNoExpNoSemi: "return\n"
+  | returnNoExpNoSemi: "return" NoPrecedingEnter $
   | empty: ";"
   | expression: [{]!<< "function" !<< Expression ";"
   | expression: [{]!<< "function" !<< Expression $
