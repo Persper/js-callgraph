@@ -6,6 +6,7 @@ import vis::Figure;
 import vis::ParseTree;
 import vis::Render;
 import String;
+import List;
 
 /*
  * TODO
@@ -14,9 +15,13 @@ import String;
  */
 
 start syntax Source 
-  = SourceElement Source //SourceElement*
-  | /* EMPTY */
+  = source: SourceElement*
   ;
+
+//start syntax Source 
+//  = source:SourceElement head SourceElement tail //SourceElement*
+//  | /* EMPTY */
+//  ;
 
 syntax SourceElement
   = stat:Statement
@@ -37,8 +42,7 @@ syntax Statement
 //  var x = 3, y = 4 is amb with =/, expr
 // TODO: need semantic action
   | returnExp: "return" NoNL Expression NoNL ";"
-  | returnExp: "return" NoNL Expression NoNL () $
- // | returnExpNoSemi : "return" NoNL Expression $
+  | returnExpNoSemi: "return" NoNL Expression NoNL () $
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
   | empty: ";"
@@ -147,8 +151,8 @@ syntax Expression
     | "typeof" Expression
     | "++" Expression
     | "--" Expression
-    | "+" !>> [+=] Expression
-    | "-" !>> [\-=] Expression
+    | prefixPlus: "+" !>> [+=] Expression
+    | prefixMin: "-" !>> [\-=] Expression
     | "~" Expression
     | "!" !>> [=] Expression
   > 
@@ -472,6 +476,30 @@ keyword Reserved =
     "true" |
     "false"
   ;
+
+//Instead of using a tail recursive variant we loop over the elements.
+//Source source(elements) {
+//	
+//	for (SourceElement element <- elements) {
+//		println("ELEMENT: <element>");
+//	}
+//	if (/(Statement)`return <Expression e>` := head && !(tail is empty)
+//	&& (tail.head is prefixPlus || tail.head is prefixMin)
+//	&& findFirst(unparse(l), "\n") != -1) {
+//		filter;
+//	}
+//	fail;
+//}
+
+
+//Source source(SourceElement head, LAYOUTLIST l, Source tail) {
+//	if (/(Statement)`return <Expression e>` := head && !(tail is empty)
+//	&& (tail.head is prefixPlus || tail.head is prefixMin)
+//	&& findFirst(unparse(l), "\n") != -1) {
+//		filter;
+//	}
+//	fail;
+//}
 
 // Todo: throw, and others?
 
