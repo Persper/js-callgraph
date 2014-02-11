@@ -26,15 +26,20 @@ syntax FunctionDeclaration
   = "function" Id "(" {Id ","}* ")" "{" SourceElement* "}"
   ;
 
+lexical Term
+  = [\ \t]* [\n] [\ \t\n]* !>> [\ \t\n]
+  | [\n] !<< [\ \t]* ";" [\ \t]* !>> [\ \t]
+  ;
+
 syntax Statement 
   = block: "{" Statement* "}"
   | variable: "var" {VariableDeclaration ","}+ 
 //  var x = 3, y = 4 is amb with =/, expr
 // TODO: need semantic action
-  | returnExp: "return" Expression ";"
-  | returnExpNoSemi: "return" Expression () !>> ";" $
-  | returnNoExp: "return" ";"
-  | returnNoExpNoSemi: "return" () !>> ";" $
+  | returnExp: "return" Expression Term
+  //| returnExpNoSemi: "return" Expression Term
+  //| returnNoExp: "return" ";"
+  | returnNoExpNoSemi: "return" Term
   | empty: ";"
   | expression: [{]!<< "function" !<< Expression ";"
   | expression: [{]!<< "function" !<< Expression $
@@ -386,7 +391,7 @@ lexical LAYOUT
 
 layout LAYOUTLIST 
   = LAYOUT* 
-  !>> [\t-\r\ ] 
+  !>> [\t\ ] 
   !>> "/*" 
   !>> "//" ;
 
@@ -571,19 +576,19 @@ public Source tryToParse(content) {
 		println("I found a parse error at line <l.begin.line>, column <l.begin.column>");
 }
 
-public void testje(Tree parseTree) {
-	visit(parseTree) {
-		case statement:(Statement)`return <Expression a>`: {
-			println("bovenste");
-			//str unparsed = unparse(statement);
-			//if (/return [\n]+/ := unparsed) {
-			//	println("Contains newlines!");
-			//	println("Adapted: return; <a>");
-			//}
-			return;
-		}
-		case (Statement)`return;`: {
-			println("Onderste");
-		}
-	}
-}
+//public void testje(Tree parseTree) {
+//	visit(parseTree) {
+//		case statement:(Statement)`return <Expression a>`: {
+//			println("bovenste");
+//			//str unparsed = unparse(statement);
+//			//if (/return [\n]+/ := unparsed) {
+//			//	println("Contains newlines!");
+//			//	println("Adapted: return; <a>");
+//			//}
+//			return;
+//		}
+//		case (Statement)`return;`: {
+//			println("Onderste");
+//		}
+//	}
+//}
