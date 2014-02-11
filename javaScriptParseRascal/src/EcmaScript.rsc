@@ -33,10 +33,10 @@ syntax Statement
 // TODO: need semantic action
   | returnExp: "return" Expression ";"
   | returnExpNoSemi: "return" Expression () !>> ";" $
-  | returnNoExp: "return" ";" //correct
+  | returnNoExp: "return" ";"
   | returnNoExpNoSemi: "return" () !>> ";" $
   | empty: ";"
-  | expression: ^ [{]!<< "function" !<< Expression ";"
+  | expression: [{]!<< "function" !<< Expression ";"
   | expression: [{]!<< "function" !<< Expression $
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement
