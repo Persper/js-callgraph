@@ -34,16 +34,32 @@ lexical Term
 lexical NoEnter =
 	[\n] !<< [\ \t]* !>> [\ \t\n];
 
+lexical NoFollowingEnter =
+	[\ \t]* !>> [\n];
+	
+lexical NoPrecedingEnter =
+	[\n] !<< [\ \t]*;
+	
+lexical NewLineOrSemiColon =
+	";" | "\n" | "\r"
+	;
+
 syntax Statement
   = block: "{" Statement* "}"
   | variable: "var" {VariableDeclaration ","}+ 
 //  var x = 3, y = 4 is amb with =/, expr
 // TODO: need semantic action
-  | returnExp: "return" NoEnter Expression NoEnter ";"
-  | returnExpEnter: "return" NoEnter Expression $
+//  | returnExpSemiColon: "return" NoEnter Expression !>> (NoEnter Expression) ";"
+  // | returnExpEnter: "return" NoEnter (NoFollowingEnter Expression NoPrecedingEnter) $
+  // | returnExp2: "return" NoEnter Expression !>> (NoEnter Expression) NewLineOrSemiColon
+  //| returnExpWithSinglelineExpression: "return" NoEnter Expression !>> (NoEnter Expression) $
+  //| returnExpWithMultilineExpression: "return" NoEnter Expression NoEnter !>> Expression $
+  | returnExp: "return" NoEnter Expression !>> Expression NoEnter NewLineOrSemiColon
+  
+  //| returnExpEnter: "return" NoEnter Expression !>> (Expression) $
   //| returnExpNoSemi: "return" Expression Term
-  // | returnNoExp: "return" ";"
-  | returnNoExpNoSemi: "return" $
+  | returnNoExp: "return" NoEnter ";"
+  | returnNoExpNoSemi: "return\n"
   | empty: ";"
   | expression: [{]!<< "function" !<< Expression ";"
   | expression: [{]!<< "function" !<< Expression $
@@ -133,7 +149,7 @@ syntax Elts
 syntax Expression
   = "this"
   | Id
-  | Literal
+  | Literal 
   | bracket "(" Expression ")"
   | "[" Elts  "]"
   | "{" {PropertyAssignment ","}+ "," "}"
