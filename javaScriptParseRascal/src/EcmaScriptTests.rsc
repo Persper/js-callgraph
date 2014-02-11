@@ -39,6 +39,10 @@ public test bool returnExpNewlineSemi() {
 	return printedParseEquals("return 1\n\n;", "|Return [1]|Empty|");
 }
 
+public test bool returnSpacesNewlines() {
+	return printedParseEquals("return    \n\n", "|Return|");
+}
+
 private bool printedParseEquals(str source, str typePrint) {
 	return showTypes(parse(source)) == typePrint;
 }

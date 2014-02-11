@@ -6,11 +6,8 @@ import IO;
 public str showTypes(tree) {
 	str returnValue = "|";
 	visit(tree) {
-		case (Statement)`return <Expression e>`: {
-			returnValue += "Return [<e>]|";
-		}
-		case (Statement)`return <Expression e>;`: {
-			returnValue += "Return [<e>];|";
+		case (Statement)`return <Expression e> <Terminator t>`: {
+			returnValue += "Return [<e>]<t>|";
 		}
 		case (Statement)`return`: {
 			returnValue += "Return|";

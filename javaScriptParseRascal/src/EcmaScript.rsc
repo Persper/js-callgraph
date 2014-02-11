@@ -14,7 +14,8 @@ import String;
  */
 
 start syntax Source 
-  = SourceElement*
+  = SourceElement Source //SourceElement*
+  | /* EMPTY */
   ;
 
 syntax SourceElement
@@ -25,21 +26,21 @@ syntax SourceElement
 syntax FunctionDeclaration 
   = "function" Id "(" {Id ","}* ")" "{" SourceElement* "}"
   ;
-
-lexical Term
-  = [\ \t]* [\n] [\ \t\n]* !>> [\ \t\n]
-  | [\n] !<< [\ \t]* ";" [\ \t]* !>> [\ \t]
-  ;
+  
+// TODO add EOF
+lexical Terminator
+ = ";" | "\n" ;
 
 syntax Statement 
   = block: "{" Statement* "}"
   | variable: "var" {VariableDeclaration ","}+ 
 //  var x = 3, y = 4 is amb with =/, expr
 // TODO: need semantic action
-  | returnExp: "return" NoNL Expression ";"
-  | returnExpNoSemi : "return" NoNL Expression $
-  | returnNoExp: "return" ";"
-  | returnNoExpNoSemi: "return" $
+  | returnExp: "return" NoNL Expression NoNL ";"
+  | returnExp: "return" NoNL Expression NoNL () $
+ // | returnExpNoSemi : "return" NoNL Expression $
+  | returnNoExp: "return" NoNL ";"
+  | returnNoExpNoSemi: "return" NoNL () $
   | empty: ";"
   | expression: [{]!<< "function" !<< Expression ";"
   | expression: [{]!<< "function" !<< Expression $
@@ -395,7 +396,7 @@ layout LAYOUTLIST
   !>> "/*" 
   !>> "//" ;
 
-layout NoNL = @manual [\ \t]*;
+layout NoNL = @manual [\ \t]* !>> [\ \t];
 
 lexical Id 
   = ([a-zA-Z$_0-9] !<< IdStart IdPart* !>> [a-zA-Z$_0-9]) \ Reserved
