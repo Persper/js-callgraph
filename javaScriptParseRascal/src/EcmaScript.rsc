@@ -31,15 +31,19 @@ lexical Term
   | [\n] !<< [\ \t]* ";" [\ \t]* !>> [\ \t]
   ;
 
-syntax Statement 
+lexical NoEnter =
+	[\n] !<< [\ \t]* !>> [\ \t\n];
+
+syntax Statement
   = block: "{" Statement* "}"
   | variable: "var" {VariableDeclaration ","}+ 
 //  var x = 3, y = 4 is amb with =/, expr
 // TODO: need semantic action
-  | returnExp: "return" Expression Term
+  | returnExp: "return" NoEnter Expression NoEnter ";"
+  | returnExpEnter: "return" NoEnter Expression $
   //| returnExpNoSemi: "return" Expression Term
-  //| returnNoExp: "return" ";"
-  | returnNoExpNoSemi: "return" Term
+  // | returnNoExp: "return" ";"
+  | returnNoExpNoSemi: "return" $
   | empty: ";"
   | expression: [{]!<< "function" !<< Expression ";"
   | expression: [{]!<< "function" !<< Expression $
