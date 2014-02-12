@@ -478,18 +478,31 @@ keyword Reserved =
   ;
 
 //Instead of using a tail recursive variant we loop over the elements.
-//Source source(elements) {
-//	
-//	for (SourceElement element <- elements) {
-//		println("ELEMENT: <element>");
-//	}
-//	if (/(Statement)`return <Expression e>` := head && !(tail is empty)
-//	&& (tail.head is prefixPlus || tail.head is prefixMin)
-//	&& findFirst(unparse(l), "\n") != -1) {
-//		filter;
-//	}
-//	fail;
-//}
+Source source(elements) {
+	list[SourceElement] elementList = []; //Maybe this loop isn't necessary but the parameter doesn't match a list directly it seems.
+	for (SourceElement element <- elements) {
+		println("ELEMENT: <element>");
+		println("Unparse: <unparse(element)>");
+		elementList += element;
+	}
+	println("ElementList size: <size(elementList)>");
+	
+	list[SourceElement] seenElements = [];
+	for (head <- elementList) {
+		list[SourceElement] tail = elementList - seenElements;
+		SourceElement tailHead = tail[0];
+		println("Size seen: <size(seenElements)>");
+		println("Size tail: <size(tail)>");
+		println("Tail head: <tailHead>");
+		if (/(Statement)`return <Expression e>` := head && size(tail) != 0
+			&& (tailHead is prefixPlus || tailHead is prefixMin)
+			&& findFirst(unparse(l), "\n") != -1) {
+			filter;
+		}
+		seenElements += head;
+	}
+	fail;
+}
 
 
 //Source source(SourceElement head, LAYOUTLIST l, Source tail) {
