@@ -15,7 +15,7 @@ import List;
  */
 
 start syntax Source 
-  = source: SourceElement*
+  = source: SourceElement head SourceElement* tail 
   ;
 
 //start syntax Source 
@@ -56,7 +56,7 @@ syntax Statement
   | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
   
-  | continueLabel: "continue"  Id ";" 
+  | continueLabel: "continue" Id ";" 
   | continueNoLabel: "continue" ";"
   | breakLabel: "break" Id ";"
   | breakNoLabel: "break" ";"
@@ -478,32 +478,17 @@ keyword Reserved =
   ;
 
 //Instead of using a tail recursive variant we loop over the elements.
-Source source(elements) {
-	list[SourceElement] elementList = []; //Maybe this loop isn't necessary but the parameter doesn't match a list directly it seems.
-	for (SourceElement element <- elements) {
-		println("ELEMENT: <element>");
-		println("Unparse: <unparse(element)>");
-		elementList += element;
-	}
-	println("ElementList size: <size(elementList)>");
-	
-	list[SourceElement] seenElements = [];
-	for (head <- elementList) {
-		list[SourceElement] tail = elementList - seenElements;
-		SourceElement tailHead = tail[0];
-		println("Size seen: <size(seenElements)>");
-		println("Size tail: <size(tail)>");
-		println("Tail head: <tailHead>");
-		if (/(Statement)`return <Expression e>` := head && size(tail) != 0
-			&& (tailHead is prefixPlus || tailHead is prefixMin)
+
+Source source(SourceElement head, LAYOUTLIST l, SourceElement* tail) {
+	// Prioritizes add and subtract expressions in multiline returns over positive and negative numbers 	
+	if (/(Statement)`return <Expression e>` := head && unparse(tail) != ""
+			&& (prefixPlus := tail[0] || prefixMin := tail[0])
 			&& findFirst(unparse(l), "\n") != -1) {
-			filter;
-		}
-		seenElements += head;
+		filter;		
 	}
+
 	fail;
 }
-
 
 //Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 //	if (/(Statement)`return <Expression e>` := head && !(tail is empty)
@@ -515,6 +500,8 @@ Source source(elements) {
 //}
 
 // Todo: throw, and others?
+
+/*
 
 Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
 	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
@@ -595,13 +582,14 @@ Statement returnExpNoSemi("return" _, LAYOUTLIST l1, Expression _) {
 	  }
 	  fail;
   }
-
+*/
 //Parsing
 public Source parse(loc file) = parse(#Source, file);
 public Source parse(str txt) = parse(#Source, txt);
 public void parseAndView(loc file) {
 	render(visParsetree(parse(file)));
 }
+
 public void parseAndView(str txt) {
 	render(space(visParsetree(parse(txt)),std(gap(8,30)),std(resizable(true))));
 	//render(
@@ -611,7 +599,7 @@ public void parseAndView(str txt) {
 	//		), grow(6), fillColor("blue"))
 	//);
 }
-
+/*
 public Source tryToParse(content) {
 	try
 		return parse(content);
@@ -619,6 +607,7 @@ public Source tryToParse(content) {
 		println("I found a parse error at line <l.begin.line>, column <l.begin.column>");
 }
 
+*/
 //public void testje(Tree parseTree) {
 //	visit(parseTree) {
 //		case statement:(Statement)`return <Expression a>`: {

@@ -43,6 +43,6 @@ public test bool returnSpacesNewlines() {
 	return printedParseEquals("return    \n\n", "|Return|");
 }
 
-private bool printedParseEquals(str source, str typePrint) {
+public bool printedParseEquals(str source, str typePrint) {
 	return showTypes(parse(source)) == typePrint;
 }
