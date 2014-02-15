@@ -478,12 +478,28 @@ keyword Reserved =
   ;
 
 //Instead of using a tail recursive variant we loop over the elements.
-
+//Findings: our matching of prefixMin and prefixMax seems like it matches everything.
+//concrete pattern matches tail but not tail[0]
+//tail[0] doesn't return a tree but a "value"
 Source source(SourceElement head, LAYOUTLIST l, SourceElement* tail) {
 	// Prioritizes add and subtract expressions in multiline returns over positive and negative numbers 	
-	if (/(Statement)`return <Expression e>` := head && unparse(tail) != ""
+	println("Head: <head>");
+	println("Head is ret exp: </(Statement)`return <Expression e>` := head>");
+	println("Tail: <tail>");
+	println("unparsed tail: <unparse(tail)>");
+	println("Tail[0]: <tail[0]>");
+	//println("unparsed tail[0] : <unparse(tail[0])>");
+	println("a: </(Expression)`+ <Expression n1>` := tail>");
+	println("b: </(Expression)`- <Expression n1>` := tail>");
+	println("L : <unparse(l)>");
+	println("L contains nl :<findFirst(unparse(l), "\n") != -1>");
+	println("Hele ding: <(/(Expression)`+ <Expression n1>` := tail || /(Expression)`-<Expression n1>` := tail)>");
+	if (/(Statement)`return <Expression e>` := head 
+			&& unparse(tail) != ""
 			&& (prefixPlus := tail[0] || prefixMin := tail[0])
+			//&& (/(Expression)`+ <Expression n1>` := tail[0] || /(Expression)`-<Expression n1>` := tail[0])
 			&& findFirst(unparse(l), "\n") != -1) {
+		println("Filtering source");
 		filter;		
 	}
 
