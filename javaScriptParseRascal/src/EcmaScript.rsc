@@ -6,6 +6,7 @@ import vis::Figure;
 import vis::ParseTree;
 import vis::Render;
 import String;
+import List;
 
 /*
  * TODO
@@ -14,8 +15,13 @@ import String;
  */
 
 start syntax Source 
-  = SourceElement*
+  = source: SourceElement head SourceElement* tail 
   ;
+
+//start syntax Source 
+//  = source:SourceElement head SourceElement tail //SourceElement*
+//  | /* EMPTY */
+//  ;
 
 syntax SourceElement
   = stat:Statement
@@ -25,41 +31,20 @@ syntax SourceElement
 syntax FunctionDeclaration 
   = "function" Id "(" {Id ","}* ")" "{" SourceElement* "}"
   ;
+  
+// TODO add EOF
+lexical Terminator
+ = ";" | "\n" ;
 
-lexical Term
-  = [\ \t]* [\n] [\ \t\n]* !>> [\ \t\n]
-  | [\n] !<< [\ \t]* ";" [\ \t]* !>> [\ \t]
-  ;
-
-lexical NoEnter =
-	[\n] !<< [\ \t]* !>> [\ \t\n];
-
-lexical NoFollowingEnter =
-	[\ \t]* !>> [\n];
-	
-lexical NoPrecedingEnter =
-	[\n] !<< [\ \t]*;
-	
-lexical NewLineOrSemiColon =
-	";" | "\n" | "\r"
-	;
-
-syntax Statement
+syntax Statement 
   = block: "{" Statement* "}"
   | variable: "var" {VariableDeclaration ","}+ 
 //  var x = 3, y = 4 is amb with =/, expr
 // TODO: need semantic action
-//  | returnExpSemiColon: "return" NoEnter Expression !>> (NoEnter Expression) ";"
-  // | returnExpEnter: "return" NoEnter (NoFollowingEnter Expression NoPrecedingEnter) $
-  // | returnExp2: "return" NoEnter Expression !>> (NoEnter Expression) NewLineOrSemiColon
-  //| returnExpWithSinglelineExpression: "return" NoEnter Expression !>> (NoEnter Expression) $
-  //| returnExpWithMultilineExpression: "return" NoEnter Expression NoEnter !>> Expression $
-  | returnExp: "return" NoEnter Expression NoPrecedingEnter NewLineOrSemiColon
-  
-  //| returnExpEnter: "return" NoEnter Expression !>> (Expression) $
-  //| returnExpNoSemi: "return" Expression Term
-  | returnNoExp: "return" NoEnter ";"
-  | returnNoExpNoSemi: "return" NoPrecedingEnter $
+  | returnExp: "return" NoNL Expression NoNL ";"
+  | returnExpNoSemi: "return" NoNL Expression NoNL () $
+  | returnNoExp: "return" NoNL ";"
+  | returnNoExpNoSemi: "return" NoNL () $
   | empty: ";"
   | expression: [{]!<< "function" !<< Expression ";"
   | expression: [{]!<< "function" !<< Expression $
@@ -71,7 +56,7 @@ syntax Statement
   | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
   
-  | continueLabel: "continue"  Id ";" 
+  | continueLabel: "continue" Id ";" 
   | continueNoLabel: "continue" ";"
   | breakLabel: "break" Id ";"
   | breakNoLabel: "break" ";"
@@ -149,7 +134,7 @@ syntax Elts
 syntax Expression
   = "this"
   | Id
-  | Literal 
+  | Literal
   | bracket "(" Expression ")"
   | "[" Elts  "]"
   | "{" {PropertyAssignment ","}+ "," "}"
@@ -166,8 +151,8 @@ syntax Expression
     | "typeof" Expression
     | "++" Expression
     | "--" Expression
-    | "+" !>> [+=] Expression
-    | "-" !>> [\-=] Expression
+    | prefixPlus: "+" !>> [+=] Expression
+    | prefixMin: "-" !>> [\-=] Expression
     | "~" Expression
     | "!" !>> [=] Expression
   > 
@@ -415,6 +400,7 @@ layout LAYOUTLIST
   !>> "/*" 
   !>> "//" ;
 
+layout NoNL = @manual [\ \t]* !>> [\ \t];
 
 lexical Id 
   = ([a-zA-Z$_0-9] !<< IdStart IdPart* !>> [a-zA-Z$_0-9]) \ Reserved
@@ -491,7 +477,22 @@ keyword Reserved =
     "false"
   ;
 
+Source source(SourceElement head, LAYOUTLIST l, SourceElement* tail) {
+	// Prioritizes add and subtract expressions in multiline returns over positive and negative numbers 	
+	if (tail.args != [] && /(Statement)`return <Expression e>` := head 
+			&& unparse(tail) != ""
+			&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
+			&& findFirst(unparse(l), "\n") != -1) {
+		println("Filtering source");
+		filter;		
+	}
+
+	fail;
+}
+
 // Todo: throw, and others?
+
+/*
 
 Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
 	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
@@ -572,13 +573,14 @@ Statement returnExpNoSemi("return" _, LAYOUTLIST l1, Expression _) {
 	  }
 	  fail;
   }
-
+*/
 //Parsing
 public Source parse(loc file) = parse(#Source, file);
 public Source parse(str txt) = parse(#Source, txt);
 public void parseAndView(loc file) {
 	render(visParsetree(parse(file)));
 }
+
 public void parseAndView(str txt) {
 	render(space(visParsetree(parse(txt)),std(gap(8,30)),std(resizable(true))));
 	//render(
@@ -588,7 +590,7 @@ public void parseAndView(str txt) {
 	//		), grow(6), fillColor("blue"))
 	//);
 }
-
+/*
 public Source tryToParse(content) {
 	try
 		return parse(content);
@@ -596,6 +598,7 @@ public Source tryToParse(content) {
 		println("I found a parse error at line <l.begin.line>, column <l.begin.column>");
 }
 
+*/
 //public void testje(Tree parseTree) {
 //	visit(parseTree) {
 //		case statement:(Statement)`return <Expression a>`: {
