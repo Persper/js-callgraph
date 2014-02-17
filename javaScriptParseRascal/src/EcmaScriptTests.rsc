@@ -3,9 +3,21 @@ module EcmaScriptTests
 import EcmaScript;
 import EcmaScriptTypePrinter;
 
+/**
+ * EXPRESSIONS
+ */
+
 public test bool onePlusTwo() {
 	return printedParseEquals("1+2", "|Expression [1+2]|");
 }
+
+public test bool oneMinusOnePlusTwo() {
+	return printedParseEquals("1\n-1\n+3;", "|Expression [1\n-1\n+3];|");
+}
+
+/**
+ * RETURN STATEMENTS
+ */
 
 public test bool returnNoSemi() {
 	return printedParseEquals("return", "|Return|");	
@@ -56,6 +68,21 @@ public test bool returnSpacesNewlines() {
 	return printedParseEquals("return    \n\n", "|Return|");
 }
 
+/**
+ * VARIABLE ASSIGNMENTS
+ */
+public test bool simpleVariableAssignment() {
+	return printedParseEquals("var i = 1;", "|Varassign [i] expr [1]|");
+}
+ 
+public test bool variableAssignment() {
+	return printedParseEquals("var x = 1\n-1\n+3;", "|Varassign [x] expr [1\n-1\n+3]");
+}
+
 public bool printedParseEquals(str source, str typePrint) {
-	return showTypes(parse(source)) == typePrint;
+	return showTypes(source) == typePrint;
+}
+
+public str showTypes(str source) {
+	return showTypes(parse(source));
 }

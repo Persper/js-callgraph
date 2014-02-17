@@ -27,6 +27,9 @@ public str showTypes(tree) {
 		case (Statement)`<Expression e>;`: {
 			returnValue += "Expression [<e>];|";
 		}
+		case (VariableDeclaration)`<Id id> = <Expression e>`: {
+			returnValue += "Varassign [<id>] expr [<e>]|";
+		}
 	}
 	return returnValue;
 }
