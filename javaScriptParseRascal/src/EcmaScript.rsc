@@ -483,17 +483,18 @@ keyword Reserved =
 //tail[0] doesn't return a tree but a "value"
 Source source(SourceElement head, LAYOUTLIST l, SourceElement* tail) {
 	// Prioritizes add and subtract expressions in multiline returns over positive and negative numbers 	
-	println("Head: <head>");
-	println("Head is ret exp: </(Statement)`return <Expression e>` := head>");
-	println("Tail: <tail>");
-	println("unparsed tail: <unparse(tail)>");
-	println("Tail[0]: <tail[0]>");
-	//println("unparsed tail[0] : <unparse(tail[0])>");
-	println("a: </(Expression)`+ <Expression n1>` := tail>");
-	println("b: </(Expression)`- <Expression n1>` := tail>");
-	println("L : <unparse(l)>");
-	println("L contains nl :<findFirst(unparse(l), "\n") != -1>");
-	println("Hele ding: <(/(Expression)`+ <Expression n1>` := tail || /(Expression)`-<Expression n1>` := tail)>");
+	//println("Head: <head>");
+	//println("Head is ret exp: </(Statement)`return <Expression e>` := head>");
+	//println("Tail: <tail>");
+	//println("unparsed tail: <unparse(tail)>");
+	//println("Tail[0]: <tail[0]>");
+	////println("unparsed tail[0] : <unparse(tail[0])>");
+	//println("a: </(Expression)`+ <Expression n1>` := tail>");
+	//println("b: </(Expression)`- <Expression n1>` := tail>");
+	//println("L : <unparse(l)>");
+	//println("L contains nl :<findFirst(unparse(l), "\n") != -1>");
+	//println("Hele ding: <(/(Expression)`+ <Expression n1>` := tail || /(Expression)`-<Expression n1>` := tail)>");
+	//println("Top: <top(tail)>");
 	if (/(Statement)`return <Expression e>` := head 
 			&& unparse(tail) != ""
 			&& (prefixPlus := tail[0] || prefixMin := tail[0])
