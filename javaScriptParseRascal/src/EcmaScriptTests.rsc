@@ -43,10 +43,10 @@ public test bool returnExpNewlinePlusExpSemi() {
 	return printedParseEquals("return 1\n+2;", "|Return [1\n+2];|");
 }
 
-////Initially filtering only worked if the elements were the first SourceElements.
-//public test bool returnExpExpNewlineSemi() {
-//	return printedParseEquals("1;return 1\n+2;", "[1];|
-//}
+//Initially filtering only worked if the elements were the first SourceElements.
+public test bool returnExpExpNewlineSemi() {
+	return printedParseEquals("1;return 1\n+2;", "[1];|");
+}
 
 public test bool returnExpNewlineSemi() {
 	return printedParseEquals("return 1\n\n;", "|Return [1]|Empty|");
