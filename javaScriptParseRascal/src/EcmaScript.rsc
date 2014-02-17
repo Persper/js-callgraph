@@ -15,7 +15,8 @@ import List;
  */
 
 start syntax Source 
-  = source: SourceElement head SourceElement* tail 
+  = source: SourceElement head Source tail 
+  |
   ;
 
 //start syntax Source 
@@ -486,7 +487,7 @@ keyword Reserved =
     "false"
   ;
 
-Source source(SourceElement head, LAYOUTLIST l, SourceElement* tail) {
+Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 	// Prioritizes add and subtract expressions in multiline returns over positive and negative numbers 	
 	if (tail.args != [] && /(Statement)`return <Expression e>` := head 
 			&& unparse(tail) != ""

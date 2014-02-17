@@ -3,6 +3,10 @@ module EcmaScriptTests
 import EcmaScript;
 import EcmaScriptTypePrinter;
 
+public test bool onePlusTwo() {
+	return printedParseEquals("1+2", "|Expression [1+2]|");
+}
+
 public test bool returnNoSemi() {
 	return printedParseEquals("return", "|Return|");	
 }
@@ -33,6 +37,15 @@ public test bool returnSemiSemi() {
 
 public test bool returnExpNewlineSemi() {
 	return printedParseEquals("return 1\n;", "|Return [1]|Empty|");
+}
+
+public test bool returnExpNewlinePlusExpSemi() {
+	return printedParseEquals("return 1\n+2;", "|Return [1\n+2];|");
+}
+
+//Initially filtering only worked if the elements were the first SourceElements.
+public test bool returnExpExpNewlineSemi() {
+	return printedParseEquals("1;return 1\n+2;", "|Expression [1];|Return [1\n+2];|");
 }
 
 public test bool returnExpNewlineSemi() {
