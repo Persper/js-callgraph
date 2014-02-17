@@ -33,21 +33,31 @@ syntax FunctionDeclaration
   ;
   
 // TODO add EOF
-lexical Terminator
- = ";" | "\n" ;
+
+lexical NoPrecedingEnters =
+	[\n] !<< [\ \t]*;
+
+syntax VariableDeclarations =
+	{VariableDeclaration ","}+ NoPrecedingEnters () $
+	;
 
 syntax Statement 
   = block: "{" Statement* "}"
-  | variable: "var" {VariableDeclaration ","}+ 
-//  var x = 3, y = 4 is amb with =/, expr
-// TODO: need semantic action
+ // | variable: "var" {VariableDeclarationNoNL ","}+ NoNL () ";"
+  | variable: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () $
+  | variable: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () ";"
   | returnExp: "return" NoNL Expression NoNL ";"
   | returnExpNoSemi: "return" NoNL Expression NoNL () $
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
   | empty: ";"
-  | expression: [{]!<< "function" !<< Expression ";"
-  | expression: [{]!<< "function" !<< Expression $
+  | oneLineExpression: [{]!<< "function" !<< Expression NoNL ";"
+  // | expression: [{]!<< "function" !<< Expression NoNL
+  
+  // | expression: [{]!<< "function" !<< Expression ";"?
+  // TODO: ignoring the presence of the semicolon might not be a good idea, but makes it work in returns and var declarations
+  | expression: [{]!<< "function" !<< Expression !>> ";"
+
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement
   | doWhile: "do" Statement "while" "(" Expression ")" ";"? 
@@ -69,7 +79,6 @@ syntax Statement
   | breakNoLabelNoSemi: "break" 
   | throwExpNoSemi: "throw" Expression  
   | throwNoExpNoSemi: "throw" 
-  
   
   | withDo: "with" "(" Expression ")" Statement
   | switchCase: "switch" "(" Expression ")" CaseBlock
@@ -486,94 +495,20 @@ Source source(SourceElement head, LAYOUTLIST l, SourceElement* tail) {
 		println("Filtering source");
 		filter;		
 	}
-
+	
+	// Same as the return expression, but for variable declarations
+	if (tail.args != [] && /(Statement)`var <VariableDeclaration v>` := head
+			&& unparse(tail) != ""
+			&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
+			&& findFirst(unparse(l), "\n") != -1) {
+		println("filtering source");
+		filter;
+	}
+	
+	// Todo: throw, and others?
 	fail;
 }
 
-// Todo: throw, and others?
-
-/*
-
-Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
-	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement continueLabel("continue" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
-	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement continueNoLabel("break" _, LAYOUTLIST l1, ";" _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement returnExp("return" _, LAYOUTLIST l1, Expression _, LAYOUTLIST l2, ";" _) { 
-  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
-    println("filtering");
-    filter;
-  }
-  fail;
-  }
-
-Statement returnNoExp("return" _, LAYOUTLIST l1, ";" _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement breakLabel("break" _, LAYOUTLIST l1, Id id, LAYOUTLIST l2, ";" _) { 
-	  if (findFirst(unparse(l1), "\n") != -1 || findFirst(unparse(l2), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement breakNoLabel("break" _, LAYOUTLIST l1, ";" _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement continueLabelNoSemi("continue" _, LAYOUTLIST l1, Id id) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-
-Statement returnExpNoSemi("return" _, LAYOUTLIST l1, Expression _) {
-	  if (findFirst(unparse(l1), "\n") != -1 ) {
-	    println("filtering");
-	    filter;
-	  }
-	  fail;
-  }
-*/
 //Parsing
 public Source parse(loc file) = parse(#Source, file);
 public Source parse(str txt) = parse(#Source, txt);
@@ -583,35 +518,4 @@ public void parseAndView(loc file) {
 
 public void parseAndView(str txt) {
 	render(space(visParsetree(parse(txt)),std(gap(8,30)),std(resizable(true))));
-	//render(
-	//	box(
-	//		box(
-	//			visParsetree(parse(txt)), size(100,50), fillColor("lightGray")
-	//		), grow(6), fillColor("blue"))
-	//);
 }
-/*
-public Source tryToParse(content) {
-	try
-		return parse(content);
-	catch ParseError(loc l):
-		println("I found a parse error at line <l.begin.line>, column <l.begin.column>");
-}
-
-*/
-//public void testje(Tree parseTree) {
-//	visit(parseTree) {
-//		case statement:(Statement)`return <Expression a>`: {
-//			println("bovenste");
-//			//str unparsed = unparse(statement);
-//			//if (/return [\n]+/ := unparsed) {
-//			//	println("Contains newlines!");
-//			//	println("Adapted: return; <a>");
-//			//}
-//			return;
-//		}
-//		case (Statement)`return;`: {
-//			println("Onderste");
-//		}
-//	}
-//}
