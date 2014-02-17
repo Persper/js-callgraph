@@ -45,7 +45,7 @@ public test bool returnExpNewlinePlusExpSemi() {
 
 //Initially filtering only worked if the elements were the first SourceElements.
 public test bool returnExpExpNewlineSemi() {
-	return printedParseEquals("1;return 1\n+2;", "[1];|");
+	return printedParseEquals("1;return 1\n+2;", "|Expression [1];|Return [1\n+2];|");
 }
 
 public test bool returnExpNewlineSemi() {
