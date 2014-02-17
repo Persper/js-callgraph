@@ -8,11 +8,11 @@ import EcmaScriptTypePrinter;
  */
 
 public test bool onePlusTwo() {
-	return printedParseEquals("1+2", "|Expression [1+2]|");
+	return outcomeIsCorrect("1+2", "|Expression [1+2]|");
 }
 
 public test bool oneMinusOnePlusTwo() {
-	return printedParseEquals("1\n-1\n+3;", "|Expression [1\n-1\n+3];|");
+	return outcomeIsCorrect("1\n-1\n+3;", "|Expression [1\n-1\n+3];|");
 }
 
 /**
@@ -20,67 +20,75 @@ public test bool oneMinusOnePlusTwo() {
  */
 
 public test bool returnNoSemi() {
-	return printedParseEquals("return", "|Return|");	
+	return outcomeIsCorrect("return", "|Return|");	
 }
 
 public test bool returnSemi() {
-	return printedParseEquals("return;", "|Return;|");	
+	return outcomeIsCorrect("return;", "|Return;|");	
 }
 
 public test bool returnExpNoSemi() {
-	return printedParseEquals("return 1", "|Return [1]|");	
+	return outcomeIsCorrect("return 1", "|Return [1]|");	
 }
 
 public test bool returnExpSemi() {
-	return printedParseEquals("return 1;", "|Return [1];|");	
+	return outcomeIsCorrect("return 1;", "|Return [1];|");	
 }
 
 public test bool returnExpSemiExpSemi() {
-	return printedParseEquals("return 1; 1;", "|Return [1];|Expression [1];|");	
+	return outcomeIsCorrect("return 1; 1;", "|Return [1];|Expression [1];|");	
 }
 
 public test bool returnExpNoSemiNewlineExpressionSemi() {
-	return printedParseEquals("return 1 \n 1;", "|Return [1]|Expression [1];|");
+	return outcomeIsCorrect("return 1 \n 1;", "|Return [1]|Expression [1];|");
 }
 
 public test bool returnSemiSemi() {
-	return printedParseEquals("return;;", "|Return;|Empty|");
+	return outcomeIsCorrect("return;;", "|Return;|Empty|");
 }
 
 public test bool returnExpNewlineSemi() {
-	return printedParseEquals("return 1\n;", "|Return [1]|Empty|");
+	return outcomeIsCorrect("return 1\n;", "|Return [1]|Empty|");
 }
 
 public test bool returnExpNewlinePlusExpSemi() {
-	return printedParseEquals("return 1\n+2;", "|Return [1\n+2];|");
+	return outcomeIsCorrect("return 1\n+2;", "|Return [1\n+2];|");
 }
 
 //Initially filtering only worked if the elements were the first SourceElements.
 public test bool returnExpExpNewlineSemi() {
-	return printedParseEquals("1;return 1\n+2;", "|Expression [1];|Return [1\n+2];|");
+	return outcomeIsCorrect("1;return 1\n+2;", "|Expression [1];|Return [1\n+2];|");
 }
 
 public test bool returnExpNewlineSemi() {
-	return printedParseEquals("return 1\n\n;", "|Return [1]|Empty|");
+	return outcomeIsCorrect("return 1\n\n;", "|Return [1]|Empty|");
 }
 
 public test bool returnSpacesNewlines() {
-	return printedParseEquals("return    \n\n", "|Return|");
+	return outcomeIsCorrect("return    \n\n", "|Return|");
 }
 
 /**
  * VARIABLE ASSIGNMENTS
  */
 public test bool simpleVariableAssignment() {
-	return printedParseEquals("var i = 1;", "|Varassign [i] expr [1]|");
+	return outcomeIsCorrect("var i = 1;", "|Varassign [i] expr [1]|");
 }
  
 public test bool variableAssignment() {
-	return printedParseEquals("var x = 1\n-1\n+3;", "|Varassign [x] expr [1\n-1\n+3]");
+	return outcomeIsCorrect("var x = 1\n-1\n+3;", "|Varassign [x] expr [1\n-1\n+3]|");
 }
 
-public bool printedParseEquals(str source, str typePrint) {
-	return showTypes(source) == typePrint;
+
+public test bool variableAssignmentEmptyStatement() {
+	return outcomeIsCorrect("var a = 1\n+4\n;x\n", "|Varassign [a] expr [1\n+4]|Empty|Expression [x]|");
+}
+
+public bool outcomeIsCorrect(str source, str expectedOutcome) {
+	parsed = parse(source);
+	bool expectedOutcomeEqual = showTypes(parsed) == expectedOutcome;
+	bool isUnambiguous = /amb(_) !:= parsed;
+	return expectedOutcomeEqual && isUnambiguous;
 }
 
 public str showTypes(str source) {

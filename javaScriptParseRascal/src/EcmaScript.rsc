@@ -46,13 +46,13 @@ syntax Statement
   = block: "{" Statement* "}"
  // | variable: "var" {VariableDeclarationNoNL ","}+ NoNL () ";"
   | variable: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () $
-  | variable: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () ";"
+  | variable: "var" {VariableDeclaration ","}* VariableDeclaration NoNL ";"
   | returnExp: "return" NoNL Expression NoNL ";"
   | returnExpNoSemi: "return" NoNL Expression NoNL () $
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
   | empty: ";"
-  | oneLineExpression: [{]!<< "function" !<< Expression NoNL ";"
+  | expression: [{]!<< "function" !<< Expression NoNL ";"
   // | expression: [{]!<< "function" !<< Expression NoNL
   
   // | expression: [{]!<< "function" !<< Expression ";"?
@@ -503,6 +503,13 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 			&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
 			&& findFirst(unparse(l), "\n") != -1) {
 		println("filtering source");
+		filter;
+	}
+	
+	if (tail.args != [] && /(Statement)`<Expression e>` := head
+		 && unparse(tail) != ""
+		&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
+		) {
 		filter;
 	}
 	
