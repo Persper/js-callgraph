@@ -527,7 +527,7 @@ BlockStatements blockStatements(BlockStatement head, LAYOUTLIST l, BlockStatemen
 	if (tail.args != []
 		&& unparse(tail) != ""
 		&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
-		&& endsWith(trim(unparse(head)), "\n")) {
+		&& endsWith(unparse(head), "\n")) { //TODO: filter out spaces and tabs but NOT newlines.
 		println("Filtering blockStatements");
 		filter;
 	}

@@ -105,7 +105,7 @@ public test bool blockOneNewlineTwoWithoutThree() {
 }
 
 public test bool blockOneNewlinePlusTwo() {
-	return outcomeIsCorrect("{ 1\n+2; }", "|Block [1+2;]|");
+	return outcomeIsCorrect("{ 1\n+2; }", "|Block [1\n+2;]|");
 }
 
 public test bool blockEmptyStatement() {
