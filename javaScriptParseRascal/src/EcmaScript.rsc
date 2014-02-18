@@ -20,11 +20,6 @@ start syntax Source
   |
   ;
 
-//start syntax Source 
-//  = source:SourceElement head SourceElement tail //SourceElement*
-//  | /* EMPTY */
-//  ;
-
 syntax SourceElement
   = stat:Statement
   | FunctionDeclaration
@@ -40,7 +35,7 @@ lexical NoPrecedingEnters =
 	[\n] !<< [\ \t]*;
 
 syntax Statement 
-  = block: "{" BlockStatement* LastBlockStatement "}"
+  = block: "{" BlockStatements "}"
   | variableNoSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () $
   | variableSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL ";"
   | returnExp: "return" NoNL Expression NoNL ";"
@@ -81,6 +76,11 @@ syntax Statement
   | tryCatchFinally: "try" "{" Statement* "}" 
        "catch" "(" Id ")" "{" Statement* "}" "finally" "{" Statement* "}"
   | debugger: "debugger" ";"?
+  ;
+  
+syntax BlockStatements
+  = blockStatements: BlockStatement head BlockStatements tail
+  | blockStatements: LastBlockStatement
   ;
   
 syntax BlockStatement
@@ -518,79 +518,21 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 	fail;
 }
 
-Statement block("{" _, LAYOUTLIST _, BlockStatement* statements, LAYOUTLIST _, LastBlockStatement lastStatement, LAYOUTLIST _, "}" _) {
-	list[Statement] statementList = getStatements(statements);
-	statementList += getLastStatement(lastStatement);
-	
-	println("size statement list: <size(statementList)>");
-	
-	map[int, Statement] statementMap = ();
-	int k = 0;
-	for (stat <- statementList) {
-		println("add stat: <stat>");
-		statementMap += (k: stat);
-		k += 1;
-	}
-	println("size statement map: <size(statementMap)>");
-	
-	for(key <- statementMap) {
-		current = statementMap[key];
-		
-		if (key > 0) {
-			previous = statementMap[(key-1)];
-			
-			//println("current: <unparse(current)> (<key>)");
-			//println("previous: <unparse(previous)> (<key-1>)");
-			if (endsWith(unparse(previous), "\n") && /(Statement)`<Expression e>` := previous) {
-				str unparsedCurrent = unparse(current);
-				if ((/(Expression)`+<Expression n1>` := current || /(Expression)`-<Expression n1>` := current)
-					&& (startsWith(unparsedCurrent, "+") || startsWith(unparsedCurrent, "-"))) {
-					println("prev: <previous> \n\ncurrent: <current>");
-					filter;
-				}
-			}
-		}		
+//Validate statements starting with +
+// { 1
+//   return +1
+// }
+// TODO: make sure this doesn't filter.
+BlockStatements blockStatements(BlockStatement head, LAYOUTLIST l, BlockStatements tail) {
+	if (tail.args != []
+		&& unparse(tail) != ""
+		&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
+		&& endsWith(trim(unparse(head)), "\n")) {
+		println("Filtering blockStatements");
+		filter;
 	}
 	fail;
 }
-
-private Statement getLastStatement(statement) {
-	top-down-break visit(statement) {
-		case Statement s: {
-			// println("statement visited: <s>");
-			return s;
-		}
-	}
-	
-	throw "no last statement visited";
-}
-
-private list[Statement] getStatements(statements) {
-	list[Statement] returnList = [];
-	for (stat <- statements) {
-		println("Statement: <stat>");
-	
-		top-down-break visit (stat) {
-
-			case Expression s: {
-				str newStat;
-			
-				println("statement visited: <s>");
-				newStat = unparse(s);
-				
-				newStat += substring(unparse(stat), size(newStat));
-				//println("new statement: <newStat>");
-		
-				returnList += parse(newStat);
-			}
-		}
-		
-
-	}
-	
-	return returnList;
-}
-
 
 //Parsing
 public Source parse(loc file) = parse(#Source, file);

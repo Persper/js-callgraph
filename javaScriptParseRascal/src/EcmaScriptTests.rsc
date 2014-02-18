@@ -92,36 +92,40 @@ public test bool emptyBlock() {
 }
  
 public test bool blockOneNewlineTwo() {
-	return outcomeIsCorrect("{ 1\n 2 }", "|Blocks [1\n] lastBlock [2 ]|");
+	return outcomeIsCorrect("{ 1\n 2 }", "|Block [1\n 2 ]|");
 }
 
 public test bool blockOneNewlineNewlineTwo() {
-	return outcomeIsCorrect("{ 1\n\n 2 }", "|Blocks [1\n\n] lastBlock [2 ]|");
+	return outcomeIsCorrect("{ 1\n\n 2 }", "|Block [1\n\n 2 ]|");
 }
  
 //No multiple /n's are shown
-public test bool blockOneTwoWithoutThree() {
-	return outcomeIsCorrect("{ 1\n 2 } 3", "|Blocks [1\n] lastBlock [2 ]|Expression [3]|");
+public test bool blockOneNewlineTwoWithoutThree() {
+	return outcomeIsCorrect("{ 1\n 2 } 3", "|Block [1\n 2 ]|Expression [3]|");
+}
+
+public test bool blockOneNewlinePlusTwo() {
+	return outcomeIsCorrect("{ 1\n+2; }", "|Block [1+2;]|");
 }
 
 public test bool blockEmptyStatement() {
-	return outcomeIsCorrect("{ ; }", "|Blocks [] lastBlock [;]|");
+	return outcomeIsCorrect("{ ; }", "|Block [;]|");
 }
 
 public test bool blockEmptyNewline() {
-	return outcomeIsCorrect("{ ;\n }", "|Blocks [] lastBlock [;]|");
+	return outcomeIsCorrect("{ ;\n }", "|Block [;]|");
 }
 
 public test bool blockOneNoWhitespaceBothSides() {
-	return outcomeIsCorrect("{1}", "|Blocks [] lastBlock [1]|");
+	return outcomeIsCorrect("{1}", "|Block [1]|");
 }
 
 public test bool blockOneNoWhitespaceLeft() {
-	return outcomeIsCorrect("{1 }", "|Blocks [] lastBlock [1 ]|");
+	return outcomeIsCorrect("{1 }", "|Block [1 ]|");
 }
 
 public test bool blockOneNoWhitespaceRight() {
-	return outcomeIsCorrect("{ 1}", "|Blocks [] lastBlock [1]|");
+	return outcomeIsCorrect("{ 1}", "|Block [1]|");
 }
 
 // TODO: parseAndView("{ a + 3\n\n\nb\n+2; }");

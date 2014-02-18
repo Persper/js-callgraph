@@ -18,8 +18,8 @@ public str showTypes(tree) {
 		case (Statement)`return;`: {
 			returnValue += "Return;|";
 		}
-		case (Statement)`{ <BlockStatement* blocks> <LastBlockStatement lastBlock> }`: {
-			returnValue += "Blocks [<blocks>] lastBlock [<lastBlock>]|";
+		case (Statement)`{ <BlockStatements blockStatements> }`: {
+			returnValue += "Block [<blockStatements>]|";
 		}
 		case (Statement)`;`: {
 			returnValue += "Empty|";
