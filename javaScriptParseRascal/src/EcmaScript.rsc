@@ -514,58 +514,41 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 		filter;
 	}
 	
-	//println("head: <head>\n\ntail: <tail>\n\ntail args: <tail.args>");
+	// Todo: throw, and others?
+	fail;
+}
+
+Statement block("{" _, LAYOUTLIST _, BlockStatement* statements, LAYOUTLIST _, LastBlockStatement lastStatement, LAYOUTLIST _, "}" _) {
+	list[Statement] statementList = getStatements(statements);
+	//statementList += getLastStatement(lastStatement);
 	
-	if (/(Statement)`{ <BlockStatement* statements> <LastBlockStatement lastStatement> }` := head) {
-		list[Statement] statementList = getStatements(statements);
-		//statementList += getLastStatement(lastStatement);
+	println("size statement list: <size(statementList)>");
+	
+	map[int, Statement] statementMap = ();
+	int k = 0;
+	for (stat <- statementList) {
+		println("add stat: <stat>");
+		statementMap += (k: stat);
+		k += 1;
+	}
+	println("size statement map: <size(statementMap)>");
+	
+	for(key <- statementMap) {
+		current = statementMap[key];
 		
-		println("size statement list: <size(statementList)>");
-		
-		map[int, Statement] statementMap = ();
-		int k = 0;
-		for (stat <- statementList) {
-			println("add stat: <stat>");
-			statementMap += (k: stat);
-			k += 1;
-		}
-		println("size statement map: <size(statementMap)>");
-		
-		for(key <- statementMap) {
-			current = statementMap[key];
+		if (key > 0) {
+			previous = statementMap[(key-1)];
 			
-			if (key > 0) {
-				previous = statementMap[(key-1)];
-				
-				println("current: <unparse(current)> (<key>)");
-				println("previous: <unparse(previous)> (<key-1>)");
-				if (endsWith(unparse(previous), "\n") && /(Statement)`<Expression e>` := previous) {
-				println("endswith");
-					if (/(Expression)`+ <Expression n1>` := current || /(Expression)`-<Expression n1>` := current) {
-						println("+ or -");
-						visit (n1) {
-							default: filter;
-						}
-						
-						// filter;
-					}
+			println("current: <unparse(current)> (<key>)");
+			println("previous: <unparse(previous)> (<key-1>)");
+			if (endsWith(unparse(previous), "\n") && /(Statement)`<Expression e>` := previous) {
+			println("endswith");
+				if (Expression := current && ((Expression)`+<Expression n1>` := current || (Expression)`-<Expression n1>` := current)) {
+					filter;
 				}
 			}
-			
-//			println("Key: <statementMap[key]>");
-			
-		}
-		//println(statements);
-		//
-		//((/(BlockStatement)`+ <Statement n1>` := tail.args[0] || /(BlockStatement)`-<Statement n1>` := tail.args[0])
-		//||
-		//(/(LastBlockStatement)`+ <Statement n1>` := tail.args[0] || /(LastBlockStatement)`-<Statement n1>` := tail.args[0]))
-		//) {
-		//filter;
-		println("yes");	
+		}		
 	}
-	
-	// Todo: throw, and others?
 	fail;
 }
 
