@@ -112,10 +112,17 @@ public test bool blockEmptyNewline() {
 	return outcomeIsCorrect("{ ;\n }", "|Blocks [] lastBlock [;]|");
 }
 
-public test bool blockNoWhitespaceOne() {
-	return outcomeIsCorrect("{1}", "|Blocks [] lastBlock[1]|");
+public test bool blockOneNoWhitespaceBothSides() {
+	return outcomeIsCorrect("{1}", "|Blocks [] lastBlock [1]|");
 }
 
+public test bool blockOneNoWhitespaceLeft() {
+	return outcomeIsCorrect("{1 }", "|Blocks [] lastBlock [1]|");
+}
+
+public test bool blockOneNoWhitespaceRight() {
+	return outcomeIsCorrect("{ 1}", "|Blocks [] lastBlock [1]|");
+}
 
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
 	parsed = parse(source);

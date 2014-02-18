@@ -92,11 +92,6 @@ syntax LastBlockStatement
   = Statement!variableNoSemi!expression
   | Statement!variableSemi!expressionSemi!empty NoNL !>> [\n]
   ;
-  
-lexical Terminator
-  = [\n]
-  | ";"
-  ;
 
 syntax ExpressionNoIn // inlining this doesn't work.
   = Expression!inn
