@@ -96,7 +96,7 @@ public test bool blockOneNewlineTwo() {
 }
 
 public test bool blockOneNewlineNewlineTwo() {
-	return outcomeIsCorrect("{ 1\n\n 2 }", "|Blocks [1\n] lastBlock [2 ]|");
+	return outcomeIsCorrect("{ 1\n\n 2 }", "|Blocks [1\n\n] lastBlock [2 ]|");
 }
  
 //No multiple /n's are shown
@@ -113,7 +113,7 @@ public test bool blockEmptyNewline() {
 }
 
 public test bool blockNoWhitespaceOne() {
-	return outcomeIsCorrect("{1}", "|Blocks [] lastBlock[1]|");
+	return outcomeIsCorrect("{1}", "|Blocks [] lastBlock [1]|");
 }
 
 

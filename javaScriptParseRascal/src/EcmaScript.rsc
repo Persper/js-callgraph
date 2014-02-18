@@ -47,9 +47,9 @@ syntax Statement
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
   | empty: ";"
-  | expressionSemi: [{]!<< "function" !<< Expression NoNL ";"
+  | expressionSemi: "function" !<< Expression NoNL ";"
   // TODO: ignoring the presence of the semicolon might not be a good idea, but makes it work in returns and var declarations
-  | expression: [{]!<< "function" !<< Expression !>> ";"
+  | expression: "function" !<< Expression !>> ";"
 
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement
@@ -85,7 +85,7 @@ syntax Statement
   
 syntax BlockStatement
   = Statement!variableNoSemi!expression
-  | Statement!variableSemi!expressionSemi!empty NoNL [\n]
+  | Statement!variableSemi!expressionSemi!empty NoNL [\n]+ !>> [\n]
   ;
   
 syntax LastBlockStatement
