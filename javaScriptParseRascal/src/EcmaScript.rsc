@@ -520,7 +520,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 
 Statement block("{" _, LAYOUTLIST _, BlockStatement* statements, LAYOUTLIST _, LastBlockStatement lastStatement, LAYOUTLIST _, "}" _) {
 	list[Statement] statementList = getStatements(statements);
-	//statementList += getLastStatement(lastStatement);
+	statementList += getLastStatement(lastStatement);
 	
 	println("size statement list: <size(statementList)>");
 	
@@ -539,11 +539,13 @@ Statement block("{" _, LAYOUTLIST _, BlockStatement* statements, LAYOUTLIST _, L
 		if (key > 0) {
 			previous = statementMap[(key-1)];
 			
-			println("current: <unparse(current)> (<key>)");
-			println("previous: <unparse(previous)> (<key-1>)");
+			//println("current: <unparse(current)> (<key>)");
+			//println("previous: <unparse(previous)> (<key-1>)");
 			if (endsWith(unparse(previous), "\n") && /(Statement)`<Expression e>` := previous) {
-			println("endswith");
-				if (Expression := current && ((Expression)`+<Expression n1>` := current || (Expression)`-<Expression n1>` := current)) {
+				str unparsedCurrent = unparse(current);
+				if ((/(Expression)`+<Expression n1>` := current || /(Expression)`-<Expression n1>` := current)
+					&& (startsWith(unparsedCurrent, "+") || startsWith(unparsedCurrent, "-"))) {
+					println("prev: <previous> \n\ncurrent: <current>");
 					filter;
 				}
 			}
