@@ -124,6 +124,7 @@ public test bool blockOneNoWhitespaceRight() {
 	return outcomeIsCorrect("{ 1}", "|Blocks [] lastBlock [1]|");
 }
 
+// TODO: parseAndView("{ a + 3\n\n\nb\n+2; }");
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
 	parsed = parse(source);
 	bool expectedOutcomeEqual = showTypes(parsed) == expectedOutcome;

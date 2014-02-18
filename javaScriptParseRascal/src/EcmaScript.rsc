@@ -7,6 +7,7 @@ import vis::ParseTree;
 import vis::Render;
 import String;
 import List;
+import Map;
 
 /*
  * TODO
@@ -58,7 +59,6 @@ syntax Statement
   | forDo: "for" "(" ExpressionNoIn? ";" Expression? ";" Expression? ")" Statement
   | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
-  
   | continueLabel: "continue" Id ";" 
   | continueNoLabel: "continue" ";"
   | breakLabel: "break" Id ";"
@@ -147,7 +147,7 @@ syntax Expression
   | Id
   | Literal
   | bracket "(" Expression ")"
-  | "[" Elts  "]"
+  | "[" Elts  "]"BlockStatement* LastBlockStatement
   | "{" {PropertyAssignment ","}+ "," "}"
   | "{" {PropertyAssignment ","}* "}"
   > function: "function" Id? "(" {Id ","}* ")" "{" SourceElement* "}"
@@ -514,9 +514,98 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 		filter;
 	}
 	
+	//println("head: <head>\n\ntail: <tail>\n\ntail args: <tail.args>");
+	
+	if (/(Statement)`{ <BlockStatement* statements> <LastBlockStatement lastStatement> }` := head) {
+		list[Statement] statementList = getStatements(statements);
+		//statementList += getLastStatement(lastStatement);
+		
+		println("size statement list: <size(statementList)>");
+		
+		map[int, Statement] statementMap = ();
+		int k = 0;
+		for (stat <- statementList) {
+			println("add stat: <stat>");
+			statementMap += (k: stat);
+			k += 1;
+		}
+		println("size statement map: <size(statementMap)>");
+		
+		for(key <- statementMap) {
+			current = statementMap[key];
+			
+			if (key > 0) {
+				previous = statementMap[(key-1)];
+				
+				println("current: <unparse(current)> (<key>)");
+				println("previous: <unparse(previous)> (<key-1>)");
+				if (endsWith(unparse(previous), "\n") && /(Statement)`<Expression e>` := previous) {
+				println("endswith");
+					if (/(Expression)`+ <Expression n1>` := current || /(Expression)`-<Expression n1>` := current) {
+						println("+ or -");
+						visit (n1) {
+							default: filter;
+						}
+						
+						// filter;
+					}
+				}
+			}
+			
+//			println("Key: <statementMap[key]>");
+			
+		}
+		//println(statements);
+		//
+		//((/(BlockStatement)`+ <Statement n1>` := tail.args[0] || /(BlockStatement)`-<Statement n1>` := tail.args[0])
+		//||
+		//(/(LastBlockStatement)`+ <Statement n1>` := tail.args[0] || /(LastBlockStatement)`-<Statement n1>` := tail.args[0]))
+		//) {
+		//filter;
+		println("yes");	
+	}
+	
 	// Todo: throw, and others?
 	fail;
 }
+
+private Statement getLastStatement(statement) {
+	top-down-break visit(statement) {
+		case Statement s: {
+			// println("statement visited: <s>");
+			return s;
+		}
+	}
+	
+	throw "no last statement visited";
+}
+
+private list[Statement] getStatements(statements) {
+	list[Statement] returnList = [];
+	for (stat <- statements) {
+		println("Statement: <stat>");
+	
+		top-down-break visit (stat) {
+
+			case Expression s: {
+				str newStat;
+			
+				println("statement visited: <s>");
+				newStat = unparse(s);
+				
+				newStat += substring(unparse(stat), size(newStat));
+				//println("new statement: <newStat>");
+		
+				returnList += parse(newStat);
+			}
+		}
+		
+
+	}
+	
+	return returnList;
+}
+
 
 //Parsing
 public Source parse(loc file) = parse(#Source, file);
