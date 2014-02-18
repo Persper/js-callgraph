@@ -128,12 +128,37 @@ public test bool blockOneNoWhitespaceRight() {
 	return outcomeIsCorrect("{ 1}", "|Block [1]|");
 }
 
-// TODO: parseAndView("{ a + 3\n\n\nb\n+2; }");
+/** 
+ * MISCELLANEOUS TESTS
+ **/
+// TODO: parseAndView("{ a + 3\n\n\nb\n+2; }")
+public test bool assignBtoAIncrementC() {
+	return outcomeIsCorrect("a=b \n c++", "|Expression [a=b]|Expression [c++]|");
+}
+
+public test bool separateInvalidToken() {
+	return outcomeThrowsParseError("!");
+}
+
+public test bool cNewlineDPlusEPrint() {
+	return outcomeThrowsParseError("c \n (d+e).print()");
+}
+
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
 	parsed = parse(source);
 	bool expectedOutcomeEqual = showTypes(parsed) == expectedOutcome;
 	bool isUnambiguous = /amb(_) !:= parsed;
 	return expectedOutcomeEqual && isUnambiguous;
+}
+
+public bool outcomeThrowsParseError(str source) {
+	bool threwError;
+	try
+		parse(source);
+	catch ParseError: {
+		threwError = true;
+	}
+	return threwError;
 }
 
 public str showTypes(str source) {
