@@ -39,19 +39,15 @@ lexical NoPrecedingEnters =
 	[\n] !<< [\ \t]*;
 
 syntax Statement 
-  = block: "{" BlockStatement* LastBlockStatement? "}"
- // | variable: "var" {VariableDeclarationNoNL ","}+ NoNL () ";"
-  | variable: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () $
-  | variable: "var" {VariableDeclaration ","}* VariableDeclaration NoNL ";"
+  = block: "{" BlockStatement* LastBlockStatement "}"
+  | variableNoSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () $
+  | variableSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL ";"
   | returnExp: "return" NoNL Expression NoNL ";"
   | returnExpNoSemi: "return" NoNL Expression NoNL () $
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
   | empty: ";"
-  | expressionSemi: [{]!<< "function" !<< Expression NoNL >> ";"
-  // | expression: [{]!<< "function" !<< Expression NoNL
-  
-  // | expression: [{]!<< "function" !<< Expression ";"?
+  | expressionSemi: [{]!<< "function" !<< Expression NoNL ";"
   // TODO: ignoring the presence of the semicolon might not be a good idea, but makes it work in returns and var declarations
   | expression: [{]!<< "function" !<< Expression !>> ";"
 
@@ -88,12 +84,13 @@ syntax Statement
   ;
   
 syntax BlockStatement
-  = blockStatementSemi: Statement NoNL ";"
-  | blockStatementNoSemi: Statement () $
+  = Statement!variableNoSemi!expression
+  | Statement!variableSemi!expressionSemi!empty NoNL [\n]
   ;
   
 syntax LastBlockStatement
-  = lastBlockStatement: Statement!expressionSemi ";"?
+  = Statement!variableNoSemi!expression
+  | Statement!variableSemi!expressionSemi!empty NoNL !>> [\n]
   ;
   
 lexical Terminator

@@ -5,7 +5,7 @@ import IO;
 
 public str showTypes(tree) {
 	str returnValue = "|";
-	visit(tree) {
+	top-down-break visit (tree) {
 		case (Statement)`return <Expression e>`: {
 			returnValue += "Return [<e>]|";
 		}
@@ -18,6 +18,9 @@ public str showTypes(tree) {
 		case (Statement)`return;`: {
 			returnValue += "Return;|";
 		}
+		case (Statement)`{ <BlockStatement* blocks> <LastBlockStatement lastBlock> }`: {
+			returnValue += "Blocks [<blocks>] lastBlock [<lastBlock>]";
+		}
 		case (Statement)`;`: {
 			returnValue += "Empty|";
 		}
@@ -29,9 +32,6 @@ public str showTypes(tree) {
 		}
 		case (VariableDeclaration)`<Id id> = <Expression e>`: {
 			returnValue += "Varassign [<id>] expr [<e>]|";
-		}
-		case (Statement)`{ <BlockStatement* blocks> <LastBlockStatement lastBlock> }`: {
-			returnValue += "Blocks [<blocks>] lastBlock [<lastBlock>]";
 		}
 	}
 	return returnValue;

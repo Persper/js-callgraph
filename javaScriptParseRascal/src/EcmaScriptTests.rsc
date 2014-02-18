@@ -85,11 +85,36 @@ public test bool variableAssignmentEmptyStatement() {
 }
 
 /**
- * OBJECT NOTATION
+ * BLOCK STATEMENTS
  */
-public test bool objectOneTwoThree() {
-	return outcomeIsCorrect("{ 1\n 2 } 3", "|Blocks [] lastBlock[]|");
+public test bool blockOneTwoWithoutThree() {
+	return outcomeIsCorrect("{ 1\n 2 } 3", "|Blocks [1\n] lastBlock [2 ]Expression [3]|");
 }
+ 
+public test bool blockOneNewlineTwo() {
+	
+}
+
+public test bool blockOneNewlineNewlineTwo() {
+	
+}
+
+public test bool blockOneNewlineTwo() {
+	
+}
+
+public test bool blockEmpty() {
+
+}
+
+public test bool blockEmptyNewline() {
+
+}
+
+public test bool blockNoWhitespaceOne() {
+	return outcomeIsCorrect("{1}", "|Blocks [] lastBlock[1]|");
+}
+
 
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
 	parsed = parse(source);
