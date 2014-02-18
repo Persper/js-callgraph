@@ -84,6 +84,13 @@ public test bool variableAssignmentEmptyStatement() {
 	return outcomeIsCorrect("var a = 1\n+4\n;x\n", "|Varassign [a] expr [1\n+4]|Empty|Expression [x]|");
 }
 
+/**
+ * OBJECT NOTATION
+ */
+public test bool objectOneTwoThree() {
+	return outcomeIsCorrect("{ 1\n 2 } 3", "|Blocks [] lastBlock[]|");
+}
+
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
 	parsed = parse(source);
 	bool expectedOutcomeEqual = showTypes(parsed) == expectedOutcome;

@@ -30,6 +30,9 @@ public str showTypes(tree) {
 		case (VariableDeclaration)`<Id id> = <Expression e>`: {
 			returnValue += "Varassign [<id>] expr [<e>]|";
 		}
+		case (Statement)`{ <BlockStatement* blocks> <LastBlockStatement lastBlock> }`: {
+			returnValue += "Blocks [<blocks>] lastBlock [<lastBlock>]";
+		}
 	}
 	return returnValue;
 }

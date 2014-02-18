@@ -38,12 +38,8 @@ syntax FunctionDeclaration
 lexical NoPrecedingEnters =
 	[\n] !<< [\ \t]*;
 
-syntax VariableDeclarations =
-	{VariableDeclaration ","}+ NoPrecedingEnters () $
-	;
-
 syntax Statement 
-  = block: "{" Statement* "}"
+  = block: "{" BlockStatement* LastBlockStatement? "}"
  // | variable: "var" {VariableDeclarationNoNL ","}+ NoNL () ";"
   | variable: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () $
   | variable: "var" {VariableDeclaration ","}* VariableDeclaration NoNL ";"
@@ -52,7 +48,7 @@ syntax Statement
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
   | empty: ";"
-  | expression: [{]!<< "function" !<< Expression NoNL ";"
+  | expressionSemi: [{]!<< "function" !<< Expression NoNL >> ";"
   // | expression: [{]!<< "function" !<< Expression NoNL
   
   // | expression: [{]!<< "function" !<< Expression ";"?
@@ -91,6 +87,19 @@ syntax Statement
   | debugger: "debugger" ";"?
   ;
   
+syntax BlockStatement
+  = blockStatementSemi: Statement NoNL ";"
+  | blockStatementNoSemi: Statement () $
+  ;
+  
+syntax LastBlockStatement
+  = lastBlockStatement: Statement!expressionSemi ";"?
+  ;
+  
+lexical Terminator
+  = [\n]
+  | ";"
+  ;
 
 syntax ExpressionNoIn // inlining this doesn't work.
   = Expression!inn
