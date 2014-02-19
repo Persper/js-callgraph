@@ -88,7 +88,7 @@ public test bool variableAssignmentEmptyStatement() {
  * BLOCK STATEMENTS
  */
 public test bool emptyBlock() {
-	return outcomeIsCorrect("{ }", "|Expression [{ }]|");
+	return outcomeIsCorrect("{ }", "|Block []|");
 }
  
 public test bool blockOneNewlineTwo() {
@@ -105,15 +105,15 @@ public test bool blockOneNewlineTwoWithoutThree() {
 }
 
 public test bool blockOneNewlinePlusTwo() {
-	return outcomeIsCorrect("{ 1\n+2; }", "|Block [1\n+2;]|");
+	return outcomeIsCorrect("{ 1\n+2; }", "|Block [1\n+2; ]|");
 }
 
 public test bool blockEmptyStatement() {
-	return outcomeIsCorrect("{ ; }", "|Block [;]|");
+	return outcomeIsCorrect("{ ; }", "|Block [; ]|");
 }
 
 public test bool blockEmptyNewline() {
-	return outcomeIsCorrect("{ ;\n }", "|Block [;]|");
+	return outcomeIsCorrect("{ ;\n }", "|Block [;\n ]|");
 }
 
 public test bool blockOneNoWhitespaceBothSides() {
@@ -140,7 +140,28 @@ public test bool separateInvalidToken() {
 	return outcomeThrowsParseError("!");
 }
 
+public test bool simpleBreak() {
+	return outcomeIsCorrect("break", "|Break|");
+}
+
+public test bool simpleBreakSemi() {
+	return outcomeIsCorrect("break;", "|Break;|");
+}
+
+public test bool simpleBreakLabel() {
+	return outcomeIsCorrect("break id", "|Break [id]|");
+}
+
+public test bool simpleBreakLabelSemi() {
+	return outcomeIsCorrect("break id;", "|Break [id];|");
+}
+
+public test bool simpleBreakSemiBlock() {
+	return outcomeIsCorrect("{ break; }", "|Block [break; ]|");
+}
+
 public test bool cNewlineDPlusEPrint() {
+	// TODO: this fails, but should this actually not parse? This mgiht be valid
 	return outcomeThrowsParseError("c \n (d+e).print()");
 }
 

@@ -40,12 +40,15 @@ syntax Statement
   | variableSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL ";"
   | returnExp: "return" NoNL Expression NoNL ";"
   | returnExpNoSemi: "return" NoNL Expression NoNL () $
+  | returnExpNoSemiBlockEnd: "return" NoNL Expression NoNL () >> [}]
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
+  | returnNoExpNoSemiBlockEnd: "return" NoNL () >> [}]
   | empty: ";"
   | expressionSemi: "function" !<< Expression NoNL ";"
-  // TODO: ignoring the presence of the semicolon might not be a good idea, but makes it work in returns and var declarations
-  | expression: "function" !<< Expression !>> ";"
+  | expressionLoose: "function" !<< Expression NoNL [\n] !>> ";" !>> [}]
+  | expressionEOF: "function" !<< Expression NoNL !>> ";" !>> [\n] !>> [}]
+
 
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement
@@ -56,21 +59,22 @@ syntax Statement
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
   | continueLabel: "continue" Id ";" 
   | continueNoLabel: "continue" ";"
-  | breakLabel: "break" Id ";"
-  | breakNoLabel: "break" ";"
+  | breakLabel: "break" NoNL Id NoNL ";"
+  | breakNoLabel: "break" NoNL ";"
   | throwExp: "throw" Expression ";" 
   | throwNoExp: "throw" ";"
   
   | continueLabelNoSemi: "continue"  Id  
   | continueNoLabelNoSemi: "continue" 
-  | breakLabelNoSemi: "break" Id 
-  | breakNoLabelNoSemi: "break" 
+  | breakLabelNoSemi: "break" NoNL Id NoNL () $
+  | breakNoLabelNoSemi: "break" NoNL () $
+  | breakNoLabelNoSemiBlockEnd: "break" NoNL () >> [}]
   | throwExpNoSemi: "throw" Expression  
   | throwNoExpNoSemi: "throw" 
   
   | withDo: "with" "(" Expression ")" Statement
   | switchCase: "switch" "(" Expression ")" CaseBlock
-  | labeled: Id ":" Statement
+  | labeled: Spaces Id NoNL ":" Statement
   | tryCatch: "try" "{" SourceElement* "}" "catch" "(" Id ")" "{" Statement* "}"
   | tryFinally: "try" "{" Statement* "}" "finally" "{" Statement* "}"
   | tryCatchFinally: "try" "{" Statement* "}" 
@@ -81,16 +85,29 @@ syntax Statement
 syntax BlockStatements
   = blockStatements: BlockStatement head BlockStatements tail
   | blockStatements: LastBlockStatement
+  |
   ;
   
+  
+// TODO:
+// parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n }");
+// parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n\n }");
+// parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n\n\n }"); each extra \n adds ambiguity
+
 syntax BlockStatement
-  = Statement!variableNoSemi!expression
-  | Statement!variableSemi!expressionSemi!empty NoNL [\n]+ !>> [\n]
+// last added "return no exp no semi"
+  =  
+  	// statetements that do not end with a semicolon and one or more new lines
+  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnNoExpNoSemi !>> (NoNL [}])
+  	// statements that end with a semicolon, not ending the block
+  	// Do not forget to create block ending versions of statements and exclude them here
+    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!expressionEOF!expressionLoose !>> (NoNL [}])
   ;
   
 syntax LastBlockStatement
-  = Statement!variableNoSemi!expression
-  | Statement!variableSemi!expressionSemi!empty NoNL !>> [\n]
+	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
+	// Statement!variableSemi!expressionSemi!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel
+  = last: Statement!variableSemi!expressionSemi!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel NoNL () !>> [\n] >> [}]
   ;
 
 syntax ExpressionNoIn // inlining this doesn't work.
@@ -116,7 +133,7 @@ syntax VariableDeclarationNoIn
   ;
 
 syntax CaseBlock 
-  = "{" CaseClause* DefaultClause? CaseClause* "}"
+  = "{" CaseClause* DefaultClause? CaseClause* "}"NoNL !>> ";"
   ;
 
 syntax CaseClause 
@@ -149,7 +166,7 @@ syntax Expression
   | bracket "(" Expression ")"
   | "[" Elts  "]"BlockStatement* LastBlockStatement
   | "{" {PropertyAssignment ","}+ "," "}"
-  | "{" {PropertyAssignment ","}* "}"
+  | "{" {PropertyAssignment ","}+ "}" // Changed multiplicity to + instead of * because an empty { } will be considered as a block
   > function: "function" Id? "(" {Id ","}* ")" "{" SourceElement* "}"
   | Expression "(" { Expression!comma ","}* ")"
   | Expression "[" Expression "]"
@@ -221,7 +238,6 @@ syntax Expression
   )
   > right comma: Expression "," Expression
   ;
-
 
 syntax PropertyName
  = Id
@@ -412,6 +428,9 @@ layout LAYOUTLIST
   !>> "//" ;
 
 layout NoNL = @manual [\ \t]* !>> [\ \t];
+layout NoNLAfter = @manual [\ \t\n]* !>> [\ \t];
+
+lexical Spaces = [\ \t]* !>> [\ \t\n];
 
 lexical Id 
   = ([a-zA-Z$_0-9] !<< IdStart IdPart* !>> [a-zA-Z$_0-9]) \ Reserved
@@ -524,6 +543,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 // }
 // TODO: make sure this doesn't filter.
 BlockStatements blockStatements(BlockStatement head, LAYOUTLIST l, BlockStatements tail) {
+println("Block statements:\nhead: <unparse(head)>\ntail: <unparse(tail)>");
 	if (tail.args != []
 		&& unparse(tail) != ""
 		&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
