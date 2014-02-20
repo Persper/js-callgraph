@@ -44,10 +44,12 @@ syntax Statement
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
   | returnNoExpNoSemiBlockEnd: "return" NoNL () >> [}]
-  | empty: ";"
+  | empty: ";" NoNL () !>> [}]
+  | emptyBlockEnd: ";" NoNL () !>> [\n] >> [}]
   | expressionSemi: "function" !<< Expression NoNL ";"
-  | expressionLoose: "function" !<< Expression NoNL [\n] !>> ";" !>> [}]
-  | expressionEOF: "function" !<< Expression NoNL !>> ";" !>> [\n] !>> [}]
+  | expressionLoose: "function" !<< Expression NoNL () !>> Expression !>> [\n]
+  | expressionEOF: "function" !<< Expression NoNL [\n] >> [\n]*
+  // | expressionEOF: "function" !<< Expression NoNL !>> ";" !>> [\n] !>> [}]
 
 
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
@@ -67,6 +69,7 @@ syntax Statement
   | continueLabelNoSemi: "continue"  Id  
   | continueNoLabelNoSemi: "continue" 
   | breakLabelNoSemi: "break" NoNL Id NoNL () $
+  | breakLabelNoSemiBlockEnd: "break" NoNL Id NoNL () >> [}]
   | breakNoLabelNoSemi: "break" NoNL () $
   | breakNoLabelNoSemiBlockEnd: "break" NoNL () >> [}]
   | throwExpNoSemi: "throw" Expression  
@@ -83,8 +86,8 @@ syntax Statement
   ;
   
 syntax BlockStatements
-  = blockStatements: BlockStatement head BlockStatements tail
-  | blockStatements: LastBlockStatement
+  = blockStatements: BlockStatement \ LastBlockStatement head BlockStatements tail
+  | blockStatements: LastBlockStatement !>> BlockStatements
   |
   ;
   
@@ -98,16 +101,16 @@ syntax BlockStatement
 // last added "return no exp no semi"
   =  
   	// statetements that do not end with a semicolon and one or more new lines
-  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnNoExpNoSemi !>> (NoNL [}])
+  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnNoExpNoSemi!expressionLoose!emptyBlockEnd NoNL () >> [\n]* !>> [}]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!expressionEOF!expressionLoose !>> (NoNL [}])
+    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!expressionLoose!expressionEOF!emptyBlockEnd NoNL () >> [\n]* !>> [}]
   ;
   
 syntax LastBlockStatement
 	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
 	// Statement!variableSemi!expressionSemi!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel
-  = last: Statement!variableSemi!expressionSemi!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel NoNL () !>> [\n] >> [}]
+  = last: Statement!variableSemi!expressionSemi!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp NoNL () !>> [\n] >> [}]
   ;
 
 syntax ExpressionNoIn // inlining this doesn't work.
@@ -148,7 +151,6 @@ syntax DefaultClause
 
 // TODO: should be copied/ renaming Expression to ExpressionNoIN
 // and removing instanceof.
-
 
 syntax Elts
   = ","*
