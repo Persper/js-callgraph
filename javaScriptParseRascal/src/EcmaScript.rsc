@@ -86,7 +86,8 @@ syntax Statement
   ;
   
 syntax BlockStatements
-  = blockStatements: BlockStatement \ LastBlockStatement head BlockStatements tail
+// start with [\n]* 
+  = blockStatements: BlockStatement head NoNL BlockStatements tail
   | blockStatements: LastBlockStatement !>> BlockStatements
   |
   ;
@@ -97,14 +98,23 @@ syntax BlockStatements
 // parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n\n }");
 // parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n\n\n }"); each extra \n adds ambiguity
 
+lexical OneOrMoreReturns =
+	[\n] NoNL () NoNL ZeroOrMoreReturns NoNL () !>> [\n];
+
+lexical ZeroOrMoreReturns =
+	| [\n] NoNL ZeroOrMoreReturns
+	|
+	;
+
 syntax BlockStatement
 // last added "return no exp no semi"
   =  
+  	// first: somehow returnExpNoSemi does not work as last line "appelkoek:{ break appelkoek;\n\n\n1\n+3\n\n;\n\n\n\n;\n;return 3\n\n }" (without the last two \n's it works :/)
   	// statetements that do not end with a semicolon and one or more new lines
-  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnNoExpNoSemi!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL () >> [\n]* !>> [}]
+  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL ZeroOrMoreReturns NoNL () !>> [\n] !>> [}]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!expressionLoose!expressionEOF!emptyBlockEnd NoNL () >> [\n]*
+    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionEOF!emptyBlockEnd NoNL ZeroOrMoreReturns NoNL () !>> [\n]
   ;
   
 syntax LastBlockStatement
@@ -161,12 +171,13 @@ syntax Elts
 // Commas (Expression Comma+)* Expression?
 // missed case in parsergen.
 
+
 syntax Expression
   = "this"
   | Id
   | Literal
   | bracket "(" Expression ")"
-  | "[" Elts  "]"BlockStatement* LastBlockStatement
+  | "[" Elts "]"BlockStatement* LastBlockStatement
   | "{" {PropertyAssignment ","}+ "," "}"
   | "{" {PropertyAssignment ","}+ "}" // Changed multiplicity to + instead of * because an empty { } will be considered as a block
   > function: "function" Id? "(" {Id ","}* ")" "{" SourceElement* "}"
@@ -174,7 +185,7 @@ syntax Expression
   | Expression "[" Expression "]"
   | Expression "." Id
   > "new" Expression
-  > Expression !>> [\n\r] "++" 
+  > Expression !>> [\n\r] "++"
   | Expression !>> [\n\r] "--"
   > "delete" Expression
     | "void" Expression
@@ -185,18 +196,18 @@ syntax Expression
     | prefixMin: "-" !>> [\-=] Expression
     | "~" Expression
     | "!" !>> [=] Expression
-  > 
-  left ( 
+  >
+  left (
     Expression "*" !>> [*=] Expression
     | Expression "/" !>> [/=] Expression
     | Expression "%" !>> [%=] Expression
   )
   >
-  left ( 
+  left (
     Expression "+" !>> [+=] Expression
     | Expression "-" !>> [\-=] Expression
   )
-  >  // right???
+  > // right???
   left (
     Expression "\<\<" Expression
     | Expression "\>\>" Expression
@@ -219,7 +230,7 @@ syntax Expression
     | Expression "!=" !>> [=] Expression
   )
   > right Expression "&" !>> [&=] Expression
-  > right Expression "^"  !>> [=] Expression
+  > right Expression "^" !>> [=] Expression
   > right Expression "|" !>> [|=] Expression
   > right Expression "&&" Expression
   > right Expression "||" Expression
@@ -284,23 +295,23 @@ lexical DecimalInteger
   !>> [0-9]
   ;
 
-lexical ExponentPart 
+lexical ExponentPart
   = [eE] SignedInteger
   ;
 
-lexical SignedInteger 
-  = [+\-]? [0-9]+ 
+lexical SignedInteger
+  = [+\-]? [0-9]+
   !>> [0-9]
   ;
 
-lexical HexInteger 
-  = [0] [Xx] [0-9a-fA-F]+ 
+lexical HexInteger
+  = [0] [Xx] [0-9a-fA-F]+
   !>> [a-zA-Z_]
   ;
 
-lexical String 
-  =  [\"] DoubleStringChar* [\"]
-  |  [\'] SingleStringChar* [\']
+lexical String
+  = [\"] DoubleStringChar* [\"]
+  | [\'] SingleStringChar* [\']
   ;
 
 lexical DoubleStringChar
@@ -319,10 +330,10 @@ lexical LineContinuation
   = [\\][\\] LineTerminatorSequence
   ;
 
-lexical EscapeSequence 
+lexical EscapeSequence
   = CharacterEscapeSequence
   | [0] !>> [0-9]
-  | HexEscapeSequence 
+  | HexEscapeSequence
   | UnicodeEscapeSequence
   ;
 
@@ -361,7 +372,7 @@ lexical RegularExpression
   = [/] RegularExpressionBody [/] RegularExpressionFlags
   ;
 
-lexical RegularExpressionBody 
+lexical RegularExpressionBody
   = RegularExpressionFirstChar RegularExpressionChar*
   ;
 
@@ -381,7 +392,7 @@ lexical RegularExpressionBackslashSequence
   = [\\] ![\n]
   ;
 
-lexical RegularExpressionClass 
+lexical RegularExpressionClass
   = [\[] RegularExpressionClassChar* [\]]
   ;
 
@@ -399,38 +410,39 @@ lexical Whitespace
   = [\t-\n\r\ ]
   ;
 
-lexical Comment 
+lexical Comment
   = MultLineComment
   | SingleLineComment
   ;
   
-lexical MultLineComment = @category="Comment"  "/*" CommentChar* "*/";
-lexical SingleLineComment =  @category="Comment"  "//" ![\n]* [\n];
+lexical MultLineComment = @category="Comment" "/*" CommentChar* "*/";
+lexical SingleLineComment = @category="Comment" "//" ![\n]* [\n];
 
-lexical CommentChar 
-  = ![*] 
-  | Asterisk 
+lexical CommentChar
+  = ![*]
+  | Asterisk
   ;
 
-lexical Asterisk 
-  = [*] !>> [/] 
+lexical Asterisk
+  = [*] !>> [/]
   ;
 
 
-lexical LAYOUT 
-  = Whitespace  
+lexical LAYOUT
+  = Whitespace
   | Comment
   ;
 
 
-layout LAYOUTLIST 
-  = LAYOUT* 
-  !>> [\t\ ] 
-  !>> "/*" 
+layout LAYOUTLIST
+  = LAYOUT*
+  !>> [\t\ ]
+  !>> "/*"
   !>> "//" ;
 
 layout NoNL = @manual [\ \t]* !>> [\ \t];
 layout NoNLAfter = @manual [\ \t\n]* !>> [\ \t];
+layout OneNL = @manual [\ \t]* >> [\n]? >> [\ \t]* !>> [\ \t\n]; 
 
 lexical Spaces = [\ \t]* !>> [\ \t\n];
 
@@ -544,12 +556,12 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 //   return +1
 // }
 // TODO: make sure this doesn't filter.
-BlockStatements blockStatements(BlockStatement head, LAYOUTLIST l, BlockStatements tail) {
+BlockStatements blockStatements(BlockStatement head, NoNL l, BlockStatements tail) {
 println("Block statements:\nhead: <unparse(head)>\ntail: <unparse(tail)>");
 	if (tail.args != []
 		&& unparse(tail) != ""
 		&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
-		&& endsWith(unparse(head), "\n")) { //TODO: filter out spaces and tabs but NOT newlines.
+		&& (endsWith(unparse(head), "\n") || startsWith(unparse(tail), "\n"))) { //TODO: filter out spaces and tabs but NOT newlines.
 		println("Filtering blockStatements");
 		filter;
 	}
