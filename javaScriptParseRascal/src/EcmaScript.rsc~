@@ -86,8 +86,12 @@ syntax Statement
   ;
   
 syntax BlockStatements
+<<<<<<< HEAD
 // start with [\n]* 
   = blockStatements: BlockStatement head NoNL BlockStatements tail
+=======
+  = blockStatements: BlockStatement head OneNL BlockStatements tail
+>>>>>>> 2dbabd4761b3a8fd74cf5497fe3a3fee28d0c8cd
   | blockStatements: LastBlockStatement !>> BlockStatements
   |
   ;
@@ -111,10 +115,17 @@ syntax BlockStatement
   =  
   	// first: somehow returnExpNoSemi does not work as last line "appelkoek:{ break appelkoek;\n\n\n1\n+3\n\n;\n\n\n\n;\n;return 3\n\n }" (without the last two \n's it works :/)
   	// statetements that do not end with a semicolon and one or more new lines
+<<<<<<< HEAD
   	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL ZeroOrMoreReturns NoNL () !>> [\n] !>> [}]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
     | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionEOF!emptyBlockEnd NoNL ZeroOrMoreReturns NoNL () !>> [\n]
+=======
+  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnNoExpNoSemi!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL () NoNL [\n]* !>> [\n] !>> [}]
+  	// statements that end with a semicolon, not ending the block
+  	// Do not forget to create block ending versions of statements and exclude them here
+    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!expressionLoose!expressionEOF!emptyBlockEnd NoNL () NoNL [\n]* !>> [\n]
+>>>>>>> 2dbabd4761b3a8fd74cf5497fe3a3fee28d0c8cd
   ;
   
 syntax LastBlockStatement
@@ -442,7 +453,11 @@ layout LAYOUTLIST
 
 layout NoNL = @manual [\ \t]* !>> [\ \t];
 layout NoNLAfter = @manual [\ \t\n]* !>> [\ \t];
+<<<<<<< HEAD
 layout OneNL = @manual [\ \t]* >> [\n]? >> [\ \t]* !>> [\ \t\n]; 
+=======
+layout OneNL = @manual [\ \t]* [\n]? [\ \t]* !>> [\ \t]; 
+>>>>>>> 2dbabd4761b3a8fd74cf5497fe3a3fee28d0c8cd
 
 lexical Spaces = [\ \t]* !>> [\ \t\n];
 
