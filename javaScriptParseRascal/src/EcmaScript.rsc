@@ -86,7 +86,7 @@ syntax Statement
   ;
   
 syntax BlockStatements
-  = blockStatements: BlockStatement \ LastBlockStatement head BlockStatements tail
+  = blockStatements: BlockStatement head OneNL BlockStatements tail
   | blockStatements: LastBlockStatement !>> BlockStatements
   |
   ;
@@ -101,10 +101,10 @@ syntax BlockStatement
 // last added "return no exp no semi"
   =  
   	// statetements that do not end with a semicolon and one or more new lines
-  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnNoExpNoSemi!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL () >> [\n]* !>> [}]
+  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnNoExpNoSemi!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL () NoNL [\n]* !>> [\n] !>> [}]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!expressionLoose!expressionEOF!emptyBlockEnd NoNL () >> [\n]*
+    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!expressionLoose!expressionEOF!emptyBlockEnd NoNL () NoNL [\n]* !>> [\n]
   ;
   
 syntax LastBlockStatement
@@ -431,6 +431,7 @@ layout LAYOUTLIST
 
 layout NoNL = @manual [\ \t]* !>> [\ \t];
 layout NoNLAfter = @manual [\ \t\n]* !>> [\ \t];
+layout OneNL = @manual [\ \t]* [\n]? [\ \t]* !>> [\ \t]; 
 
 lexical Spaces = [\ \t]* !>> [\ \t\n];
 
