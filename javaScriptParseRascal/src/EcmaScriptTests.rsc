@@ -69,6 +69,59 @@ public test bool returnSpacesNewlines() {
 }
 
 /**
+ * THROW STATEMENTS
+ */
+
+public test bool throwNoSemi() {
+	return outcomeIsCorrect("throw", "|Throw|");	
+}
+
+public test bool throwSemi() {
+	return outcomeIsCorrect("throw;", "|Throw;|");	
+}
+
+public test bool throwExpNoSemi() {
+	return outcomeIsCorrect("throw 1", "|Throw [1]|");	
+}
+
+public test bool throwExpSemi() {
+	return outcomeIsCorrect("throw 1;", "|Throw [1];|");	
+}
+
+public test bool throwExpSemiExpSemi() {
+	return outcomeIsCorrect("throw 1; 1;", "|Throw [1];|Expression [1];|");	
+}
+
+public test bool throwExpNoSemiNewlineExpressionSemi() {
+	return outcomeIsCorrect("throw 1 \n 1;", "|Throw [1]|Expression [1];|");
+}
+
+public test bool throwSemiSemi() {
+	return outcomeIsCorrect("throw;;", "|Throw;|Empty|");
+}
+
+public test bool throwExpNewlineSemi() {
+	return outcomeIsCorrect("throw 1\n;", "|Throw [1]|Empty|");
+}
+
+public test bool throwExpNewlinePlusExpSemi() {
+	return outcomeIsCorrect("throw 1\n+2;", "|Throw [1\n+2];|");
+}
+
+//Initially filtering only worked if the elements were the first SourceElements.
+public test bool throwExpExpNewlineSemi() {
+	return outcomeIsCorrect("1;throw 1\n+2;", "|Expression [1];|Throw [1\n+2];|");
+}
+
+public test bool throwExpNewlineSemi() {
+	return outcomeIsCorrect("throw 1\n\n;", "|Throw [1]|Empty|");
+}
+
+public test bool throwSpacesNewlines() {
+	return outcomeIsCorrect("throw    \n\n", "|Throw|");
+}
+
+/**
  * VARIABLE ASSIGNMENTS
  */
 public test bool simpleVariableAssignment() {
@@ -167,9 +220,15 @@ public test bool cNewlineDPlusEPrint() {
 
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
 	parsed = parse(source);
-	bool expectedOutcomeEqual = showTypes(parsed) == expectedOutcome;
-	bool isUnambiguous = /amb(_) !:= parsed;
-	return expectedOutcomeEqual && isUnambiguous;
+	bool isAmbiguous = /amb(_) := parsed;
+	if (isAmbiguous) {
+		throw source + " is ambiguous.";
+	}
+	str outcome = showTypes(parsed);
+	if (outcome != expectedOutcome) {
+		throw "Expected <expectedOutcome> but was <outcome>.";
+	}
+	return true; //All test conditions are met.
 }
 
 public bool outcomeThrowsParseError(str source) {

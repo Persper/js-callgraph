@@ -18,6 +18,18 @@ public str showTypes(tree) {
 		case (Statement)`return;`: {
 			returnValue += "Return;|";
 		}
+		case (Statement)`throw <Expression e>`: {
+			returnValue += "Throw [<e>]|";
+		}
+		case (Statement)`throw <Expression e>;`: {
+			returnValue += "Throw [<e>];|";
+		}
+		case (Statement)`throw`: {
+			returnValue += "Throw|";
+		}
+		case (Statement)`throw;`: {
+			returnValue += "Throw;|";
+		}
 		case (Statement)`{ <BlockStatements blockStatements> }`: {
 			returnValue += "Block [<blockStatements>]|";
 		}
