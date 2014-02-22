@@ -568,13 +568,9 @@ println("Block statements:\nhead: <unparse(head)>\ntail: <unparse(tail)>");
 //Parsing
 public Source parse(loc file) = parse(#Source, file);
 public Source parse(str txt) = parse(#Source, txt);
-public void parseAndView(loc file) {
-	render(visParsetree(parse(file)));
-}
-
-public void parseAndView(str txt) {
-	render(space(visParsetree(parse(txt)),std(gap(8,30)),std(resizable(true))));
-}
+public void parseAndView(loc file) = parseAndView(parse(file));
+public void parseAndView(str txt) = parseAndView(parse(txt));
+public void parseAndView(Tree tree) = render(space(visParsetree(tree),std(gap(8,30)),std(resizable(true))));
 
 //UTILITY FUNCTIONS
 private bool isReturnWithExpression(element) = /(Statement)`return <Expression e>` := element;
