@@ -91,7 +91,7 @@ syntax Statement
 syntax BlockStatements
 // start with [\n]* 
   = blockStatements: BlockStatement head NoNL BlockStatements tail
-  | blockStatements: LastBlockStatement !>> BlockStatements
+  | blockStatements: LastBlockStatement
   |
   ;
   
@@ -101,12 +101,11 @@ syntax BlockStatements
 // parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n\n }");
 // parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n\n\n }"); each extra \n adds ambiguity
 
-//TODO: rename these two lexicals to avoid confusion.
-lexical OneOrMoreReturns =
-	[\n] NoNL () NoNL ZeroOrMoreReturns NoNL () !>> [\n];
+lexical OneOrMoreNewLines =
+	[\n] NoNL () NoNL ZeroOrMoreNewLines NoNL () !>> [\n];
 
-lexical ZeroOrMoreReturns =
-	| [\n] NoNL ZeroOrMoreReturns
+lexical ZeroOrMoreNewLines =
+	| [\n] NoNL ZeroOrMoreNewLines
 	|
 	;
 
@@ -115,10 +114,10 @@ syntax BlockStatement
   =  
   	// first: somehow returnExpNoSemi does not work as last line "appelkoek:{ break appelkoek;\n\n\n1\n+3\n\n;\n\n\n\n;\n;return 3\n\n }" (without the last two \n's it works :/)
   	// statetements that do not end with a semicolon and one or more new lines
-  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL ZeroOrMoreReturns NoNL () !>> [\n] !>> [}]
+  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n] !>> [}]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd NoNL ZeroOrMoreReturns NoNL () !>> [\n]
+    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
   
 syntax LastBlockStatement
