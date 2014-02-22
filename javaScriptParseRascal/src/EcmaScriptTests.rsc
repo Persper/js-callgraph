@@ -160,9 +160,9 @@ public test bool simpleBreakSemiBlock() {
 	return outcomeIsCorrect("{ break; }", "|Block [break; ]|");
 }
 
+//Last part is seen as a function call of c.
 public test bool cNewlineDPlusEPrint() {
-	// TODO: this fails, but should this actually not parse? This mgiht be valid
-	return outcomeThrowsParseError("c \n (d+e).print()");
+	return outcomeIsCorrect("a = b + c\n(d+e);", "|Expression [a = b + c\n(d+e)];|");
 }
 
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
