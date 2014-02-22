@@ -68,6 +68,14 @@ public test bool returnSpacesNewlines() {
 	return outcomeIsCorrect("return    \n\n", "|Return|");
 }
 
+public test bool returnExpNewlinePlusExpMinExpSemi() {
+	return outcomeIsCorrect("return 1\n+2-2;", "|Return [1\n+2-2];|");
+}
+
+public test bool returnExpNewlinePlusExpNewlineMinExpSemi() {
+	return outcomeIsCorrect("return 1\n+2\n-2;", "|Return [1\n+2\n-2];|");
+}
+
 /**
  * THROW STATEMENTS
  */
@@ -119,6 +127,14 @@ public test bool throwExpNewlineSemi() {
 
 public test bool throwSpacesNewlines() {
 	return outcomeIsCorrect("throw    \n\n", "|Throw|");
+}
+
+public test bool throwExpNewlinePlusExpMinExpSemi() {
+	return outcomeIsCorrect("throw 1\n+2-2;", "|Throw [1\n+2-2];|");
+}
+
+public test bool throwExpNewlinePlusExpNewlineMinExpSemi() {
+	return outcomeIsCorrect("throw 1\n+2\n-2;", "|Throw [1\n+2\n-2];|");
 }
 
 /**
