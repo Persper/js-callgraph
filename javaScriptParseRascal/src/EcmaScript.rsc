@@ -541,7 +541,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 	if (tail.args != [] 
 		&& isExpression(head)
 		&& unparse(tail) != ""
-		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]))) {
+		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]) || isBracketExpression(tail.args[0]))) {
 		filter;
 	}
 	
@@ -561,7 +561,7 @@ println("Block statements:\nhead: <unparse(head)>\ntail: <unparse(tail)>");
 		&& (endsWith(unparse(head), "\n") || startsWith(unparse(tail), "\n"))) { //TODO: filter out spaces and tabs but NOT newlines.
 		println("Filtering blockStatements");
 		filter;
-	}
+	}	
 	fail;
 }
 
@@ -578,5 +578,16 @@ private bool isThrowWithExpression(element) = /(Statement)`throw <Expression e>`
 private bool isVariableDeclaration(element) = /(Statement)`var <VariableDeclaration v>` := element;
 	
 private bool isExpression(element) = /(Statement)`<Expression e>` := element;
+private bool isExpressionSemi(element) = /(Statement)`<Expression e>;` := element;
 private bool isPlusExpression(element) = /(Expression)`+ <Expression n1>` := element;
 private bool isMinusExpression(element) = /(Expression)`- <Expression n1>` := element;
+
+//May start with optional newlines, may end in newlines or semi.
+public bool isBracketExpression(element) {
+	str unparsed = trim(unparse(element));
+	unparsed = replaceAll(unparsed, "\n", "");
+	Tree reparsed = parse(unparsed);
+	if (!isExpression(reparsed) && !isExpressionSemi(reparsed)) return false;
+	unparsed = endsWith(unparsed, ";") ? replaceLast(unparsed, ";", "") : unparsed;
+	return startsWith(unparsed, "(") && endsWith(unparsed, ")");
+}

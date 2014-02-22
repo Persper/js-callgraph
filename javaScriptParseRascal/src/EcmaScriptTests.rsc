@@ -234,7 +234,19 @@ public test bool cNewlineDPlusEPrint() {
 }
 
 public test bool callAWithParameterB() {
-	return outcomeIsCorrect("a(b);", "|Expression [a(b)];");
+	return outcomeIsCorrect("a(b)", "|Expression [a(b)]|");
+}
+
+public test bool callAWithParameterBSemi() {
+	return outcomeIsCorrect("a(b);", "|Expression [a(b)];|");
+}
+
+public test bool callAWithParameterBNewline() {
+	return outcomeIsCorrect("a(b)\n", "|Expression [a(b)]\n|");
+}
+
+public test bool callAWithParameterBSemiNewline() {
+	return outcomeIsCorrect("a(b);\n", "|Expression [a(b)];|");
 }
 
 public bool outcomeIsCorrect(str source, str expectedOutcome) {

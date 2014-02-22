@@ -12,6 +12,9 @@ public str showTypes(tree) {
 		case (Statement)`return <Expression e>;`: {
 			returnValue += "Return [<e>];|";
 		}
+		//case (Statement)`return <Expression e>`: {
+		//	returnValue += "Return [<e>]\n|"
+		//}
 		case (Statement)`return`: {
 			returnValue += "Return|";
 		}
