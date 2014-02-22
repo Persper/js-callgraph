@@ -527,30 +527,26 @@ keyword Reserved =
     "false"
   ;
 
-Source source(SourceElement head, LAYOUTLIST l, Source tail) {
+Source source(SourceElement head, LAYOUTLIST l, Source tail) {	
 	// Prioritizes add and subtract expressions in multiline returns over positive and negative numbers 	
 	if (tail.args != [] 
 			&& (isReturnWithExpression(head) || isThrowWithExpression(head) || isVariableDeclaration(head))
 			&& unparse(tail) != ""
-			&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
+			&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]))
 			&& findFirst(unparse(l), "\n") != -1) {
 		println("Filtering source");
 		filter;		
 	}
 	
-	if (tail.args != [] && /(Statement)`<Expression e>` := head
-		 && unparse(tail) != ""
-		&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
-		) {
+	if (tail.args != [] 
+		&& isExpression(head)
+		&& unparse(tail) != ""
+		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]))) {
 		filter;
 	}
 	
 	fail;
 }
-
-private bool isReturnWithExpression(element) = /(Statement)`return <Expression e>` := element;
-private bool isThrowWithExpression(element) = /(Statement)`throw <Expression e>` := element;
-private bool isVariableDeclaration(element) = /(Statement)`var <VariableDeclaration v>` := element;
 
 //Validate statements starting with +
 // { 1
@@ -561,7 +557,7 @@ BlockStatements blockStatements(BlockStatement head, NoNL l, BlockStatements tai
 println("Block statements:\nhead: <unparse(head)>\ntail: <unparse(tail)>");
 	if (tail.args != []
 		&& unparse(tail) != ""
-		&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
+		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]))
 		&& (endsWith(unparse(head), "\n") || startsWith(unparse(tail), "\n"))) { //TODO: filter out spaces and tabs but NOT newlines.
 		println("Filtering blockStatements");
 		filter;
@@ -579,3 +575,12 @@ public void parseAndView(loc file) {
 public void parseAndView(str txt) {
 	render(space(visParsetree(parse(txt)),std(gap(8,30)),std(resizable(true))));
 }
+
+//UTILITY FUNCTIONS
+private bool isReturnWithExpression(element) = /(Statement)`return <Expression e>` := element;
+private bool isThrowWithExpression(element) = /(Statement)`throw <Expression e>` := element;
+private bool isVariableDeclaration(element) = /(Statement)`var <VariableDeclaration v>` := element;
+	
+private bool isExpression(element) = /(Statement)`<Expression e>` := element;
+private bool isPlusExpression(element) = /(Expression)`+ <Expression n1>` := element;
+private bool isMinusExpression(element) = /(Expression)`- <Expression n1>` := element;
