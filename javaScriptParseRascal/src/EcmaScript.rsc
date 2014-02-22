@@ -38,18 +38,20 @@ syntax Statement
   = block: "{" BlockStatements "}"
   | variableNoSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () $
   | variableSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL ";"
+  
   | returnExp: "return" NoNL Expression NoNL ";"
   | returnExpNoSemi: "return" NoNL Expression NoNL () $
   | returnExpNoSemiBlockEnd: "return" NoNL Expression NoNL () >> [}]
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
   | returnNoExpNoSemiBlockEnd: "return" NoNL () >> [}]
+  
   | empty: ";" NoNL () !>> [}]
   | emptyBlockEnd: ";" NoNL () !>> [\n] >> [}]
   | expressionSemi: "function" !<< Expression NoNL ";"
   | expressionLoose: "function" !<< Expression NoNL () !>> Expression !>> [\n]
-  | expressionEOF: "function" !<< Expression NoNL [\n] >> [\n]*
-  // | expressionEOF: "function" !<< Expression NoNL !>> ";" !>> [\n] !>> [}]
+  | expressionNL: "function" !<< Expression NoNL [\n] >> [\n]*
+  // | expressionNL: "function" !<< Expression NoNL !>> ";" !>> [\n] !>> [}]
 
 
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
@@ -85,6 +87,7 @@ syntax Statement
   | debugger: "debugger" ";"?
   ;
   
+//TODO: find out if not-follows restriction can be removed.
 syntax BlockStatements
 // start with [\n]* 
   = blockStatements: BlockStatement head NoNL BlockStatements tail
@@ -98,6 +101,7 @@ syntax BlockStatements
 // parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n\n }");
 // parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n\n\n }"); each extra \n adds ambiguity
 
+//TODO: rename these two lexicals to avoid confusion.
 lexical OneOrMoreReturns =
 	[\n] NoNL () NoNL ZeroOrMoreReturns NoNL () !>> [\n];
 
@@ -114,7 +118,7 @@ syntax BlockStatement
   	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL ZeroOrMoreReturns NoNL () !>> [\n] !>> [}]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionEOF!emptyBlockEnd NoNL ZeroOrMoreReturns NoNL () !>> [\n]
+    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd NoNL ZeroOrMoreReturns NoNL () !>> [\n]
   ;
   
 syntax LastBlockStatement
