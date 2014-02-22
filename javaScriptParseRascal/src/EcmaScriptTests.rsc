@@ -217,6 +217,10 @@ public test bool cNewlineDPlusEPrint() {
 	return outcomeIsCorrect("a = b + c\n(d+e);", "|Expression [a = b + c\n(d+e)];|");
 }
 
+public test bool callAWithParameterB() {
+	return outcomeIsCorrect("a(b);", "|Expression [a(b)];");
+}
+
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
 	parsed = parse(source);
 	bool isAmbiguous = /amb(_) := parsed;
