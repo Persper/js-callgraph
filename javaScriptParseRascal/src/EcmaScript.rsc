@@ -46,6 +46,13 @@ syntax Statement
   | returnNoExpNoSemi: "return" NoNL () $
   | returnNoExpNoSemiBlockEnd: "return" NoNL () >> [}]
   
+  | throwExp: "throw" NoNL Expression NoNL ";"
+  | throwExpNoSemi: "throw" NoNL Expression NoNL () $
+  | throwExpNoSemiBlockEnd: "throw" NoNL Expression NoNL () >> [}]
+  | throwNoExp: "throw" NoNL ";"
+  | throwNoExpNoSemi: "throw" NoNL () $
+  | throwNoExpNoSemiBlockEnd: "throw" NoNL () >> [}]
+  
   | empty: ";" NoNL () !>> [}]
   | emptyBlockEnd: ";" NoNL () !>> [\n] >> [}]
   | expressionSemi: "function" !<< Expression NoNL ";"
@@ -65,8 +72,6 @@ syntax Statement
   | continueNoLabel: "continue" ";"
   | breakLabel: "break" NoNL Id NoNL ";"
   | breakNoLabel: "break" NoNL ";"
-  | throwExp: "throw" Expression ";" 
-  | throwNoExp: "throw" ";"
   
   | continueLabelNoSemi: "continue"  Id  
   | continueNoLabelNoSemi: "continue" 
@@ -74,8 +79,6 @@ syntax Statement
   | breakLabelNoSemiBlockEnd: "break" NoNL Id NoNL () >> [}]
   | breakNoLabelNoSemi: "break" NoNL () $
   | breakNoLabelNoSemiBlockEnd: "break" NoNL () >> [}]
-  | throwExpNoSemi: "throw" Expression  
-  | throwNoExpNoSemi: "throw" 
   
   | withDo: "with" "(" Expression ")" Statement
   | switchCase: "switch" "(" Expression ")" CaseBlock
@@ -114,16 +117,16 @@ syntax BlockStatement
   =  
   	// first: somehow returnExpNoSemi does not work as last line "appelkoek:{ break appelkoek;\n\n\n1\n+3\n\n;\n\n\n\n;\n;return 3\n\n }" (without the last two \n's it works :/)
   	// statetements that do not end with a semicolon and one or more new lines
-  	 first: Statement!variableSemi!expressionSemi!returnExp!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n] !>> [}]
+  	 first: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n] !>> [}]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!returnExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
   
 syntax LastBlockStatement
 	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
-	// Statement!variableSemi!expressionSemi!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel
-  = last: Statement!variableSemi!expressionSemi!returnNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp NoNL () !>> [\n] >> [}]
+	// Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel
+  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp NoNL () !>> [\n] >> [}]
   ;
 
 syntax ExpressionNoIn // inlining this doesn't work.
@@ -526,21 +529,13 @@ keyword Reserved =
 
 Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 	// Prioritizes add and subtract expressions in multiline returns over positive and negative numbers 	
-	if (tail.args != [] && /(Statement)`return <Expression e>` := head 
+	if (tail.args != [] 
+			&& (isReturnWithExpression(head) || isThrowWithExpression(head) || isVariableDeclaration(head))
 			&& unparse(tail) != ""
 			&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
 			&& findFirst(unparse(l), "\n") != -1) {
 		println("Filtering source");
 		filter;		
-	}
-	
-	// Same as the return expression, but for variable declarations
-	if (tail.args != [] && /(Statement)`var <VariableDeclaration v>` := head
-			&& unparse(tail) != ""
-			&& (/(Expression)`+ <Expression n1>` := tail.args[0] || /(Expression)`-<Expression n1>` := tail.args[0])
-			&& findFirst(unparse(l), "\n") != -1) {
-		println("filtering source");
-		filter;
 	}
 	
 	if (tail.args != [] && /(Statement)`<Expression e>` := head
@@ -550,9 +545,12 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 		filter;
 	}
 	
-	// Todo: throw, and others?
 	fail;
 }
+
+private bool isReturnWithExpression(element) = /(Statement)`return <Expression e>` := element;
+private bool isThrowWithExpression(element) = /(Statement)`throw <Expression e>` := element;
+private bool isVariableDeclaration(element) = /(Statement)`var <VariableDeclaration v>` := element;
 
 //Validate statements starting with +
 // { 1

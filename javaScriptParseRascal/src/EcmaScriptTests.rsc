@@ -132,7 +132,6 @@ public test bool variableAssignment() {
 	return outcomeIsCorrect("var x = 1\n-1\n+3;", "|Varassign [x] expr [1\n-1\n+3]|");
 }
 
-
 public test bool variableAssignmentEmptyStatement() {
 	return outcomeIsCorrect("var a = 1\n+4\n;x\n", "|Varassign [a] expr [1\n+4]|Empty|Expression [x]|");
 }
@@ -186,7 +185,7 @@ public test bool blockOneNoWhitespaceRight() {
  **/
 // TODO: parseAndView("{ a + 3\n\n\nb\n+2; }")
 public test bool assignBtoAIncrementC() {
-	return outcomeIsCorrect("a=b \n c++", "|Expression [a=b]|Expression [c++]|");
+	return outcomeIsCorrect("a=b isVariableDeclaration\n c++", "|Expression [a=b]|Expression [c++]|");
 }
 
 public test bool separateInvalidToken() {
