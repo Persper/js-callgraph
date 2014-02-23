@@ -201,7 +201,7 @@ public test bool blockOneNoWhitespaceRight() {
  **/
 // TODO: parseAndView("{ a + 3\n\n\nb\n+2; }")
 public test bool assignBtoAIncrementC() {
-	return outcomeIsCorrect("a=b isVariableDeclaration\n c++", "|Expression [a=b]|Expression [c++]|");
+	return outcomeIsCorrect("a=b\nc++", "|Expression [a=b]\n|Expression [c++]|");
 }
 
 public test bool separateInvalidToken() {

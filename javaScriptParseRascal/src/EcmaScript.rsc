@@ -57,9 +57,7 @@ syntax Statement
   | emptyBlockEnd: ";" NoNL () !>> [\n] >> [}]
   | expressionSemi: "function" !<< Expression NoNL ";"
   | expressionLoose: "function" !<< Expression NoNL () !>> Expression !>> [\n]
-  | expressionNL: "function" !<< Expression NoNL [\n] >> [\n]*
-  // | expressionNL: "function" !<< Expression NoNL !>> ";" !>> [\n] !>> [}]
-
+  | expressionNL: "function" !<< Expression NoNL OneOrMoreNewLines
 
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement
@@ -579,15 +577,7 @@ private bool isVariableDeclaration(element) = /(Statement)`var <VariableDeclarat
 	
 private bool isExpression(element) = /(Statement)`<Expression e>` := element;
 private bool isExpressionSemi(element) = /(Statement)`<Expression e>;` := element;
+private bool isExpressionNL(element) = /(Statement)`<Expression e> <OneOrMoreNewLines n>` := element;
 private bool isPlusExpression(element) = /(Expression)`+ <Expression n1>` := element;
 private bool isMinusExpression(element) = /(Expression)`- <Expression n1>` := element;
-
-//May start with optional newlines, may end in newlines or semi.
-public bool isBracketExpression(element) {
-	str unparsed = trim(unparse(element));
-	unparsed = replaceAll(unparsed, "\n", "");
-	Tree reparsed = parse(unparsed);
-	if (!isExpression(reparsed) && !isExpressionSemi(reparsed)) return false;
-	unparsed = endsWith(unparsed, ";") ? replaceLast(unparsed, ";", "") : unparsed;
-	return startsWith(unparsed, "(") && endsWith(unparsed, ")");
-}
+private bool isBracketExpression(element) = /(Expression)`( <Expression n1> )` := element;
