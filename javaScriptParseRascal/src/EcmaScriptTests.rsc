@@ -245,8 +245,24 @@ public test bool callAWithParameterBNewline() {
 	return outcomeIsCorrect("a(b)\n", "|Expression [a(b)]\n|");
 }
 
+public test bool aNewline() {
+	return outcomeIsCorrect("a\n", "|Expression [a]\n|");
+}
+
+public test bool aSemiNewline() {
+	return outcomeIsCorrect("a;\n", "|Expression [a];|");
+}
+
+public test bool aSemiSemiNewline() {
+	return outcomeIsCorrect("a;;\n", "|Expression [a];|Empty|");
+}
+
 public test bool callAWithParameterBSemiNewline() {
 	return outcomeIsCorrect("a(b);\n", "|Expression [a(b)];|");
+}
+
+public test bool callAWithParameterBSemiNewline() {
+	return outcomeIsCorrect("a(b);;\n", "|Expression [a(b)];|Empty|");
 }
 
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
