@@ -233,7 +233,7 @@ public test bool simpleBreakSemiBlock() {
 }
 
 public test bool simpleBreakLabelNLBlock() {
-	return outcomeIsCorrect("{ break id\n }", "|Block [break [id]\n ]|");
+	return outcomeIsCorrect("{ break id\n }", "|Block [break id\n ]|");
 }
 
 public test bool simpleBreakNLBlock() {

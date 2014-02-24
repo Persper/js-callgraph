@@ -45,7 +45,7 @@ syntax Statement
   | returnNoExp: "return" NoNL ";"
   | returnNoExpNoSemi: "return" NoNL () $
   | returnNoExpNoSemiBlockEnd: "return" NoNL () >> [}]
-  
+
   | throwExp: "throw" NoNL Expression NoNL ";"
   | throwExpNoSemi: "throw" NoNL Expression NoNL () $
   | throwExpNoSemiBlockEnd: "throw" NoNL Expression NoNL () >> [}]
@@ -96,7 +96,23 @@ syntax BlockStatements
   | blockStatements: LastBlockStatement
   |
   ;
+
+syntax BlockStatement
+// last added "return no exp no semi"
+  =  
+  	// first: somehow returnExpNoSemi does not work as last line "appelkoek:{ break appelkoek;\n\n\n1\n+3\n\n;\n\n\n\n;\n;return 3\n\n }" (without the last two \n's it works :/)
+  	// statetements that do not end with a semicolon and one or more new lines
+  	 newLine: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	// statements that end with a semicolon, not ending the block
+  	// Do not forget to create block ending versions of statements and exclude them here
+    | semiColon: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  ;
   
+syntax LastBlockStatement
+	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
+	// Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel
+  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp NoNL () !>> [\n] >> [}]
+  ;
   
 // TODO:
 // parseAndView("appelkoek:{ break appelkoek;\n2;;;1\n+2;\n\n }");
@@ -110,23 +126,6 @@ lexical ZeroOrMoreNewLines =
 	| [\n] NoNL ZeroOrMoreNewLines
 	|
 	;
-
-syntax BlockStatement
-// last added "return no exp no semi"
-  =  
-  	// first: somehow returnExpNoSemi does not work as last line "appelkoek:{ break appelkoek;\n\n\n1\n+3\n\n;\n\n\n\n;\n;return 3\n\n }" (without the last two \n's it works :/)
-  	// statetements that do not end with a semicolon and one or more new lines
-  	 first: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n] !>> [}]
-  	// statements that end with a semicolon, not ending the block
-  	// Do not forget to create block ending versions of statements and exclude them here
-    | second: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
-  ;
-  
-syntax LastBlockStatement
-	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
-	// Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel
-  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp NoNL () !>> [\n] >> [}]
-  ;
 
 syntax ExpressionNoIn // inlining this doesn't work.
   = Expression!inn
