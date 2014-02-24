@@ -60,6 +60,18 @@ public str showTypes(tree) {
 		case (Statement)`break <Id id>;`: {
 			returnValue += "Break [<id>];|";
 		}
+		case (Statement)`continue;`: {
+			returnValue += "Continue;|";
+		}		
+		case (Statement)`continue`: {
+			returnValue += "Continue|";
+		}
+		case (Statement)`continue <Id id>`: {
+			returnValue += "Continue [<id>]|";
+		}
+		case (Statement)`continue <Id id>;`: {
+			returnValue += "Continue [<id>];|";
+		}
 	}
 	return returnValue;
 }

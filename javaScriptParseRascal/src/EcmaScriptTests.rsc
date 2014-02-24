@@ -196,18 +196,9 @@ public test bool blockOneNoWhitespaceRight() {
 	return outcomeIsCorrect("{ 1}", "|Block [1]|");
 }
 
-/** 
- * MISCELLANEOUS TESTS
- **/
-// TODO: parseAndView("{ a + 3\n\n\nb\n+2; }")
-public test bool assignBtoAIncrementC() {
-	return outcomeIsCorrect("a=b\nc++", "|Expression [a=b]\n|Expression [c++]|");
-}
-
-public test bool separateInvalidToken() {
-	return outcomeThrowsParseError("!");
-}
-
+/**
+ * BREAK TESTS
+ */
 public test bool simpleBreak() {
 	return outcomeIsCorrect("break", "|Break|");
 }
@@ -238,6 +229,53 @@ public test bool simpleBreakLabelNLBlock() {
 
 public test bool simpleBreakNLBlock() {
 	return outcomeIsCorrect("{ break\n }", "|Block [break\n ]|");
+}
+
+/**
+ * CONTINUE TESTS
+ */
+public test bool simpleContinue() {
+	return outcomeIsCorrect("continue", "|Continue|");
+}
+
+public test bool simpleContinueSemi() {
+	return outcomeIsCorrect("continue;", "|Continue;|");
+}
+
+public test bool simpleContinueLabel() {
+	return outcomeIsCorrect("continue id", "|Continue [id]|");
+}
+
+public test bool simpleContinueNewlineLabel() {
+	return outcomeIsCorrect("continue \nid", "|Continue|Expression [id]|");
+}
+
+public test bool simpleContinueLabelSemi() {
+	return outcomeIsCorrect("continue id;", "|Continue [id];|");
+}
+
+public test bool simpleContinueSemiBlock() {
+	return outcomeIsCorrect("{ continue; }", "|Block [continue; ]|");
+}
+
+public test bool simpleContinueLabelNLBlock() {
+	return outcomeIsCorrect("{ continue id\n }", "|Block [continue id\n ]|");
+}
+
+public test bool simpleContinueNLBlock() {
+	return outcomeIsCorrect("{ continue\n }", "|Block [continue\n ]|");
+}
+
+/** 
+ * MISCELLANEOUS TESTS
+ **/
+// TODO: parseAndView("{ a + 3\n\n\nb\n+2; }")
+public test bool assignBtoAIncrementC() {
+	return outcomeIsCorrect("a=b\nc++", "|Expression [a=b]\n|Expression [c++]|");
+}
+
+public test bool separateInvalidToken() {
+	return outcomeThrowsParseError("!");
 }
 
 //Last part is seen as a function call of c.
