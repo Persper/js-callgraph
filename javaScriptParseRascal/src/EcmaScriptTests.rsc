@@ -149,7 +149,7 @@ public test bool variableAssignment() {
 }
 
 public test bool variableAssignmentEmptyStatement() {
-	return outcomeIsCorrect("var a = 1\n+4\n;x\n", "|Varassign [a] expr [1\n+4]|Empty|Expression [x]|");
+	return outcomeIsCorrect("var a = 1\n+4\n;x\n", "|Varassign [a] expr [1\n+4]|Empty|Expression [x]\n|");
 }
 
 /**

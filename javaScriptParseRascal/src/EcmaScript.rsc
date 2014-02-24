@@ -56,7 +56,8 @@ syntax Statement
   | empty: ";" NoNL () !>> [}]
   | emptyBlockEnd: ";" NoNL () !>> [\n] >> [}]
   | expressionSemi: "function" !<< Expression NoNL ";"
-  | expressionLoose: "function" !<< Expression NoNL () !>> Expression !>> [\n]
+  | expressionLoose: "function" !<< Expression NoNL () !>> [\n] NoNL () $
+  | expressionBlockEnd: "function" !<< Expression NoNL () !>> [\n] >> [}]
   | expressionNL: "function" !<< Expression NoNL OneOrMoreNewLines
 
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
@@ -102,10 +103,10 @@ syntax BlockStatement
   =  
   	// first: somehow returnExpNoSemi does not work as last line "appelkoek:{ break appelkoek;\n\n\n1\n+3\n\n;\n\n\n\n;\n;return 3\n\n }" (without the last two \n's it works :/)
   	// statetements that do not end with a semicolon and one or more new lines
-  	 newLine: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	 newLine: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!breakLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!expressionBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | semiColon: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+    | semiColon: Statement!variableNoSemi!expressionNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd!expressionBlockEnd NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
   
 syntax LastBlockStatement
@@ -180,7 +181,8 @@ syntax Expression
   = "this"
   | Id
   | Literal
-  | bracket "(" Expression ")"
+  | bracket "(" Expression ")" NoNL OneOrMoreNewLines
+  | bracket "(" Expression ")" NoNL ";"
   | "[" Elts "]"BlockStatement* LastBlockStatement
   | "{" {PropertyAssignment ","}+ "," "}"
   | "{" {PropertyAssignment ","}+ "}" // Changed multiplicity to + instead of * because an empty { } will be considered as a block
@@ -532,14 +534,15 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 			&& unparse(tail) != ""
 			&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]))
 			&& findFirst(unparse(l), "\n") != -1) {
-		println("Filtering source");
+		println("Filtering source a");
 		filter;		
 	}
 	
 	if (tail.args != [] 
-		&& isExpression(head)
+		&& (isExpression(head) || isExpressionNL(head))
 		&& unparse(tail) != ""
-		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]) || isParenthesesExpression(tail.args[0]) || isEmptyStatement(tail.args[0]))) {
+		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]) || isParenthesesExpression(tail.args[0]))) {
+		println("Filtering source b");
 		filter;
 	}
 	
@@ -580,5 +583,5 @@ private bool isExpressionSemi(element) = /(Statement)`<Expression e>;` := elemen
 private bool isExpressionNL(element) = /(Statement)`<Expression e> <OneOrMoreNewLines n>` := element;
 private bool isPlusExpression(element) = /(Expression)`+ <Expression n1>` := element;
 private bool isMinusExpression(element) = /(Expression)`- <Expression n1>` := element;
-private bool isParenthesesExpression(element) = /(Expression)`( <Expression n1> )` := element;
+private bool isParenthesesExpression(element) = /(Expression)`( <Expression n1> ) <OneOrMoreNewLines n>` := element || /(Expression)`( <Expression n1> );` := element;
 private bool isEmptyStatement(element) = /(Statement)`;` := element;
