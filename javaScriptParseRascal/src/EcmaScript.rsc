@@ -539,7 +539,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 	if (tail.args != [] 
 		&& isExpression(head)
 		&& unparse(tail) != ""
-		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]) || isBracketExpression(tail.args[0]) || isEmptyStatement(tail.args[0]))) {
+		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]) || isParenthesesExpression(tail.args[0]) || isEmptyStatement(tail.args[0]))) {
 		filter;
 	}
 	
@@ -580,5 +580,5 @@ private bool isExpressionSemi(element) = /(Statement)`<Expression e>;` := elemen
 private bool isExpressionNL(element) = /(Statement)`<Expression e> <OneOrMoreNewLines n>` := element;
 private bool isPlusExpression(element) = /(Expression)`+ <Expression n1>` := element;
 private bool isMinusExpression(element) = /(Expression)`- <Expression n1>` := element;
-private bool isBracketExpression(element) = /(Expression)`( <Expression n1> )` := element;
+private bool isParenthesesExpression(element) = /(Expression)`( <Expression n1> )` := element;
 private bool isEmptyStatement(element) = /(Statement)`;` := element;
