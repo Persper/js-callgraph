@@ -220,12 +220,24 @@ public test bool simpleBreakLabel() {
 	return outcomeIsCorrect("break id", "|Break [id]|");
 }
 
+public test bool simpleBreakNewlineLabel() {
+	return outcomeIsCorrect("break \nid", "|Break|Expression [id]|");
+}
+
 public test bool simpleBreakLabelSemi() {
 	return outcomeIsCorrect("break id;", "|Break [id];|");
 }
 
 public test bool simpleBreakSemiBlock() {
 	return outcomeIsCorrect("{ break; }", "|Block [break; ]|");
+}
+
+public test bool simpleBreakLabelNLBlock() {
+	return outcomeIsCorrect("{ break id\n }", "|Block [break [id]\n ]|");
+}
+
+public test bool simpleBreakNLBlock() {
+	return outcomeIsCorrect("{ break\n }", "|Block [break\n ]|");
 }
 
 //Last part is seen as a function call of c.

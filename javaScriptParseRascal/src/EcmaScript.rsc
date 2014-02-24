@@ -66,13 +66,14 @@ syntax Statement
   | forDo: "for" "(" ExpressionNoIn? ";" Expression? ";" Expression? ")" Statement
   | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
+ 
   | continueLabel: "continue" Id ";" 
   | continueNoLabel: "continue" ";"
-  | breakLabel: "break" NoNL Id NoNL ";"
-  | breakNoLabel: "break" NoNL ";"
-  
   | continueLabelNoSemi: "continue"  Id  
   | continueNoLabelNoSemi: "continue" 
+  
+  | breakLabel: "break" NoNL Id NoNL ";"
+  | breakNoLabel: "break" NoNL ";"
   | breakLabelNoSemi: "break" NoNL Id NoNL () $
   | breakLabelNoSemiBlockEnd: "break" NoNL Id NoNL () >> [}]
   | breakNoLabelNoSemi: "break" NoNL () $
