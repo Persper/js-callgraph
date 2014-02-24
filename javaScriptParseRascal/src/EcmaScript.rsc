@@ -16,7 +16,7 @@ import Map;
  */
 
 start syntax Source 
-  = source: SourceElement head Source tail 
+  = source: SourceElement head Source tail !>> [\n]
   |
   ;
 
@@ -578,8 +578,8 @@ println("Block statements:\nhead: <unparse(head)>\ntail: <unparse(tail)>");
 }
 
 //Parsing
-public start[Source] parse(loc file) = parse(#start[Source], file);
-public start[Source] parse(str txt) = parse(#start[Source], txt);
+public Source parse(loc file) = parse(#start[Source], file).top;
+public Source parse(str txt) = parse(#start[Source], txt).top;
 public void parseAndView(loc file) = parseAndView(parse(file));
 public void parseAndView(str txt) = parseAndView(parse(txt));
 public void parseAndView(Tree tree) = render(space(visParsetree(tree),std(gap(8,30)),std(resizable(true))));
