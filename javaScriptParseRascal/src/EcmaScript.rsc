@@ -46,8 +46,8 @@ syntax Block
   
 syntax Statement 
   = block:Block
-  | variableNoSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () $
-  | variableSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL ";"
+  | variableNoSemi: "var" {VariableDeclaration ","}+ NoNL () $
+  | variableSemi: "var" {VariableDeclaration ","}+ NoNL ";"
   
   | returnExp: "return" NoNL Expression NoNL ";"
   | returnExpNoSemi: "return" NoNL Expression NoNL () $
@@ -193,6 +193,8 @@ syntax Expression
   | "this"
   | Id
   | Literal
+  | array: "[" {Expression!comma ","}+ "]"
+  | emptyArray: "[" "]"
   | bracket "(" Expression ")" NoNL OneOrMoreNewLines
   | bracket "(" Expression ")" NoNL ";"
   | "[" Elts "]"BlockStatement* LastBlockStatement
@@ -546,7 +548,6 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 			&& unparse(tail) != ""
 			&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]))
 			&& findFirst(unparse(l), "\n") != -1) {
-		println("Filtering source a");
 		filter;		
 	}
 	
@@ -554,7 +555,6 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 		&& (isExpression(head) || isExpressionNL(head))
 		&& unparse(tail) != ""
 		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]) || isParenthesesExpression(tail.args[0]))) {
-		println("Filtering source b");
 		filter;
 	}
 	
@@ -567,12 +567,10 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 // }
 // TODO: make sure this doesn't filter.
 BlockStatements blockStatements(BlockStatement head, NoNL l, BlockStatements tail) {
-println("Block statements:\nhead: <unparse(head)>\ntail: <unparse(tail)>");
 	if (tail.args != []
 		&& unparse(tail) != ""
 		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]))
 		&& (endsWith(unparse(head), "\n") || startsWith(unparse(tail), "\n"))) { //TODO: filter out spaces and tabs but NOT newlines.
-		println("Filtering blockStatements");
 		filter;
 	}	
 	fail;

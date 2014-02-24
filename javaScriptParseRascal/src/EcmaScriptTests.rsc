@@ -143,6 +143,10 @@ public test bool throwExpNewlinePlusExpNewlineMinExpSemi() {
 public test bool simpleVariableAssignment() {
 	return outcomeIsCorrect("var i = 1;", "|Varassign [i] expr [1]|");
 }
+
+public test bool simpleMultipleVariableAssignments() {
+	return outcomeIsCorrect("var i = 1, j = 2;", "|Varassign [i] expr [1]|Varassign [j] expr [2]|");
+}
  
 public test bool variableAssignment() {
 	return outcomeIsCorrect("var x = 1\n-1\n+3;", "|Varassign [x] expr [1\n-1\n+3]|");
