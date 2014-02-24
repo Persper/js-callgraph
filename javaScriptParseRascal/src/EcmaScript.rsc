@@ -25,8 +25,13 @@ syntax SourceElement
   | FunctionDeclaration
   ;
 
+syntax ZeroOrMoreSourceElements
+	= SourceElement NoNL ZeroOrMoreSourceElements
+	|
+	;
+
 syntax FunctionDeclaration 
-  = "function" Id "(" {Id ","}* ")" "{" SourceElement* "}"
+  = "function" Id "(" {Id ","}* ")" Block
   ;
   
 // TODO add EOF
@@ -34,8 +39,13 @@ syntax FunctionDeclaration
 lexical NoPrecedingEnters =
 	[\n] !<< [\ \t]*;
 
+syntax Block
+  = block: "{" BlockStatements NoNL "}"
+  | emptyBlock: "{" NoNL ZeroOrMoreNewLines >> "}"
+  ;
+  
 syntax Statement 
-  = block: "{" BlockStatements "}"
+  = block:Block
   | variableNoSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL () $
   | variableSemi: "var" {VariableDeclaration ","}* VariableDeclaration NoNL ";"
   
@@ -113,7 +123,7 @@ syntax BlockStatement
   
 syntax LastBlockStatement
 	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
-  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp NoNL () !>> [\n] >> [}]
+  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp!expressionNL NoNL () !>> [\n] >> [}]
   ;
   
 // TODO:
@@ -187,7 +197,7 @@ syntax Expression
   | "[" Elts "]"BlockStatement* LastBlockStatement
   | "{" {PropertyAssignment ","}+ "," "}"
   | objectDefinition:"{" {PropertyAssignment ","}* "}"
-  > function: "function" Id? "(" {Id ","}* ")" "{" SourceElement* "}"
+  > function: "function" Id? "(" {Id ","}* ")" Block
   | Expression "(" { Expression!comma ","}* ")"
   | Expression "[" Expression "]"
   | Expression "." Id

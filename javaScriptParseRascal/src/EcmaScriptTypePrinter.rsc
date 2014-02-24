@@ -30,7 +30,7 @@ public str showTypes(tree) {
 		case (Statement)`throw;`: {
 			returnValue += "Throw;|";
 		}
-		case (Statement)`{ <BlockStatements blockStatements> }`: {
+		case (Block)`{ <BlockStatements blockStatements> }`: {
 			returnValue += "Block [<blockStatements>]|";
 		}
 		case (Statement)`;`: {
@@ -72,8 +72,8 @@ public str showTypes(tree) {
 		case (Statement)`continue <Id id>;`: {
 			returnValue += "Continue [<id>];|";
 		}
-		case (FunctionDeclaration)`function <Id id> ( <{Id ","}* params> ) { <SourceElement* body> }`: {
-			returnValue += "FunctionDecl id [<id>] params: [<params>] body: [<body>]|";
+		case (FunctionDeclaration)`function <Id id> ( <{Id ","}* params> ) <Block b>`: {
+			returnValue += "FunctionDecl id [<id>] params: [<params>] body: [<b>]|";
 		}
 	}
 	return returnValue;

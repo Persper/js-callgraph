@@ -162,6 +162,10 @@ public test bool variableAssignmentEmptyObject() {
 public test bool emptyBlock() {
 	return outcomeIsCorrect("{ }", "|Block []|");
 }
+
+public test bool emptyBlockWithNewLine() {
+	return outcomeIsCorrect("{\n}", "|Block []|");
+}
  
 public test bool blockOneNewlineTwo() {
 	return outcomeIsCorrect("{ 1\n 2 }", "|Block [1\n 2 ]|");
@@ -274,7 +278,11 @@ public test bool simpleContinueNLBlock() {
  * FUNCTION DECLARATIONS
  */
 public test bool singleLineFunctionDeclaration() {
-	return outcomeIsCorrect("function f(a) {1}", "|FunctionDecl id [f] params: [a] body: [1]|");
+	return outcomeIsCorrect("function f(a) {1}", "|FunctionDecl id [f] params: [a] body: [{1}]|");
+}
+
+public test bool multiLineFunctionDeclaration() {
+	return outcomeIsCorrect("function f(a) {\n1\n}", "|FunctionDecl id [f] params: [a] body: [{\n1\n}]|");
 }
 
 /** 
