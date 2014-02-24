@@ -72,6 +72,9 @@ public str showTypes(tree) {
 		case (Statement)`continue <Id id>;`: {
 			returnValue += "Continue [<id>];|";
 		}
+		case (FunctionDeclaration)`function <Id id> ( <{Id ","}* params> ) { <SourceElement* body> }`: {
+			returnValue += "FunctionDecl id [<id>] params: [<params>] body: [<body>]|";
+		}
 	}
 	return returnValue;
 }

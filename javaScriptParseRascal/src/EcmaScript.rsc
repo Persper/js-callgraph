@@ -55,10 +55,10 @@ syntax Statement
   
   | empty: ";" NoNL () !>> [}]
   | emptyBlockEnd: ";" NoNL () !>> [\n] >> [}]
-  | expressionSemi: "function" !<< Expression NoNL ";"
-  | expressionLoose: "function" !<< Expression NoNL () !>> [\n] NoNL () $
-  | expressionBlockEnd: "function" !<< Expression NoNL () !>> [\n] >> [}]
-  | expressionNL: "function" !<< Expression NoNL OneOrMoreNewLines
+  | expressionSemi: Expression!function NoNL ";"
+  | expressionLoose: Expression!function NoNL () !>> [\n] NoNL () $
+  | expressionBlockEnd: Expression!function NoNL () !>> [\n] >> [}]
+  | expressionNL: Expression!function NoNL OneOrMoreNewLines
 
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement

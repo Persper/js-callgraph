@@ -266,6 +266,13 @@ public test bool simpleContinueNLBlock() {
 	return outcomeIsCorrect("{ continue\n }", "|Block [continue\n ]|");
 }
 
+/**
+ * FUNCTION DECLARATIONS
+ */
+public test bool singleLineFunctionDeclaration() {
+	return outcomeIsCorrect("function f(a) {1}", "|FunctionDecl id [f] params: [a] body: [1]|");
+}
+
 /** 
  * MISCELLANEOUS TESTS
  **/
