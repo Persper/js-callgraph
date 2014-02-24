@@ -55,10 +55,10 @@ syntax Statement
   
   | empty: ";" NoNL () !>> [}]
   | emptyBlockEnd: ";" NoNL () !>> [\n] >> [}]
-  | expressionSemi: Expression!function NoNL ";"
-  | expressionLoose: Expression!function NoNL () !>> [\n] NoNL () $
-  | expressionBlockEnd: Expression!function NoNL () !>> [\n] >> [}]
-  | expressionNL: Expression!function NoNL OneOrMoreNewLines
+  | expressionSemi: Expression!function!objectDefinition NoNL ";"
+  | expressionLoose: Expression!function!objectDefinition NoNL () !>> [\n] NoNL () $
+  | expressionBlockEnd: Expression!function!objectDefinition NoNL () !>> [\n] >> [}]
+  | expressionNL: Expression!function!objectDefinition NoNL OneOrMoreNewLines
 
   | ifThen: "if" "(" Expression ")" Statement !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement
@@ -186,7 +186,7 @@ syntax Expression
   | bracket "(" Expression ")" NoNL ";"
   | "[" Elts "]"BlockStatement* LastBlockStatement
   | "{" {PropertyAssignment ","}+ "," "}"
-  | "{" {PropertyAssignment ","}+ "}" // Changed multiplicity to + instead of * because an empty { } will be considered as a block
+  | objectDefinition:"{" {PropertyAssignment ","}* "}"
   > function: "function" Id? "(" {Id ","}* ")" "{" SourceElement* "}"
   | Expression "(" { Expression!comma ","}* ")"
   | Expression "[" Expression "]"

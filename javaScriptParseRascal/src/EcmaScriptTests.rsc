@@ -152,6 +152,10 @@ public test bool variableAssignmentEmptyStatement() {
 	return outcomeIsCorrect("var a = 1\n+4\n;x\n", "|Varassign [a] expr [1\n+4]|Empty|Expression [x]\n|");
 }
 
+public test bool variableAssignmentEmptyObject() {
+	return outcomeIsCorrect("var x = {}", "|Varassign [x] expr [{}]|");
+}
+
 /**
  * BLOCK STATEMENTS
  */
@@ -320,6 +324,10 @@ public test bool callAWithParameterBSemiNewline() {
 
 public test bool callAWithParameterBSemiNewline() {
 	return outcomeIsCorrect("a(b);;\n", "|Expression [a(b)];|Empty|");
+}
+
+public test bool identifier() {
+	return outcomeIsCorrect("id", "|Expression [id]|");
 }
 
 public bool outcomeIsCorrect(str source, str expectedOutcome) {
