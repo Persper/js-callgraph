@@ -189,7 +189,8 @@ syntax Elts
 
 
 syntax Expression
-  = "this"
+  = "(" Expression ")"
+  | "this"
   | Id
   | Literal
   | bracket "(" Expression ")" NoNL OneOrMoreNewLines
