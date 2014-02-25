@@ -30,6 +30,9 @@ public str showTypes(tree) {
 		case (Statement)`throw;`: {
 			returnValue += "Throw;|";
 		}
+		case (Block)`{ }`: {
+			returnValue += "EmptyBlock|";
+		}
 		case (Block)`{ <BlockStatements blockStatements> }`: {
 			returnValue += "Block [<blockStatements>]|";
 		}

@@ -164,11 +164,11 @@ public test bool variableAssignmentEmptyObject() {
  * BLOCK STATEMENTS
  */
 public test bool emptyBlock() {
-	return outcomeIsCorrect("{ }", "|Block []|");
+	return outcomeIsCorrect("{ }", "|EmptyBlock|");
 }
 
 public test bool emptyBlockWithNewLine() {
-	return outcomeIsCorrect("{\n}", "|Block []|");
+	return outcomeIsCorrect("{\n}", "|EmptyBlock|");
 }
  
 public test bool blockOneNewlineTwo() {
