@@ -404,13 +404,13 @@ lexical RegularExpressionBody
   ;
 
 lexical RegularExpressionFirstChar
-  = ![*/\[\n]
+  = ![*/\[\n\\]
   | RegularExpressionBackslashSequence
   | RegularExpressionClass
   ;
 
 lexical RegularExpressionChar
-  = ![/\[\n]
+  = ![/\[\n\\]
   | RegularExpressionBackslashSequence
   | RegularExpressionClass
   ;
