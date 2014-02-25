@@ -436,7 +436,12 @@ lexical Comment
   ;
   
 lexical MultLineComment = @category="Comment" "/*" CommentChar* "*/";
-lexical SingleLineComment = @category="Comment" "//" ![\n]* [\n];
+
+lexical ZeroOrMoreChars =
+        | ![\n] NoNL ZeroOrMoreChars
+        |
+        ;
+lexical SingleLineComment = @category="Comment" "//" NoNL ZeroOrMoreChars NoNL [\n];
 
 lexical CommentChar
   = ![*]
