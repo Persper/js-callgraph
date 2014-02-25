@@ -99,6 +99,7 @@ syntax Statement
   
 syntax Block
   = block: "{" BlockStatements "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	| emptyBlock: "{" "}"
   ;
   
 //TODO: find out if not-follows restriction can be removed.
@@ -106,7 +107,9 @@ syntax BlockStatements
 // start with [\n]* 
   = blockStatements: BlockStatement head NoNL BlockStatements tail
   | blockStatements: LastBlockStatement
-  | ZeroOrMoreNewLines NoNL () !>> [\n]
+  | BlockStatement >> ()
+  //| "{" !<< NoNL () NoNL !>> "}"
+  // ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
 
 syntax BlockStatement
@@ -121,6 +124,7 @@ syntax BlockStatement
   	| nestedBlock: Block
   	// Excludes everything except statements containing blocks which in turn contain statements. These don't have to end in newlines or semicolons.
   	| statementContainingNested: Statement!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!breakLabel!breakNoLabel!breakLabelNoSemi!breakLabelNoSemiBlockEnd!breakNoLabelNoSemi!breakNoLabelNoSemiBlockEnd!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!labeled!debugger!block
+  	| functionDecl: FunctionDeclaration
   ;
   
 syntax LastBlockStatement
@@ -191,8 +195,8 @@ syntax Elts
 
 
 syntax Expression
-  = "(" Expression ")" !>> ";"
-  | "this"
+  = "this"
+  | "(" Expression ")" !>> ";"
   | Id
   | Literal
   | array: "[" {Expression!comma ","}+ "]"

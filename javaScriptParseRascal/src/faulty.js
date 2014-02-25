@@ -1,4 +1,4 @@
-var fn = function() {
-    return
-        2 + 3;
+function A() {
+    function B() {
+    }
 }

@@ -294,6 +294,10 @@ public test bool multiLineFunctionDeclaration() {
 	return outcomeIsCorrect("function f(a) {\n1\n}", "|FunctionDecl id [f] params: [a] body: [{\n1\n}]|");
 }
 
+public test bool nestedFunctions() {
+	return outcomeIsCorrect("function f(a){ function g(b){ } }", "|FunctionDecl id [f] params: [a] body: [{ function g(b){ } }]|");
+}
+
 /** 
  * MISCELLANEOUS TESTS
  **/
