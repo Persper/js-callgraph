@@ -208,6 +208,10 @@ public test bool blockOneNoWhitespaceRight() {
 	return outcomeIsCorrect("{ 1}", "|Block [1]|");
 }
 
+public test bool nestedBlock() {
+	return outcomeIsCorrect("{{1}}", "|Block [|Block [1]|]|");
+}
+
 /**
  * BREAK TESTS
  */
