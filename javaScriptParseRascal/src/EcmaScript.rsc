@@ -72,7 +72,8 @@ syntax Statement
   | forDo: "for" "(" ExpressionNoIn? ";" Expression? ";" Expression? ")" Statement
   | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
-        
+  | forIn: "for" "(" "var" Id "in" Expression ")" Statement
+          
   | continueLabel: "continue" NoNL Id NoNL ";"
   | continueNoLabel: "continue" NoNL ";"
   | continueLabelNoSemi: "continue" NoNL Id NoNL () $
@@ -98,8 +99,8 @@ syntax Statement
   ;
   
 syntax Block
-  = block: "{" BlockStatements "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
-  	| emptyBlock: "{" "}"
+  = emptyBlock: "{" "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	| block: "{" BlockStatements "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
   
 //TODO: find out if not-follows restriction can be removed.
@@ -343,17 +344,17 @@ lexical String
 lexical DoubleStringChar
   = ![\"\\\n]
   | [\\] EscapeSequence
-  | LineContinuation
+  //| LineContinuation
   ;
 
 lexical SingleStringChar
   = ![\'\\\n]
   | [\\] EscapeSequence
-  | LineContinuation
+  //| LineContinuation
   ;
 
 lexical LineContinuation
-  = [\\][\\] LineTerminatorSequence
+  = [\\] NoNL OneOrMoreNewLines
   ;
 
 lexical EscapeSequence

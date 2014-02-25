@@ -310,6 +310,10 @@ public test bool separateInvalidToken() {
 	return outcomeThrowsParseError("!");
 }
 
+public test bool multiLineString() {
+	return outcomeIsCorrect("test \\\n test", "test  test");
+}
+
 //Last part is seen as a function call of c.
 public test bool cNewlineDPlusEPrint() {
 	return outcomeIsCorrect("a = b + c\n(d+e);", "|Expression [a = b + c\n(d+e)];|");
