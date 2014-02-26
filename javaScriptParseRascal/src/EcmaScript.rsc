@@ -91,13 +91,16 @@ syntax Statement
   | withDo: "with" "(" Expression ")" Statement
   | switchCase: "switch" "(" Expression ")" CaseBlock
   | labeled: Spaces Id NoNL ":" Statement
-  | tryCatch: "try" "{" SourceElement* "}" "catch" "(" Id ")" "{" Statement* "}"
-  | tryFinally: "try" "{" Statement* "}" "finally" "{" Statement* "}"
-  | tryCatchFinally: "try" "{" Statement* "}" 
-       "catch" "(" Id ")" "{" Statement* "}" "finally" "{" Statement* "}"
+  | trBlock: TryBlock
   | debugger: "debugger" ";"?
   ;
-  
+
+syntax TryBlock =
+  tryCatch: "try" Block "catch" "(" Id ")" Block
+  | tryFinally: "try" Block "finally" Block
+  | tryCatchFinally: "try" Block "catch" "(" Id ")" Block "finally" Block 
+  ;
+
 syntax Block
   = emptyBlock: "{" "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   	| block: "{" BlockStatements "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
@@ -107,30 +110,28 @@ syntax Block
 syntax BlockStatements
 // start with [\n]* 
   = blockStatements: BlockStatement head NoNL BlockStatements tail
-  | blockStatements: LastBlockStatement
-  | BlockStatement >> ()
-  //| "{" !<< NoNL () NoNL !>> "}"
-  // ZeroOrMoreNewLines NoNL () !>> [\n]
+  | blockStatementLast: LastBlockStatement
+  | tailEnd: BlockStatement >> ()
   ;
 
 syntax BlockStatement
-// last added "return no exp no semi"
   =  
-  	// first: somehow returnExpNoSemi does not work as last line "appelkoek:{ break appelkoek;\n\n\n1\n+3\n\n;\n\n\n\n;\n;return 3\n\n }" (without the last two \n's it works :/)
   	// statetements that do not end with a semicolon and one or more new lines
-  	 newLine: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!expressionBlockEnd!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	 newLine: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!expressionBlockEnd!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!trBlock NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | semiColon: Statement!variableNoSemi!expressionNoSemi!returnNoExpNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd!expressionBlockEnd!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+    | semiColon: Statement!variableNoSemi!expressionNoSemi!returnNoExpNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd!expressionBlockEnd!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!trBlock NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   	| nestedBlock: Block
   	// Excludes everything except statements containing blocks which in turn contain statements. These don't have to end in newlines or semicolons.
-  	| statementContainingNested: Statement!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!breakLabel!breakNoLabel!breakLabelNoSemi!breakLabelNoSemiBlockEnd!breakNoLabelNoSemi!breakNoLabelNoSemiBlockEnd!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!labeled!debugger!block
+  	| statementContainingNested: Statement!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!breakLabel!breakNoLabel!breakLabelNoSemi!breakLabelNoSemiBlockEnd!breakNoLabelNoSemi!breakNoLabelNoSemiBlockEnd!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!labeled!debugger!trBlock
   	| functionDecl: FunctionDeclaration
+  	
+  	| tryBlock: TryBlock
   ;
   
 syntax LastBlockStatement
 	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
-  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp!expressionNL!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn NoNL () !>> [\n] >> [}]
+  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp!expressionNL!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!trBlock NoNL () !>> [\n] >> [}]
   ;
   
 // TODO:
@@ -196,8 +197,10 @@ syntax Elts
 
 
 syntax Expression
-  = "this"
-  | "(" Expression ")" !>> ";"
+  = 
+  "this"
+  > ternary: Expression "?" Expression ":" Expression
+  > bracket "(" Expression ")" !>> ";"
   | Id
   | Literal
   | array: "[" {Expression!comma ","}+ "]"
@@ -261,7 +264,6 @@ syntax Expression
   > right Expression "|" !>> [|=] Expression
   > right Expression "&&" Expression
   > right Expression "||" Expression
-  > Expression "?" Expression ":" Expression
   > right (
       Expression "=" !>> ([=][=]?) Expression
     | Expression "*=" Expression
@@ -424,7 +426,7 @@ lexical RegularExpressionClass
   ;
 
 lexical RegularExpressionClassChar
-  = ![\n\]]
+  = ![\n\]\\]
   | RegularExpressionBackslashSequence
   ;
 
