@@ -8,6 +8,7 @@ import vis::Render;
 import String;
 import List;
 import Map;
+import Set;
 
 /*
  * TODO
@@ -195,14 +196,9 @@ syntax Elts
 // Commas (Expression Comma+)* Expression?
 // missed case in parsergen.
 
-
+// Todo: Yield and check associativity https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
 syntax Expression
-  = 
-  "this"
-  > ternary: Expression "?" Expression ":" Expression
-  > bracket "(" Expression ")" !>> ";"
-  | Id
-  | Literal
+  = bracket "(" Expression ")" !>> ";"
   | array: "[" {Expression!comma ","}+ "]"
   | emptyArray: "[" "]"
   | bracket "(" Expression ")" NoNL OneOrMoreNewLines
@@ -211,9 +207,13 @@ syntax Expression
   | "{" {PropertyAssignment ","}+ "," "}"
   | objectDefinition:"{" {PropertyAssignment ","}* "}"
   > function: "function" Id? "(" {Id ","}* ")" Block
-  | Expression "(" { Expression!comma ","}* ")"
+  > Expression "." Id !>> "()"
+  | Expression "." Id "()"  
+  > Expression "(" { Expression!comma ","}* ")"
   | Expression "[" Expression "]"
-  | Expression "." Id
+  | "this"
+  | Id
+  | Literal
   > "new" Expression
   > Expression !>> [\n\r] "++"
   | Expression !>> [\n\r] "--"
@@ -262,8 +262,8 @@ syntax Expression
   > right Expression "&" !>> [&=] Expression
   > right Expression "^" !>> [=] Expression
   > right Expression "|" !>> [|=] Expression
-  > right Expression "&&" Expression
-  > right Expression "||" Expression
+  > left Expression "&&" Expression
+  > left Expression "||" Expression
   > right (
       Expression "=" !>> ([=][=]?) Expression
     | Expression "*=" Expression
@@ -278,7 +278,8 @@ syntax Expression
     | Expression "^=" Expression
     | Expression "|=" Expression
   )
-  > right comma: Expression "," Expression
+  > left comma: Expression "," Expression
+  > right Expression "?" Expression ":" Expression
   ;
 
 syntax PropertyName
@@ -350,7 +351,7 @@ lexical DoubleStringChar
   ;
 
 lexical SingleStringChar
-  = ![\'\\\n]
+  = NonSingleStringEscapeCharacter // ![\'\\\n]
   | [\\] EscapeSequence
   //| LineContinuation
   ;
@@ -361,22 +362,25 @@ lexical LineContinuation
 
 lexical EscapeSequence
   = CharacterEscapeSequence
-  | [0] !>> [0-9]
+  // | [0] !>> [0-9]
   | HexEscapeSequence
   | UnicodeEscapeSequence
   ;
 
 lexical CharacterEscapeSequence
-  = SingleEscapeCharacter
-  | NonEscapeCharacter
+  = 
+  NonEscapeCharacter
+  | SingleEscapeCharacter
   ;
 
 lexical SingleEscapeCharacter
   = [\'\"\\bfnrtv]
   ;
 
+lexical NonSingleStringEscapeCharacter = ![\n\'\\bfnrtv];
+
 lexical NonEscapeCharacter
-  = ![\n\"\\bfnrtv]
+  = ![\n\"\\bfnrtvux]
   ;
 
 lexical EscapeCharacter
@@ -569,7 +573,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 		&& (isExpression(head) || isExpressionNL(head))
 		&& unparse(tail) != ""
 		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]) || isParenthesesExpression(tail.args[0]))) {
-		filter;
+		filter; 
 	}
 	
 	fail;
@@ -585,9 +589,11 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 // }
 // TODO: make sure this doesn't filter.
 BlockStatements blockStatements(BlockStatement head, NoNL l, BlockStatements tail) {
+	println("I was called");
 	if (head is newLine && size(tail.args) > 0) {
 		// candidate for invalid parse tree
 		if (isLeftMostPlusMinus(tail.args[0])) {
+			println("and filtered");
 			filter;
 		}
 		fail;
@@ -604,12 +610,12 @@ bool isLeftMostPlusMinus(Tree t) {
 tuple[int,int] getBeginPosition(Tree t) = (t@\loc).begin ? <-1,1>;
 
 Tree getLeftMost(type[&T] tp, Tree t) {
-	currentMin = <-1,-1>;
+	currentMin = t@\loc.end;
 	result = t;
 	visit (t) {
 		case &T child : {
 			pos1 = getBeginPosition(child);
-			if (pos1 != <-1,-1>, pos1 < currentMin || currentMin == <-1,-1>) {
+			if (pos1 != <-1,-1>, pos1 < currentMin) {
 				result = child;
 				currentMin = pos1;
 			}
