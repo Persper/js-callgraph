@@ -1,5 +1,6 @@
-parseOnly ?
-soFar.length :
-soFar ?
-Sizzle.error( selector ) :
-tokenCache( selector, groups ).slice
+
+                jQuery.merge( ret,
+                    1 ? 2 : 3
+                );
+ 
+ 
