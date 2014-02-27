@@ -579,17 +579,63 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 // { 1
 //   return +1
 // }
+// {
+//    return 1
+//    + 3
+// }
 // TODO: make sure this doesn't filter.
 BlockStatements blockStatements(BlockStatement head, NoNL l, BlockStatements tail) {
-	if (tail.args != []
-		&& unparse(tail) != ""
-		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]))
-		&& (endsWith(unparse(head), "\n") || startsWith(unparse(tail), "\n"))) { //TODO: filter out spaces and tabs but NOT newlines.
-		filter;
-	}	
+	if (head is newLine && size(tail.args) > 0) {
+		// candidate for invalid parse tree
+		if (isLeftMostPlusMinus(tail.args[0])) {
+			filter;
+		}
+		fail;
+	}
 	fail;
 }
 
+bool isLeftMostPlusMinus(Tree t) {
+	Tree lefty = getLeftMost(#Expression, t);
+	return (Expression)`+ <Expression _>` := lefty 
+		|| (Expression)`- <Expression _>` := lefty;
+}
+
+tuple[int,int] getBeginPosition(Tree t) = (t@\loc).begin ? <-1,1>;
+
+Tree getLeftMost(type[&T] tp, Tree t) {
+	currentMin = <-1,-1>;
+	result = t;
+	visit (t) {
+		case &T child : {
+			pos1 = getBeginPosition(child);
+			if (pos1 != <-1,-1>, pos1 < currentMin || currentMin == <-1,-1>) {
+				result = child;
+				currentMin = pos1;
+			}
+		}
+	}
+	return result;
+}
+
+/*
+private bool containsInvalidBlockStatement(Tree t) {
+	if (/blockStatements(head, tail) := t) {
+		// still kinda wrong, isPlus/isMinus search too deep!
+		return tail.args != []
+			&& unparse(tail) != ""
+			&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]));
+	}
+	return false;
+}
+
+public Tree amb(set[Tree] alternatives) {
+	result = { a | a <- alternatives, !containsInvalidBlockStatement(a)};
+	if ({Tree r} := result)
+		return r;
+	fail amb;
+}
+*/
 //Parsing
 public Source parse(loc file) = parse(#start[Source], file).top;
 public Source parse(str txt) = parse(#start[Source], txt).top;
