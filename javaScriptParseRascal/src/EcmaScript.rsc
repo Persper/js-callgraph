@@ -272,7 +272,7 @@ syntax Expression
   > left Expression "&&" Expression
   > left Expression "||" Expression
   > right (
-      Expression "=" !>> ([=][=]?) Expression
+      variableAssignment:Id "=" !>> ([=][=]?) Expression
     | Expression "*=" Expression
     | Expression "/=" Expression
     | Expression "%=" Expression
