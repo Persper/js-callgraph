@@ -355,6 +355,10 @@ public test bool identifier() {
 	return outcomeIsCorrect("id", "|Expression [id]|");
 }
 
+public test bool backwardsAssignment() {
+	return outcomeThrowsParseError("1 = x");
+}
+
 /** 
  * OPERATOR PRECEDENCE
  **/
@@ -384,6 +388,10 @@ public test bool equalLeftToRight2() {
 
 public test bool bracketsFirst() {
 	return evaluate(parse("(3 + 4) * 5")) == 35;
+}
+
+public test bool assignmentAssociativity() {
+	return evaluateVarAssign(parse("x = y = 5")) == "|Value of x is 5|Value of y is 5|";
 }
 
 public bool outcomeIsCorrect(str source, str expectedOutcome) {

@@ -86,6 +86,9 @@ public str showTypes(tree) {
 
 public num evaluate(tree) {
 	top-down-break visit(tree) {
+		case (Expression)`<Id id> = <Expression e>`: {
+			return evaluate(e);
+		}
 		case (Expression)`<Literal l>`: {
 			return toInt(unparse(l));
 		}
@@ -102,4 +105,14 @@ public num evaluate(tree) {
 			return evaluate(a) - evaluate(b);
 		}
 	}
+}
+
+public str evaluateVarAssign(tree) {
+	str returnValue = "|";
+	top-down visit(tree) {
+		case (Expression)`<Id id> = <Expression e>`: {
+			returnValue += "Value of <id> is <evaluate(e)>|";
+		}
+	}
+	return returnValue;
 }
