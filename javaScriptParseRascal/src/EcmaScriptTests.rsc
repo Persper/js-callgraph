@@ -311,7 +311,7 @@ public test bool separateInvalidToken() {
 }
 
 public test bool multiLineString() {
-	return outcomeIsCorrect("test \\\n test", "test  test");
+	return outcomeIsCorrect("\"test \\\n test\"", "test  test");
 }
 
 //Last part is seen as a function call of c.
@@ -353,6 +353,37 @@ public test bool callAWithParameterBSemiNewline() {
 
 public test bool identifier() {
 	return outcomeIsCorrect("id", "|Expression [id]|");
+}
+
+/** 
+ * OPERATOR PRECEDENCE
+ **/
+public test bool multBeforePlus() {
+	return evaluate(parse("3 + 4 * 5")) == 23;
+}
+
+public test bool multBeforeMinus() {
+	return evaluate(parse("43 - 4 * 5")) == 23;
+}
+
+public test bool divBeforePlus() {
+	return evaluate(parse("3 + 20 / 4")) == 8;
+}
+
+public test bool divBeforeMinus() {
+	return evaluate(parse("13 - 20 / 4")) == 8;
+}
+
+public test bool equalLeftToRight1() {
+	return evaluate(parse("3 * 4 / 2")) == 6;
+}
+
+public test bool equalLeftToRight2() {
+	return evaluate(parse("10 / 2 * 4")) == 20;
+}
+
+public test bool bracketsFirst() {
+	return evaluate(parse("(3 + 4) * 5")) == 35;
 }
 
 public bool outcomeIsCorrect(str source, str expectedOutcome) {

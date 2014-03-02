@@ -1,7 +1,9 @@
 module EcmaScriptTypePrinter
 
 import EcmaScript;
+import ParseTree;
 import IO;
+import String;
 
 public str showTypes(tree) {
 	str returnValue = "|";
@@ -80,4 +82,24 @@ public str showTypes(tree) {
 		}
 	}
 	return returnValue;
+}
+
+public num evaluate(tree) {
+	top-down-break visit(tree) {
+		case (Expression)`<Literal l>`: {
+			return toInt(unparse(l));
+		}
+		case (Expression)`<Expression a> * <Expression b>`: {
+			return evaluate(a) * evaluate(b);
+		}
+		case (Expression)`<Expression a> / <Expression b>`: {
+			return evaluate(a) / evaluate(b);
+		}
+		case (Expression)`<Expression a> + <Expression b>`: {
+			return evaluate(a) + evaluate(b);
+		}
+		case (Expression)`<Expression a> - <Expression b>`: {
+			return evaluate(a) - evaluate(b);
+		}
+	}
 }

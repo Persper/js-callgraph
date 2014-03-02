@@ -11,11 +11,13 @@ import Map;
 import Set;
 
 /*
- * TODO
- * - Check for newlines in continue Id etc.
- * - Do semicolon insertion right.
+ * This grammar supports EcmaScript 5 at the moment which means that the following (non-exhaustive list)
+ * of functions are not supported at the moment:
+ * - Yield
+ * - Generators
+ * - Let bindings
+ * - ...
  */
-
 start syntax Source 
   = source: SourceElement head Source tail !>> [\n]
   |
@@ -204,7 +206,7 @@ syntax Elts
 // Commas (Expression Comma+)* Expression?
 // missed case in parsergen.
 
-// Todo: Yield and check associativity https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
+// Todo: Check associativity https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
 syntax Expression
   = 
    array: "[" {Expression!comma ","}+ "]"
