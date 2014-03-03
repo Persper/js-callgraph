@@ -363,7 +363,7 @@ lexical DoubleStringChar
   ;
 
 lexical SingleStringChar
-  = NonSingleStringEscapeCharacter // ![\'\\\n]
+  = ![\'\\\n] //TODO: LEXICAL OF THIS (![\n\'\\bfnrtv]) WHY?
   | [\\] EscapeSequence
   //| LineContinuation
   ;
@@ -388,8 +388,6 @@ lexical CharacterEscapeSequence
 lexical SingleEscapeCharacter
   = [\'\"\\bfnrtv]
   ;
-
-lexical NonSingleStringEscapeCharacter = ![\n\'\\bfnrtv];
 
 lexical NonEscapeCharacter
   = ![\n\"\\bfnrtvux]
