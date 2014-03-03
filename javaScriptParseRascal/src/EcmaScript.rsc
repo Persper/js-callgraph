@@ -107,15 +107,17 @@ syntax TryBlock =
   | tryCatchFinally: "try" Block "catch" "(" Id ")" Block "finally" Block 
   ;
 
+//Eats the newlines but when this happens in a variableAssignment it can't be parsed as an ExpressionNL anymore
+//causing problems with two blocks following each other without using a semicolon.
 syntax Block
-  = emptyBlock: "{" "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
-  	| block: "{" BlockStatements "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  = emptyBlock: "{" "}"
+  | block: "{" BlockStatements "}"
   ;
   
 //TODO: find out if not-follows restriction can be removed.
 syntax BlockStatements
 // start with [\n]* 
-  = blockStatements: BlockStatement head NoNL BlockStatements tail
+  = blockStatements: BlockStatement head BlockStatements tail
   | blockStatementLast: LastBlockStatement
   | tailEnd: BlockStatement >> ()
   ;

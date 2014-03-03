@@ -1,6 +1,5 @@
+a = function() {
+}
 
-                jQuery.merge( ret,
-                    1 ? 2 : 3
-                );
- 
- 
+b = function() {
+}
