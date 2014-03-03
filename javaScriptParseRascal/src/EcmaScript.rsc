@@ -117,7 +117,7 @@ syntax Block
 //TODO: find out if not-follows restriction can be removed.
 syntax BlockStatements
 // start with [\n]* 
-  = blockStatements: BlockStatement head BlockStatements tail
+  = blockStatements: BlockStatement head NoNL BlockStatements tail
   | blockStatementLast: LastBlockStatement
   | tailEnd: BlockStatement >> ()
   ;
