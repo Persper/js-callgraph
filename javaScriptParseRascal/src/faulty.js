@@ -1,6 +1,4 @@
-if (true) {
-    if (true) {
-    	1;
-    }
-    return factory( w );
-} 
+function a() {
+	if (true) a;
+	b;
+}
