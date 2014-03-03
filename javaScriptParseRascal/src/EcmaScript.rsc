@@ -597,7 +597,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 //    return 1
 //    + 3
 // }
-// TODO: make sure this doesn't filter.
+// TODO: make sure this doesn't filter. Currently it DOES.
 BlockStatements blockStatements(BlockStatement head, NoNL l, BlockStatements tail) {
 	//println("I was called");
 	if (head is newLine && size(tail.args) > 0) {
