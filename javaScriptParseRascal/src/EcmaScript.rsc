@@ -207,6 +207,8 @@ syntax Elts
 // missed case in parsergen.
 
 // Todo: Check associativity https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Operator_Precedence
+// Todo: Right now you can put any type of Expression on the lhs of a variableAssignment like: 5 = y; We only want to do this for a few cases however
+// Rather than exclude everything other than those cases it would be much easier to whitelist the few that ARE allowed.
 syntax Expression
   = 
    array: "[" {Expression!comma ","}+ "]"
@@ -214,12 +216,12 @@ syntax Expression
   | "{" {PropertyAssignment ","}+ "," "}"
   | objectDefinition:"{" {PropertyAssignment ","}* "}"
   > function: "function" Id? "(" {Id ","}* ")" Block
-  | Expression "." Id
-  > Expression "(" { Expression!comma ","}+ ")"
-  | Expression "(" ")"
-  | Expression "[" Expression "]"
+  | Expression "." Id //Can be on LHS of variableAssignment
+  > Expression "(" { Expression!comma ","}+ ")" //Can be on LHS of variableAssignment
+  | Expression "(" ")" //Can be on LHS of variableAssignment
+  | Expression "[" Expression "]" //Can be on LHS of variableAssignment
   | "this"
-  | Id
+  | Id //Can be on LHS of variableAssignment
   | Literal
   > "new" Expression
   > Expression !>> [\n\r] "++"
@@ -272,7 +274,7 @@ syntax Expression
   > left Expression "&&" Expression
   > left Expression "||" Expression
   > right (
-      variableAssignment:Id "=" !>> ([=][=]?) Expression
+      variableAssignment:Expression "=" !>> ([=][=]?) Expression
     | Expression "*=" Expression
     | Expression "/=" Expression
     | Expression "%=" Expression
@@ -285,7 +287,7 @@ syntax Expression
     | Expression "^=" Expression
     | Expression "|=" Expression
   )
-  > nestedExpression: "(" Expression ")"
+  > nestedExpression: "(" Expression ")" //Can be on LHS of variableAssignment
   > right Expression "?" Expression ":" Expression
   > left comma: Expression "," Expression
   ;
