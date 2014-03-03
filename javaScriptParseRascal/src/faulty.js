@@ -1,6 +1,6 @@
-
-                jQuery.merge( ret,
-                    1 ? 2 : 3
-                );
- 
- 
+if (true) {
+    if (true) {
+    	1;
+    }
+    return factory( w );
+} 
