@@ -212,7 +212,6 @@ public test bool twoFunctions() {
 	return outcomeIsCorrect("a = function() {\n}\n\nb = function() {\n}", "|Expression [a = function() {\n}]\n|Expression [b = function() {\n}]|");
 }
 
-//TODO: VISIT PROPERLY
 public test bool nestedBlock() {
 	return outcomeIsCorrect("{{1}}", "|Block [{1}]|");
 }
