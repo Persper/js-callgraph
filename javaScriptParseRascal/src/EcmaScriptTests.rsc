@@ -374,6 +374,7 @@ public test bool backwardsAssignment() {
 }
 
 public test bool testSnippetsParseUnambiguously() {
+	bool allGood = true;
 	list[loc] files = |project://JavaScriptParseRascal/src/snippets|.ls;
 	for (loc file <- files) {
 		if (endsWith(file.uri, "-IGNORE.js")) {
@@ -382,10 +383,11 @@ public test bool testSnippetsParseUnambiguously() {
 		}
 		Tree parsed = parse(file);
 		if(/amb(_) := parsed) {
-			throw ("Snippet <file> parses ambiguously");
+			println("Snippet <file> parses ambiguously");
+			allGood = false;
 		}
 	}
-	return true;
+	return allGood;
 }
 
 /** 
