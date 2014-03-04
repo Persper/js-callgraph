@@ -98,7 +98,7 @@ syntax Statement
   | debugger: "debugger" ";"?
   ;
 
-syntax SwitchBlock = "switch" "(" Expression ")" CaseBlock; 
+syntax SwitchBlock = "switch" "(" Expression ")" CaseBlock;
 
 
 syntax TryBlock =
@@ -178,7 +178,7 @@ syntax VariableDeclarationNoIn
   ;
 
 syntax CaseBlock 
-  = "{" CaseClauses+ "}" !>> ";"
+  = "{" CaseClauses* "}" !>> ";"
   ;
 
 syntax CaseClauses = 
@@ -577,6 +577,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 			&& unparse(tail) != ""
 			&& isLeftMostPlusMinus(tail.args[0])
 			&& findFirst(unparse(l), "\n") != -1) {
+			println("Filtering");
 		filter;
 	}
 	
@@ -584,6 +585,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 		&& (isExpression(head) || isExpressionNL(head))
 		&& unparse(tail) != ""
 		&& (isLeftMostPlusMinus(tail.args[0]) || isLeftMostParenthesesExpression(tail.args[0]))) {
+		println("Filtering");
 		filter; 
 	}
 	
