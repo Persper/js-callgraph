@@ -12,7 +12,7 @@ import Set;
 
 /*
  * This grammar supports EcmaScript 5 at the moment which means that the following (non-exhaustive list)
- * of functions are not supported:
+ * of functions are not supported at the moment:
  * - Yield
  * - Generators
  * - Let bindings
@@ -34,7 +34,7 @@ syntax ZeroOrMoreSourceElements
 	;
 
 syntax FunctionDeclaration 
-  = "function" Id "(" {Id ","}* ")" Block NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  = "function" Id "(" {Id ","}* ")" Block
   ;
   
 // TODO add EOF
@@ -43,7 +43,7 @@ lexical NoPrecedingEnters =
 	[\n] !<< [\ \t]*;
   
 syntax Statement 
-  = block:Block NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  = block:Block
   | variableNoSemi: "var" {VariableDeclaration ","}+ NoNL () $
   | variableSemi: "var" {VariableDeclaration ","}+ NoNL ";"
 
@@ -92,9 +92,9 @@ syntax Statement
   | breakNoLabelNoSemiBlockEnd: "break" NoNL () >> [}]
   
   | withDo: "with" "(" Expression ")" Statement
-  | switchCase: SwitchBlock //TODO: MAYBE EAT NEWLINES HERE TOO?
+  | switchCase: SwitchBlock //TODO: newline eating here too?
   | labeled: Spaces Id NoNL ":" Statement
-  | tryBlock: TryBlock
+  | trBlock: TryBlock
   | debugger: "debugger" ";"?
   ;
 
@@ -102,16 +102,14 @@ syntax SwitchBlock = "switch" "(" Expression ")" CaseBlock;
 
 
 syntax TryBlock =
-  tryCatch: "try" Block "catch" "(" Id ")" Block NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
-  | tryFinally: "try" Block "finally" Block NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
-  | tryCatchFinally: "try" Block "catch" "(" Id ")" Block "finally" Block NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  tryCatch: "try" Block "catch" "(" Id ")" Block
+  | tryFinally: "try" Block "finally" Block
+  | tryCatchFinally: "try" Block "catch" "(" Id ")" Block "finally" Block 
   ;
 
-//Eats the newlines but when this happens in a variableAssignment it can't be parsed as an ExpressionNL anymore
-//causing problems with two blocks following each other without using a semicolon.
 syntax Block
-  = emptyBlock: "{" "}"
-  | block: "{" BlockStatements "}"
+  = emptyBlock: "{" "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	| block: "{" BlockStatements "}" NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
   
 //TODO: find out if not-follows restriction can be removed.
@@ -125,13 +123,13 @@ syntax BlockStatements
 syntax BlockStatement
   =  
   	// statetements that do not end with a semicolon and one or more new lines
-  	 newLine: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!expressionBlockEnd!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!tryBlock!switchCase NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	 newLine: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!expressionBlockEnd!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!trBlock!switchCase NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | semiColon: Statement!variableNoSemi!expressionNoSemi!returnNoExpNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd!expressionBlockEnd!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!tryBlock!switchCase NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+    | semiColon: Statement!variableNoSemi!expressionNoSemi!returnNoExpNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd!expressionBlockEnd!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!trBlock!switchCase NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   	| nestedBlock: Block
   	// Excludes everything except statements containing blocks which in turn contain statements. These don't have to end in newlines or semicolons.
-  	| statementContainingNested: Statement!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!breakLabel!breakNoLabel!breakLabelNoSemi!breakLabelNoSemiBlockEnd!breakNoLabelNoSemi!breakNoLabelNoSemiBlockEnd!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!labeled!debugger!tryBlock!switchCase!block
+  	| statementContainingNested: Statement!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!breakLabel!breakNoLabel!breakLabelNoSemi!breakLabelNoSemiBlockEnd!breakNoLabelNoSemi!breakNoLabelNoSemiBlockEnd!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!labeled!debugger!trBlock!switchCase
   	| functionDecl: FunctionDeclaration
   	| switchBlock: SwitchBlock
   	| tryBlock: TryBlock
@@ -139,7 +137,7 @@ syntax BlockStatement
   
 syntax LastBlockStatement
 	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
-  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp!expressionNL!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!tryBlock!switchCase NoNL () !>> [\n] >> [}]
+  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp!expressionNL!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!trBlock!switchCase NoNL () !>> [\n] >> [}]
   ;
   
 // TODO:
@@ -363,7 +361,7 @@ lexical DoubleStringChar
   ;
 
 lexical SingleStringChar
-  = ![\'\\\n] //TODO: LEXICAL OF THIS (![\n\'\\bfnrtv]) WHY?
+  = NonSingleStringEscapeCharacter // ![\'\\\n]
   | [\\] EscapeSequence
   //| LineContinuation
   ;
@@ -388,6 +386,8 @@ lexical CharacterEscapeSequence
 lexical SingleEscapeCharacter
   = [\'\"\\bfnrtv]
   ;
+
+lexical NonSingleStringEscapeCharacter = ![\n\'\\bfnrtv];
 
 lexical NonEscapeCharacter
   = ![\n\"\\bfnrtvux]
@@ -597,7 +597,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 //    return 1
 //    + 3
 // }
-// TODO: make sure this doesn't filter.
+// TODO: make sure this doesn't filter. Currently it DOES.
 BlockStatements blockStatements(BlockStatement head, NoNL l, BlockStatements tail) {
 	//println("I was called");
 	if (head is newLine && size(tail.args) > 0) {
