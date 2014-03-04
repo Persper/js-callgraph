@@ -1,5 +1,8 @@
 module EcmaScriptTests
 
+import String;
+import IO;
+import ParseTree;
 import EcmaScript;
 import EcmaScriptTypePrinter;
 
@@ -363,14 +366,26 @@ public test bool backwardsAssignment() {
 }
 
 public test bool testSnippetsParseUnambiguously() {
+	bool allGood = true;
 	list[loc] files = |project://JavaScriptParseRascal/src/snippets|.ls;
 	for (loc file <- files) {
-		Tree parsed = parse(file);
-		if(/amb(_) !:= parsed) {
-			throw ("Snippet " + file + "parses ambiguously");
+		if (endsWith(file.uri, "-IGNORE.js")) {
+			println("--- Skipping <file> ---");
+			continue;
+		}
+		try {
+			Tree parsed = parse(file);
+			if(/amb(_) := parsed) {
+				println("Snippet <file> parses ambiguously");
+				allGood = false;
+			}
+		}
+		catch ParseError: {
+			println("Snippet <file> doesnt parse");
+			allGood = false;
 		}
 	}
-	return true;
+	return allGood;
 }
 
 /** 
