@@ -140,7 +140,7 @@ syntax BlockStatement
   	| switchBlock: SwitchBlock
   	| tryBlock: TryBlock
   	//TODO: add other NON-SINGLE STATEMENT conditionals/loops
-  	| singleStatementConditionalOrLoop: Statement!block!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!continueLabel!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!breakLabel!breakNoLabel!breakLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!withDo!switchCase!labeled!tryBlock!debugger!ifThenBlock!ifThenElseBlock  NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	| singleStatementConditionalOrLoop: Statement!block!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!continueLabel!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!breakLabel!breakNoLabel!breakLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!withDo!switchCase!labeled!tryBlock!debugger!ifThenBlock!ifThenElseBlock!doWhile  NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
   
 syntax LastBlockStatement
