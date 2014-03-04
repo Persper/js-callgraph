@@ -365,7 +365,7 @@ public test bool backwardsAssignment() {
 public test bool testSnippetsParseUnambiguously() {
 	list[loc] files = |project://JavaScriptParseRascal/src/snippets|.ls;
 	for (loc file <- files) {
-		Tree parsed = parse(source);
+		Tree parsed = parse(file);
 		if(/amb(_) !:= parsed) {
 			throw ("Snippet " + file + "parses ambiguously");
 		}
