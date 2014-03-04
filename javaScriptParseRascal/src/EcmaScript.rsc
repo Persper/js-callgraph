@@ -577,18 +577,19 @@ keyword Reserved =
 
 Source source(SourceElement head, LAYOUTLIST l, Source tail) {	
 	// Prioritizes add and subtract expressions in multiline returns over positive and negative numbers 	
+	//TODO: left-most here too?
 	if (tail.args != [] 
 			&& (isReturnWithExpression(head) || isThrowWithExpression(head) || isVariableDeclaration(head))
 			&& unparse(tail) != ""
-			&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]))
+			&& isLeftMostPlusMinus(tail.args[0])
 			&& findFirst(unparse(l), "\n") != -1) {
-		filter;		
+		filter;
 	}
 	
 	if (tail.args != [] 
 		&& (isExpression(head) || isExpressionNL(head))
 		&& unparse(tail) != ""
-		&& (isPlusExpression(tail.args[0]) || isMinusExpression(tail.args[0]) || isParenthesesExpression(tail.args[0]))) {
+		&& (isLeftMostPlusMinus(tail.args[0]) || isLeftMostParenthesesExpression(tail.args[0]))) {
 		filter; 
 	}
 	
@@ -620,6 +621,11 @@ bool isLeftMostPlusMinus(Tree t) {
 	Tree lefty = getLeftMost(#Expression, t);
 	return (Expression)`+ <Expression _>` := lefty 
 		|| (Expression)`- <Expression _>` := lefty;
+}
+
+bool isLeftMostParenthesesExpression(Tree t) {
+	Tree lefty = getLeftMost(#Expression, t);
+	return /(Expression)`( <Expression n1> )` := lefty;
 }
 
 tuple[int,int] getBeginPosition(Tree t) = (t@\loc).begin ? <-1,1>;
@@ -674,5 +680,4 @@ private bool isExpressionSemi(element) = /(Statement)`<Expression e>;` := elemen
 private bool isExpressionNL(element) = /(Statement)`<Expression e> <OneOrMoreNewLines n>` := element;
 private bool isPlusExpression(element) = /(Expression)`+ <Expression n1>` := element;
 private bool isMinusExpression(element) = /(Expression)`- <Expression n1>` := element;
-private bool isParenthesesExpression(element) = /(Expression)`( <Expression n1> )` := element;
 private bool isEmptyStatement(element) = /(Statement)`;` := element;

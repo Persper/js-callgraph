@@ -1,8 +1,8 @@
 module EcmaScriptTests
 
-import ParseTree;
 import String;
 import IO;
+import ParseTree;
 import EcmaScript;
 import EcmaScriptTypePrinter;
 
