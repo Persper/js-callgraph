@@ -1,5 +1,8 @@
 module EcmaScriptTests
 
+import ParseTree;
+import String;
+import IO;
 import EcmaScript;
 import EcmaScriptTypePrinter;
 
@@ -358,6 +361,14 @@ public test bool identifier() {
 	return outcomeIsCorrect("id", "|Expression [id]|");
 }
 
+public test bool ifStatementsEatsSemicolon() {
+	if (/(Statement)`if (<Expression e>) <Statement t>` := parse("if(true) a;")) {
+		return /(Statement)`<Expression e>`:= t;
+	} else {
+		throw "Doesnt match pattern";
+	}
+}
+
 public test bool backwardsAssignment() {
 	return outcomeThrowsParseError("1 = x");
 }
@@ -365,9 +376,13 @@ public test bool backwardsAssignment() {
 public test bool testSnippetsParseUnambiguously() {
 	list[loc] files = |project://JavaScriptParseRascal/src/snippets|.ls;
 	for (loc file <- files) {
+		if (endsWith(file.uri, "-IGNORE.js")) {
+			println("--- Skipping <file> ---");
+			continue;
+		}
 		Tree parsed = parse(file);
-		if(/amb(_) !:= parsed) {
-			throw ("Snippet " + file + "parses ambiguously");
+		if(/amb(_) := parsed) {
+			throw ("Snippet <file> parses ambiguously");
 		}
 	}
 	return true;
