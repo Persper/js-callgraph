@@ -92,7 +92,7 @@ syntax Statement
   | breakNoLabelNoSemiBlockEnd: "break" NoNL () >> [}]
   
   | withDo: "with" "(" Expression ")" Statement
-  | switchCase: SwitchBlock
+  | switchCase: SwitchBlock //TODO: newline eating here too?
   | labeled: Spaces Id NoNL ":" Statement
   | trBlock: TryBlock
   | debugger: "debugger" ";"?

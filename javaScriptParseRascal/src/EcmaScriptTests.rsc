@@ -208,10 +208,13 @@ public test bool blockOneNoWhitespaceRight() {
 	return outcomeIsCorrect("{ 1}", "|Block [1]|");
 }
 
-//TODO: VISIT PROPERLY
-//public test bool nestedBlock() {
-//	return outcomeIsCorrect("{{1}}", "|Block [|Block [1]|]|");
-//}
+public test bool twoFunctions() {
+	return outcomeIsCorrect("a = function() {\n}\n\nb = function() {\n}", "|Expression [a = function() {\n}]\n|Expression [b = function() {\n}]|");
+}
+
+public test bool nestedBlock() {
+	return outcomeIsCorrect("{{1}}", "|Block [{1}]|");
+}
 
 /**
  * BREAK TESTS
@@ -357,6 +360,17 @@ public test bool identifier() {
 
 public test bool backwardsAssignment() {
 	return outcomeThrowsParseError("1 = x");
+}
+
+public test bool testSnippetsParseUnambiguously() {
+	list[loc] files = |project://JavaScriptParseRascal/src/snippets|.ls;
+	for (loc file <- files) {
+		Tree parsed = parse(source);
+		if(/amb(_) !:= parsed) {
+			throw ("Snippet " + file + "parses ambiguously");
+		}
+	}
+	return true;
 }
 
 /** 

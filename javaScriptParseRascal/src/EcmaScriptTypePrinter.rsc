@@ -80,6 +80,12 @@ public str showTypes(tree) {
 		case (FunctionDeclaration)`function <Id id> ( <{Id ","}* params> ) <Block b>`: {
 			returnValue += "FunctionDecl id [<id>] params: [<params>] body: [<b>]|";
 		}
+		case (Statement)`if (<Expression e>) <Statement t>`: {
+			returnValue += "If exp [<e>] then [<t>]|";
+		}
+		case (Statement)`if (<Expression e>) <Statement t> else <Statement f>`: {
+			returnValue += "If exp [<e>] then [<t>] else [<f>]|";
+		}
 	}
 	return returnValue;
 }
