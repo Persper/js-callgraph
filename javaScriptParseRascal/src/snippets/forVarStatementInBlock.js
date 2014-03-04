@@ -1,4 +1,4 @@
-function f() {
+{
     for (var i = 0; i < len; i++ ) {
         a;
     }
