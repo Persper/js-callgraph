@@ -381,9 +381,15 @@ public test bool testSnippetsParseUnambiguously() {
 			println("--- Skipping <file> ---");
 			continue;
 		}
-		Tree parsed = parse(file);
-		if(/amb(_) := parsed) {
-			println("Snippet <file> parses ambiguously");
+		try {
+			Tree parsed = parse(file);
+			if(/amb(_) := parsed) {
+				println("Snippet <file> parses ambiguously");
+				allGood = false;
+			}
+		}
+		catch ParseError: {
+			println("Snippet <file> doesnt parse");
 			allGood = false;
 		}
 	}

@@ -1,6 +1,4 @@
 {
-	while(true) {
-		a;
-	}
+	while(true) a;
 	b;
 }

@@ -74,9 +74,9 @@ syntax Statement
   | ifThenElseBlock: "if" "(" Expression ")" Statement "else" Block
   
   | doWhile: "do" Statement "while" "(" Expression ")" ";"? 
-  | whileDo: "while" "(" Expression ")" Statement
-  | forDo: "for" "(" ExpressionNoIn? ";" Expression? ";" Expression? ")" Statement
-  | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement
+  | whileDo: "while" "(" Expression ")" Statement //TODO: WHY DOESNT THE ERROR OCCUR HERE?
+  | forDo: "for" "(" ExpressionNoIn? ";" Expression? ";" Expression? ")" Statement  //TODO: WHY DOESNT THE ERROR OCCUR HERE?
+  | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement  //TODO: WHY DOESNT THE ERROR OCCUR HERE?
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
   | forIn: "for" "(" "var" Id "in" Expression ")" Statement
           
@@ -139,8 +139,8 @@ syntax BlockStatement
   	| functionDecl: FunctionDeclaration
   	| switchBlock: SwitchBlock
   	| tryBlock: TryBlock
-  	//TODO: add other NON-SINGLE STATEMENT conditionals/loops
-  	| singleStatementConditionalOrLoop: Statement!block!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!continueLabel!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!breakLabel!breakNoLabel!breakLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!withDo!switchCase!labeled!tryBlock!debugger!ifThenBlock!ifThenElseBlock!doWhile!whileDo  NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	//TODO: find out why this only seems necessary for ifs and if-elses
+  	| singleStatementConditionals: Statement!block!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!continueLabel!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!breakLabel!breakNoLabel!breakLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!withDo!switchCase!labeled!tryBlock!debugger!ifThenBlock!ifThenElseBlock!doWhile!whileDo!forDo!forIn NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
   
 syntax LastBlockStatement
