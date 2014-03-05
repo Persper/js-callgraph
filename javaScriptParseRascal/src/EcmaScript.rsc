@@ -65,17 +65,19 @@ syntax Statement
   | emptyBlockEnd: ";" NoNL () !>> [\n] >> [}]
   | expressionSemi: Expression!function!objectDefinition NoNL ";"
   | expressionLoose: Expression!function!objectDefinition NoNL () !>> [\n] NoNL () $
-  | expressionBlockEnd: Expression!function!objectDefinition NoNL () !>> [\n] >> [}]
-  | expressionNL: Expression!function!objectDefinition NoNL OneOrMoreNewLines
+  | expressionBlockEnd: Expression!function!objectDefinition NoNL () !>> [\n] >> [}] >> ZeroOrMoreNewLines
+  | expressionNL: Expression!function!objectDefinition NoNL OneOrMoreNewLines !>> [\n]
 
   | ifThen: "if" "(" Expression ")" Statement!block !>> "else"
   | ifThenBlock: "if" "(" Expression ")" Block !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement!block //For if-then-else only the second block is revelant as it is the one adjacent to next statements.
   | ifThenElseBlock: "if" "(" Expression ")" Statement "else" Block
   
-  | doWhile: "do" Statement "while" "(" Expression ")" ";"? 
+  | doWhile: "do" Statement "while" "(" Expression ")" ";"
+  | doWhileLoose: "do" Statement "while" "(" Expression ")" !>> ";"
+
   | whileDo: "while" "(" Expression ")" Statement //TODO: WHY DOESNT THE ERROR OCCUR HERE?
-  | forDo: "for" "(" ExpressionNoIn? ";" Expression? ";" Expression? ")" Statement  //TODO: WHY DOESNT THE ERROR OCCUR HERE?
+  | forDo: "for" "(" {VariableDeclarationNoIn ","}* ";" Expression? ";" Expression? ")" Statement  //TODO: WHY DOESNT THE ERROR OCCUR HERE?
   | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement  //TODO: WHY DOESNT THE ERROR OCCUR HERE?
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
   | forIn: "for" "(" "var" Id "in" Expression ")" Statement
@@ -121,7 +123,7 @@ syntax Block
 //TODO: find out if not-follows restriction can be removed.
 syntax BlockStatements
 // start with [\n]* 
-  = blockStatements: BlockStatement head NoNL BlockStatements tail
+  = blockStatements: BlockStatement head BlockStatements tail
   | blockStatementLast: LastBlockStatement
   | tailEnd: BlockStatement >> ()
   ;
@@ -129,23 +131,23 @@ syntax BlockStatements
 syntax BlockStatement
   =  
   	// statetements that do not end with a semicolon and one or more new lines
-  	 newLine: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!expressionBlockEnd!block!ifThen!ifThenBlock!ifThenElse!ifThenElseBlock!doWhile!whileDo!forDo!forIn!tryBlock!switchCase NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	 newLine: Statement!variableSemi!expressionSemi!returnExp!throwExp!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!expressionLoose!emptyBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!returnExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!expressionBlockEnd!block!ifThen!ifThenBlock!ifThenElse!ifThenElseBlock!doWhile!whileDo!forDo!forIn!tryBlock!switchCase!doWhile!doWhileLoose NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   	// statements that end with a semicolon, not ending the block
   	// Do not forget to create block ending versions of statements and exclude them here
-    | semiColon: Statement!variableNoSemi!expressionNoSemi!returnNoExpNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd!expressionBlockEnd!block!ifThen!ifThenBlock!ifThenElse!ifThenElseBlock!doWhile!whileDo!forDo!forIn!tryBlock!switchCase NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+    | semiColon: Statement!variableNoSemi!expressionNoSemi!returnNoExpNoSemi!returnExpNoSemi!throwExpNoSemi!continueLabelNoSemi!continueNoLabelNoSemi!breakLabelNoSemi!breakNoLabelNoSemi!returnExpNoSemiBlockEnd!throwExpNoSemiBlockEnd!returnNoExpNoSemiBlockEnd!throwNoExpNoSemiBlockEnd!continueNoLabelNoSemiBlockEnd!breakNoLabelNoSemiBlockEnd!continueLabelNoSemiBlockEnd!breakLabelNoSemiBlockEnd!expressionLoose!expressionNL!emptyBlockEnd!expressionBlockEnd!block!ifThen!ifThenBlock!ifThenElse!ifThenElseBlock!whileDo!forDo!forIn!tryBlock!switchCase!doWhileLoose NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   	| nestedBlock: Block
   	// Excludes everything except statements containing blocks which in turn contain statements. These don't have to end in newlines or semicolons.
-  	| statementContainingNested: Statement!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!breakLabel!breakNoLabel!breakLabelNoSemi!breakLabelNoSemiBlockEnd!breakNoLabelNoSemi!breakNoLabelNoSemiBlockEnd!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!labeled!debugger!tryBlock!switchCase!block!ifThen!ifThenElse NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	| statementContainingNested: Statement!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!breakLabel!breakNoLabel!breakLabelNoSemi!breakLabelNoSemiBlockEnd!breakNoLabelNoSemi!breakNoLabelNoSemiBlockEnd!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!labeled!debugger!tryBlock!switchCase!block!ifThen!ifThenElse!doWhile!doWhileLoose NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   	| functionDecl: FunctionDeclaration
   	| switchBlock: SwitchBlock
   	| tryBlock: TryBlock
   	//TODO: find out why this only seems necessary for ifs and if-elses
-  	| singleStatementConditionals: Statement!block!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!continueLabel!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!breakLabel!breakNoLabel!breakLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!withDo!switchCase!labeled!tryBlock!debugger!ifThenBlock!ifThenElseBlock!doWhile!whileDo!forDo!forIn NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	| singleStatementConditionals: Statement!block!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!continueLabel!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!breakLabel!breakNoLabel!breakLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!withDo!switchCase!labeled!tryBlock!debugger!ifThenBlock!ifThenElseBlock!doWhile!whileDo!forDo!forIn!doWhile NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
   
 syntax LastBlockStatement
 	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
-  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp!expressionNL!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!tryBlock!switchCase NoNL () !>> [\n] >> [}]
+  = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp!expressionNL!block!ifThen!ifThenElse!doWhile!whileDo!forDo!forIn!tryBlock!switchCase!doWhile NoNL () !>> [\n] >> [}]
   ;
   
 // TODO:
@@ -282,7 +284,13 @@ syntax Expression
   > left Expression "&&" Expression
   > left Expression "||" Expression
   > right (
-      variableAssignment:Expression "=" !>> ([=][=]?) Expression
+      variableAssignment:Expression "=" !>> ([=][=]?) Expression >> ";"
+    | variableAssignmentNoSemi:Expression "=" !>> ([=][=]?) Expression NoNL () $
+    | variableAssignmentBlockEnd:Expression "=" !>> ([=][=]?) Expression NoNL () >> [}]
+    | variableAssignmentLoose:Expression "=" !>> ([=][=]?) Expression NoNL !>> "}" !>> ";" !>> [\n]
+    | variableAssignmentMulti:Expression "=" !>> ([=][=]?) Expression ","
+	//| variableAssignmentMultiNoSemi:{variableAssignmentLoose ","}+ NoNL () $
+	//| variableAssignmentMultiBlockEnd:{variableAssignmentLoose ","}+ NoNL () >> [}]    
     | Expression "*=" Expression
     | Expression "/=" Expression
     | Expression "%=" Expression
@@ -299,6 +307,14 @@ syntax Expression
   > right Expression "?" Expression ":" Expression
   > left comma: Expression "," Expression
   ;
+
+syntax AssignmentExpression =
+  assignment: SubAssignment head "," AssignmentExpression tail
+ | SubAssignment >> ()
+ |
+ ;
+ 
+syntax SubAssignment = Expression "=" !>> "=" Expression;
 
 syntax PropertyName
  = Id
@@ -605,7 +621,7 @@ Source source(SourceElement head, LAYOUTLIST l, Source tail) {
 //    + 3
 // }
 // TODO: make sure this doesn't filter. Currently it DOES.
-BlockStatements blockStatements(BlockStatement head, NoNL l, BlockStatements tail) {
+BlockStatements blockStatements(BlockStatement head, LAYOUTLIST l, BlockStatements tail) {
 	//println("I was called");
 	if (head is newLine && size(tail.args) > 0) {
 		// candidate for invalid parse tree

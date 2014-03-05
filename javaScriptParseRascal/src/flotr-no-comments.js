@@ -2582,4 +2582,4 @@ Flotr.Date = {
     [1, "year"]
   ],
   monthNames: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
-};
+};
