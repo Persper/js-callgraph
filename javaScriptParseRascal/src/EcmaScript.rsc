@@ -72,13 +72,13 @@ syntax Statement
   | ifThenBlock: "if" "(" Expression ")" Block !>> "else"
   | ifThenElse: "if" "(" Expression ")" Statement "else" Statement!block //For if-then-else only the second block is revelant as it is the one adjacent to next statements.
   | ifThenElseBlock: "if" "(" Expression ")" Statement "else" Block
-  
+
   | doWhile: "do" Statement "while" "(" Expression ")" ";"
   | doWhileLoose: "do" Statement "while" "(" Expression ")" !>> ";"
 
   | whileDo: "while" "(" Expression ")" Statement //TODO: WHY DOESNT THE ERROR OCCUR HERE?
   | forDo: "for" "(" {VariableDeclarationNoIn ","}* ";" Expression? ";" Expression? ")" Statement  //TODO: WHY DOESNT THE ERROR OCCUR HERE?
-  | forDo: "for" "(" "var" VariableDeclarationNoIn ";" Expression? ";" Expression? ")" Statement  //TODO: WHY DOESNT THE ERROR OCCUR HERE?
+  | forDo: "for" "(" "var" {VariableDeclarationNoIn ","}+ ";" Expression? ";" Expression? ")" Statement  //TODO: WHY DOESNT THE ERROR OCCUR HERE?
   | forIn: "for" "(" Expression "in" Expression ")" Statement // left-hand side expr "in" ???
   | forIn: "for" "(" "var" Id "in" Expression ")" Statement
           
@@ -142,7 +142,7 @@ syntax BlockStatement
   	| switchBlock: SwitchBlock
   	| tryBlock: TryBlock
   	//TODO: find out why this only seems necessary for ifs and if-elses
-  	| singleStatementConditionals: Statement!block!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!continueLabel!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!breakLabel!breakNoLabel!breakLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!withDo!switchCase!labeled!tryBlock!debugger!ifThenBlock!ifThenElseBlock!doWhile!whileDo!forDo!forIn!doWhile NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
+  	| singleStatementConditionals: Statement!block!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!continueLabel!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!breakLabel!breakNoLabel!breakLabelNoSemi!breakNoLabelNoSemiBlockEnd!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!withDo!switchCase!labeled!tryBlock!debugger!ifThenBlock!ifThenElseBlock!doWhile!whileDo!forDo!forIn!doWhile NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
   
 syntax LastBlockStatement
@@ -186,16 +186,28 @@ syntax VariableDeclarationNoIn
   ;
 
 syntax CaseBlock 
-  = "{" CaseClauses+ "}" !>> ";"
+  = "{" CaseClauses "}" !>> ";"
   ;
 
+// TODO: Probably ambiguous due to string literals still being ambiguous and layout problems
 syntax CaseClauses = 
- caseClause: CaseClause
- | defaultClause: DefaultClause
+ | recursive: CaseOrDefaultClause head CaseClauses tail
+ | CaseOrDefaultClause >> [}]
 ;
 
+syntax CaseOrDefaultClause = CaseClause
+| DefaultClause
+;
+
+
 syntax CaseClause 
-  = "case" Expression ":" Statement*
+=  //=  "case" Expression ":" Statement!breakNoLabelNoSemi* breakNoLabelNoSemi
+  //| "case" Expression ":" Statement!breakNoLabelNoSemiBlockEnd* breakNoLabelNoSemiBlockEnd // only possible at block end
+  //| "case" Expression ":" Statement!breakNoLabel* breakNoLabel
+  // "case" Expression ":" CaseClause // fallthrough
+ // | "case" Expression ":" DefaultClause // fallthrough
+  | "case" Expression ":" Statement* () !>> Statement
+  
   ;
 
 syntax DefaultClause 
@@ -226,10 +238,10 @@ syntax Expression
   | "{" {PropertyAssignment ","}+ "," "}"
   | objectDefinition:"{" {PropertyAssignment ","}* "}"
   > function: "function" Id? "(" {Id ","}* ")" Block
-  | Expression "." Id //Can be on LHS of variableAssignment
+  | property: Expression "." Id //Can be on LHS of variableAssignment
   > Expression "(" { Expression!comma ","}+ ")" //Can be on LHS of variableAssignment
   | Expression "(" ")" //Can be on LHS of variableAssignment
-  | Expression "[" Expression "]" //Can be on LHS of variableAssignment
+  | member: Expression "[" Expression "]" //Can be on LHS of variableAssignment
   | "this"
   | Id //Can be on LHS of variableAssignment
   | Literal
@@ -284,13 +296,15 @@ syntax Expression
   > left Expression "&&" Expression
   > left Expression "||" Expression
   > right (
-      variableAssignment:Expression "=" !>> ([=][=]?) Expression >> ";"
-    | variableAssignmentNoSemi:Expression "=" !>> ([=][=]?) Expression NoNL () $
-    | variableAssignmentBlockEnd:Expression "=" !>> ([=][=]?) Expression NoNL () >> [}]
-    | variableAssignmentLoose:Expression "=" !>> ([=][=]?) Expression NoNL !>> "}" !>> ";" !>> [\n]
-    | variableAssignmentMulti:Expression "=" !>> ([=][=]?) Expression ","
 	//| variableAssignmentMultiNoSemi:{variableAssignmentLoose ","}+ NoNL () $
 	//| variableAssignmentMultiBlockEnd:{variableAssignmentLoose ","}+ NoNL () >> [}]    
+	      variableAssignment:Expression "=" !>> ([=][=]?) Expression!variableAssignmentLoose >> ";"
+    | variableAssignmentNoSemi:Expression "=" !>> ([=][=]?) Expression!variableAssignmentBlockEnd!variableAssignment >> [\n]
+    | variableAssignmentBlockEnd:Expression "=" !>> ([=][=]?) Expression!variableAssignment NoNL () >> [}]
+    | variableAssignmentLoose:Expression "=" !>> ([=][=]?) Expression!variableAssignment!variableAssignmentBlockEnd!variableAssignmentMulti NoNL !>> [\n] !>> "}" !>> ";"
+    
+    // TODO this might parse invalid javascript, if a declaration ends with ,
+    | variableAssignmentMulti:Expression "=" !>> ([=][=]?) Expression!variableAssignment!variableAssignmentBlockEnd ","
     | Expression "*=" Expression
     | Expression "/=" Expression
     | Expression "%=" Expression
@@ -305,7 +319,7 @@ syntax Expression
   )
   > nestedExpression: "(" Expression ")" //Can be on LHS of variableAssignment
   > right Expression "?" Expression ":" Expression
-  > left comma: Expression "," Expression
+  // left comma: Expression "," Expression
   ;
 
 syntax AssignmentExpression =
