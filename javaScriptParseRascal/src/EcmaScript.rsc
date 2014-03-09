@@ -338,8 +338,8 @@ syntax PropertyName
 
 syntax PropertyAssignment
   = PropertyName ":" Expression
-  | "get" PropertyName "(" ")" "{" FunctionBody "}"
-  | "set" PropertyName "(" Id ")" "{" FunctionBody "}"
+  | "get" PropertyName "(" ")" Block
+  | "set" PropertyName "(" Id ")" Block
   ;
 
 
