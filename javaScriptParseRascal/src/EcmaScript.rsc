@@ -144,9 +144,9 @@ syntax BlockStatement
     //TODO: find out why this only seems necessary for ifs and if-elses
     | singleStatementConditionals: Statement!block!variableNoSemi!variableSemi!returnExp!returnExpNoSemi!returnExpNoSemiBlockEnd!returnNoExp!returnNoExpNoSemi!returnNoExpNoSemiBlockEnd!throwExp!throwExpNoSemi!throwExpNoSemiBlockEnd!throwNoExp!throwNoExpNoSemi!throwNoExpNoSemiBlockEnd!empty!emptyBlockEnd!expressionSemi!expressionLoose!expressionBlockEnd!expressionNL!continueLabel!continueNoLabel!continueLabelNoSemi!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!breakLabel!breakNoLabel!breakLabelNoSemi!breakNoLabelNoSemiBlockEnd!continueLabelNoSemiBlockEnd!continueNoLabelNoSemi!continueNoLabelNoSemiBlockEnd!withDo!switchCase!labeled!tryBlock!debugger!ifThenBlock!ifThenElseBlock!doWhile!whileDo!forDo!forIn!doWhile!breakNoLabelNoSemi NoNL ZeroOrMoreNewLines NoNL () !>> [\n]
   ;
-  
+
 syntax LastBlockStatement
-    // statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
+	// statements that do not end with a semicolon and are not followed by new lines, but are followed by } (end of block)
   = last: Statement!variableSemi!expressionSemi!returnNoExp!throwNoExp!continueLabel!continueNoLabel!breakLabel!breakNoLabel!empty!returnExp!throwExp!expressionNL!block!ifThen!ifThenElse!ifThenBlock!ifThenElseBlock!doWhile!whileDo!forDo!forIn!tryBlock!switchCase!doWhile NoNL () !>> [\n] >> [}]
   ;
   
@@ -186,19 +186,20 @@ syntax VariableDeclarationNoIn
   ;
 
 syntax CaseBlock 
-  = "{" CaseClauses "}" !>> ";"
+  = "{" CaseOrDefaultClause+ "}"
+  | "{" "}"
   ;
 
 // TODO: Probably ambiguous due to string literals still being ambiguous and layout problems
 syntax CaseClauses = 
- | recursive: CaseOrDefaultClause head CaseClauses tail
- | CaseOrDefaultClause >> [}]
+ | recursive: CaseOrDefaultClause head NoNL CaseClauses tail
+ |
+ //| caseclause: CaseOrDefaultClause >> [}]
 ;
 
 syntax CaseOrDefaultClause = CaseClause
 | DefaultClause
 ;
-
 
 syntax CaseClause 
 =  //=  "case" Expression ":" Statement!breakNoLabelNoSemi* breakNoLabelNoSemi
@@ -206,12 +207,15 @@ syntax CaseClause
   //| "case" Expression ":" Statement!breakNoLabel* breakNoLabel
   // "case" Expression ":" CaseClause // fallthrough
  // | "case" Expression ":" DefaultClause // fallthrough
-  | "case" Expression ":" Statement* () !>> Statement
+   "case" Expression ":" Statement+
+   | emptyfallthrough: "case" Expression ":" !>> Statement 
   
   ;
 
+
 syntax DefaultClause 
-  = "default" ":" Statement*
+  = "default" ":" Statement+
+  | empty: "default" ":" !>> Statement
   ;
 
 

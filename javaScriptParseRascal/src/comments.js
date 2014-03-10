@@ -1,4 +1,11 @@
 switch (format) {
-    case "x": return 2;
-    case "y": return 1;
+    case obj:
+    case kaas:
+    
+    
+    case "2":{
+        return 5;
+        break;
+    }
+    default:
 }
