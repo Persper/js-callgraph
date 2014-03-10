@@ -1,4 +1,11 @@
-//This is a comment prior to a statement.
-if (true !== false) {
-	console.log("Test");
+switch (format) {
+    case obj:
+    case kaas:
+    
+    
+    case "2":{
+        return 5;
+        break;
+    }
+    default:
 }
