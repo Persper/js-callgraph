@@ -426,7 +426,7 @@ lexical CharacterEscapeSequence
   ;
 
 lexical SingleEscapeCharacter
-  = [\'\"\\bfnrtv]
+  = [\n\"\\bfnrtvux]
   ;
 
 lexical NonEscapeCharacter
@@ -646,7 +646,7 @@ BlockStatements blockStatements(BlockStatement head, LAYOUTLIST l, BlockStatemen
 	if (head is newLine && size(tail.args) > 0) {
 		// candidate for invalid parse tree
 		if (isLeftMostPlusMinus(tail.args[0])) {
-			println("and filtered");
+			//println("and filtered");
 			filter;
 		}
 	}
