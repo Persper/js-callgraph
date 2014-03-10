@@ -361,13 +361,29 @@ public test bool identifier() {
 	return outcomeIsCorrect("id", "|Expression [id]|");
 }
 
+public test bool ifStatementsEatsSemicolon() {
+	if (/(Statement)`if (<Expression e>) <Statement t>` := parse("if(true) a;")) {
+		return /(Statement)`<Expression e>`:= t;
+	} else {
+		throw "Doesnt match pattern";
+	}
+}
+
 public test bool backwardsAssignment() {
 	return outcomeThrowsParseError("1 = x");
 }
 
-public test bool testSnippetsParseUnambiguously() {
+public test bool testSnippets() {
+	return folderContentsParseUnambiguously(|project://JavaScriptParseRascal/src/snippets|);
+}
+
+public test bool testPaperLibraries() {
+	return folderContentsParseUnambiguously(|project://JavaScriptParseRascal/src/paperlibs|);
+}
+
+public bool folderContentsParseUnambiguously(folder) {
 	bool allGood = true;
-	list[loc] files = |project://JavaScriptParseRascal/src/snippets|.ls;
+	list[loc] files = folder.ls;
 	for (loc file <- files) {
 		if (endsWith(file.uri, "-IGNORE.js")) {
 			println("--- Skipping <file> ---");
