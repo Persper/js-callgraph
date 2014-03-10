@@ -1,4 +1,4 @@
-//This is a comment prior to a statement.
-if (true !== false) {
-	console.log("Test");
+switch (format) {
+    case "x": return 2;
+    case "y": return 1;
 }
