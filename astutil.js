@@ -16,7 +16,7 @@ if (typeof define !== 'function') {
 }
 
 define(function (require, exports) {
-    var esprima = require('./esprima');
+    var esprima = require('esprima');
     var fs = require('fs');
     var sloc  = require('sloc');
 
