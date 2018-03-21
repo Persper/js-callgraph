@@ -2,6 +2,9 @@ createEmptyVNode = () => {
   return 5;
 };
 
-createEmptyVNode = function a() {
+createEmptyVNode2 = function a() {
   return 5;
 };
+
+createEmptyVNode();
+createEmptyVNode2();
