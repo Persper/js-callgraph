@@ -58,6 +58,7 @@ define(function (require, exports) {
                     flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id));
                     break;
                 case 'FunctionExpression':
+                case 'ArrowFunctionExpression':
                     flow_graph.addEdge(funcVertex(nd), exprVertex(nd));
                     if (nd.id)
                         flow_graph.addEdge(funcVertex(nd), varVertex(nd.id));
@@ -178,7 +179,9 @@ define(function (require, exports) {
 
     // function vertex
     function funcVertex(fn) {
-        if (fn.type !== 'FunctionDeclaration' && fn.type !== 'FunctionExpression')
+        if (fn.type !== 'FunctionDeclaration' &&
+            fn.type !== 'FunctionExpression'  &&
+            fn.type !== 'ArrowFunctionExpression')
             throw new Error("invalid function vertex");
         return fn.attr.func_vertex
             || (fn.attr.func_vertex = {
@@ -192,7 +195,9 @@ define(function (require, exports) {
 
     // parameter vertex
     function parmVertex(fn, i) {
-        if (fn.type !== 'FunctionDeclaration' && fn.type !== 'FunctionExpression')
+      if (fn.type !== 'FunctionDeclaration' &&
+          fn.type !== 'FunctionExpression'  &&
+          fn.type !== 'ArrowFunctionExpression')
             throw new Error("invalid function vertex");
         var vertex;
         if (i === 0) {
@@ -205,7 +210,9 @@ define(function (require, exports) {
 
     // vertex representing function return value
     function retVertex(fn) {
-        if (fn.type !== 'FunctionDeclaration' && fn.type !== 'FunctionExpression')
+      if (fn.type !== 'FunctionDeclaration' &&
+          fn.type !== 'FunctionExpression'  &&
+          fn.type !== 'ArrowFunctionExpression')
             throw new Error("invalid return vertex");
 
         return fn.attr.ret_vertex
