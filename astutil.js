@@ -109,8 +109,8 @@ define(function (require, exports) {
             attr: {}
         };
         sources.forEach(function (source) {
-            var prog = esprima.parse(source.program, { loc: true, range: true });
-            prog.attr = { filename: source.filename, sloc : sloc(source.program, "javascript").sloc};
+            var prog = esprima.parse(source.program, { loc: true, range: true, sourceType: 'module' });
+            prog.attr = { filename: source.filename, sloc : sloc(source.program, "js").sloc};
             ast.programs.push(prog);
         });
         init(ast);
