@@ -63,7 +63,10 @@ define(function (require, exports) {
             if (nd.type === 'Program')
                 enclosingFile = nd.attr.filename;
 
-            if (nd.type === 'FunctionDeclaration' || nd.type === 'FunctionExpression') {
+            if (nd.type === 'FunctionDeclaration' ||
+                nd.type === 'FunctionExpression'  ||
+                nd.type === 'ArrowFunctionExpression') {
+
                 root.attr.functions.push(nd);
                 nd.attr.parent = parent;
                 nd.attr.childProp = childProp;

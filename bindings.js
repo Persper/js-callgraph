@@ -31,12 +31,14 @@ define(function (require, exports) {
                         visit(nd.id);
                     // FALL THROUGH
                     case 'FunctionExpression':
+                    case 'ArrowFunctionExpression':
                         var old_decl_scope = decl_scope;
                         scope = decl_scope = new symtab.Symtab(scope);
                         scope.global = false;
 
                         nd.attr.scope = scope;
-                        if (nd.type === 'FunctionExpression' && nd.id) {
+                        if (( nd.type === 'FunctionExpression' ||
+                              nd.type === 'ArrowFunctionExpression' ) && nd.id) {
                             decl_scope.set(nd.id.name, nd.id);
                             visit(nd.id);
                         }
