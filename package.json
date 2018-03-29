@@ -4,6 +4,7 @@
   "description": "This project implements a field-based call graph construction algorithm for JavaScript as described in",
   "main": "main.js",
   "dependencies": {
+    "amdefine": "^1.0.1",
     "argparse": "^1.0.10",
     "esprima": "^4.0.0",
     "npm": "^5.7.1",
