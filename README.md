@@ -4,7 +4,17 @@ This project implements a field-based call graph construction algorithm for Java
 
 > A. Feldthaus, M. Schäfer, M. Sridharan, J. Dolby, F. Tip. Efficient Construction of Approximate Call Graphs for JavaScript IDE Services. In *ICSE*, 2013.
 
-Module `main.js` offers a command-line interface, which can be run using Node.js; invoke `node main.js -h` to get a list of command line arguments.
+
+## Get Started
+```
+npm install
+node main.js -h # for a list of command line arguments
+
+# Running on simple input scripts
+node main.js --cg input-scripts/simple-scripts/functioncall-arithmetic.js
+```
+
+## Structure
 
 The call graph constructor can be run in two basic modes (selected using the `--strategy` flag to `main.js`), *pessimistic* and *optimistic*, which differ in how interprocedural flows are handled. In the basic pessimistic approach (strategy `NONE`), interprocedural flow is not tracked at all; a slight refinement is strategy `ONESHOT`, where interprocedural flow is tracked only for one-shot closures that are invoked immediatel. The optimistic approach (strategy `DEMAND`) performs interprocedural propagation along edges that may ultimately end at a call site (and are thus interesting for call graph construction). Full interprocedural propagation (strategy `FULL`) is not implemented yet.
 
