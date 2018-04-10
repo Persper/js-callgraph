@@ -33,14 +33,16 @@ define(function (require, exports) {
                             flow_graph.addEdge(vertexFor(nd.elements[i]), propVertex({ type: 'Literal',
                                 value: i }));
                     break;
+                // R1
                 case 'AssignmentExpression':
                     if (nd.operator === '=')
                         flow_graph.addEdges(vertexFor(nd.right), [vertexFor(nd.left), vertexFor(nd)]);
                     break;
+                // R9
                 case 'CallExpression':
                     if (nd.callee.type === 'MemberExpression')
                         flow_graph.addEdge(vertexFor(nd.callee.object), argVertex(nd, 0));
-                // FALL THROUGH
+                // R8 FALL THROUGH
                 case 'NewExpression':
                     flow_graph.addEdge(vertexFor(nd.callee), calleeVertex(nd));
                     for (var i = 0; i < nd.arguments.length; ++i)
@@ -50,24 +52,29 @@ define(function (require, exports) {
                 case 'CatchClause':
                     flow_graph.addEdge(unknownVertex(), varVertex(nd.param));
                     break;
+                // R3
                 case 'ConditionalExpression':
                     flow_graph.addEdge(vertexFor(nd.consequent), vertexFor(nd));
                     flow_graph.addEdge(vertexFor(nd.alternate), vertexFor(nd));
                     break;
+                // R7
                 case 'FunctionDeclaration':
                     flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id));
                     break;
+                // R6
                 case 'FunctionExpression':
                 case 'ArrowFunctionExpression':
                     flow_graph.addEdge(funcVertex(nd), exprVertex(nd));
                     if (nd.id)
                         flow_graph.addEdge(funcVertex(nd), varVertex(nd.id));
                     break;
+                // R2, R4
                 case 'LogicalExpression':
                     if (nd.operator === '||')
                         flow_graph.addEdge(vertexFor(nd.left), vertexFor(nd));
                     flow_graph.addEdge(vertexFor(nd.right), vertexFor(nd));
                     break;
+                // R5
                 case 'ObjectExpression':
                     nd.properties.forEach(function (prop) {
                         if (prop.kind === 'init') {
@@ -75,6 +82,7 @@ define(function (require, exports) {
                         }
                     });
                     break;
+                // R10
                 case 'ReturnStatement':
                     if (nd.argument)
                         flow_graph.addEdge(vertexFor(nd.argument), retVertex(nd.attr.enclosingFunction));
