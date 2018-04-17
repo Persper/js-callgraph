@@ -1,1 +1,0 @@
-node ..\main.js --countCB "C:\Users\Sander\Dropbox\Afstuderen UvA\callback percentages\libraries\fe\mootools-1.4.5.js"

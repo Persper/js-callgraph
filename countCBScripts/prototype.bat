@@ -1,1 +1,0 @@
-node ..\main.js --countCB "C:\Users\Sander\Dropbox\Afstuderen UvA\callback percentages\libraries\fe\prototype-1.7.1.js"
