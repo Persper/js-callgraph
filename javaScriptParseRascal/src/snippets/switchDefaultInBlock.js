@@ -1,5 +1,0 @@
-{
-	switch(a) {
-		default: break;
-	}
-}

@@ -1,7 +1,0 @@
-{
-		if (true) {
-		}
-
-		if (false) {
-		}
-}

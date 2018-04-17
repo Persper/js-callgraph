@@ -1,1 +1,0 @@
-node ..\main.js --countCB "C:\Users\Sander\Dropbox\Afstuderen UvA\callback percentages\libraries\fe\jquery-1.10.2.js"
