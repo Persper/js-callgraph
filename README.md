@@ -8,10 +8,10 @@ This project implements a field-based call graph construction algorithm for Java
 ## Get Started
 ```
 npm install
-node main.js -h # for a list of command line arguments
+node src/main.js -h # for a list of command line arguments
 
 # Running on simple input scripts
-node main.js --cg input-scripts/simple-scripts/functioncall-arithmetic.js
+node src/main.js --cg input-scripts/simple-scripts/functioncall-arithmetic.js
 ```
 
 ## Structure
