@@ -1,0 +1,42 @@
+create-component.js.o:3 -> NativeVertex
+create-component.js.o:9 -> NativeVertex
+create-component.js.o:11 -> create-component.js.o:_interopRequireDefault:27
+create-component.js.o:13 -> NativeVertex
+create-component.js.o:15 -> NativeVertex
+create-component.js.o:17 -> NativeVertex
+create-component.js.o:19 -> NativeVertex
+create-component.js.o:21 -> NativeVertex
+create-component.js.o:23 -> NativeVertex
+create-component.js.o:25 -> NativeVertex
+create-component.js.o:29 -> create-component.js.o:init:33
+create-component.js.o:37 -> create-component.js.o:prepatch:43
+create-component.js.o:39 -> create-component.js.o:createComponentIntanceForVnode:178
+create-component.js.o:40 ->
+create-component.js.o:46 -> lifecycle.js.o:updateChildComponent:218
+create-component.js.o:58 -> lifecycle.js.o:callHook:319
+create-component.js.o:67 -> scheduler.js.o:queueActivatedComponent:114
+create-component.js.o:69 -> lifecycle.js.o:activateChildComponent:285
+create-component.js.o:78 -> lifecycle.js.o:(undefined):113
+create-component.js.o:80 -> lifecycle.js.o:deactivateChildComponent:303
+create-component.js.o:86 -> NativeVertex
+create-component.js.o:97 ->
+create-component.js.o:104 -> debug.js.o:warn:30
+create-component.js.o:104 -> NativeVertex
+create-component.js.o:111 -> util.js.o:isUndef:37
+create-component.js.o:113 -> resolve-async-component.js.o:resolveAsyncComponent:27
+create-component.js.o:118 -> resolve-async-component.js.o:createAsyncPlaceholder:20
+create-component.js.o:126 -> init.js.o:resolveConstructorOptions:111
+create-component.js.o:129 -> util.js.o:isDef:41
+create-component.js.o:130 -> create-component.js.o:transformModel:206
+create-component.js.o:134 -> extract-props.js.o:extractPropsFromVNodeData:10
+create-component.js.o:137 -> util.js.o:isTrue:45
+create-component.js.o:138 -> create-functional-component.js.o:createFunctionalComponent:81
+create-component.js.o:148 -> util.js.o:isTrue:45
+create-component.js.o:161 -> create-component.js.o:installComponentHooks:196
+create-component.js.o:165 -> vnode.js.o:VNode:23
+create-component.js.o:171 -> render-component-template.js.o:isRecyclableComponent:19
+create-component.js.o:172 -> render-component-template.js.o:renderRecyclableComponentTemplate:23
+create-component.js.o:189 -> util.js.o:isDef:41
+create-component.js.o:193 ->
+create-component.js.o:210 -> util.js.o:isDef:41
+create-component.js.o:211 -> NativeVertex
