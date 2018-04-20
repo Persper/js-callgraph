@@ -1,0 +1,21 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Initialization', function () {
+  it('without new', function () {
+    try {
+      (0, _vue2.default)();
+    } catch (e) {}
+    expect('Vue is a constructor and should be called with the `new` keyword').toHaveBeenWarned();
+  });
+
+  it('with new', function () {
+    expect(new _vue2.default() instanceof _vue2.default).toBe(true);
+  });
+});
+

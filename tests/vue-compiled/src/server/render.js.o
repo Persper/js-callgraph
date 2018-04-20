@@ -1,0 +1,392 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createRenderFunction = createRenderFunction;
+
+var _util = require('web/server/util');
+
+var _constants = require('shared/constants');
+
+var _renderContext = require('./render-context');
+
+var _debug = require('core/util/debug');
+
+var _compiler = require('web/server/compiler');
+
+var _runtimeHelpers = require('./optimizing-compiler/runtime-helpers');
+
+var _util2 = require('shared/util');
+
+var _createComponent = require('core/vdom/create-component');
+
+var warned = Object.create(null);
+var warnOnce = function warnOnce(msg) {
+  if (!warned[msg]) {
+    warned[msg] = true;
+    console.warn('\n\x1B[31m' + msg + '\x1B[39m\n');
+  }
+};
+
+var onCompilationError = function onCompilationError(err, vm) {
+  var trace = vm ? (0, _debug.generateComponentTrace)(vm) : '';
+  throw new Error('\n\x1B[31m' + err + trace + '\x1B[39m\n');
+};
+
+var normalizeRender = function normalizeRender(vm) {
+  var _vm$$options = vm.$options,
+      render = _vm$$options.render,
+      template = _vm$$options.template,
+      _scopeId = _vm$$options._scopeId;
+
+  if ((0, _util2.isUndef)(render)) {
+    if (template) {
+      var compiled = (0, _compiler.ssrCompileToFunctions)(template, {
+        scopeId: _scopeId,
+        warn: onCompilationError
+      }, vm);
+
+      vm.$options.render = compiled.render;
+      vm.$options.staticRenderFns = compiled.staticRenderFns;
+    } else {
+      throw new Error('render function or template not defined in component: ' + (vm.$options.name || vm.$options._componentTag || 'anonymous'));
+    }
+  }
+};
+
+function renderNode(node, isRoot, context) {
+  if (node.isString) {
+    renderStringNode(node, context);
+  } else if ((0, _util2.isDef)(node.componentOptions)) {
+    renderComponent(node, isRoot, context);
+  } else if ((0, _util2.isDef)(node.tag)) {
+    renderElement(node, isRoot, context);
+  } else if ((0, _util2.isTrue)(node.isComment)) {
+    if ((0, _util2.isDef)(node.asyncFactory)) {
+      // async component
+      renderAsyncComponent(node, isRoot, context);
+    } else {
+      context.write('<!--' + node.text + '-->', context.next);
+    }
+  } else {
+    context.write(node.raw ? node.text : (0, _util.escape)(String(node.text)), context.next);
+  }
+}
+
+function registerComponentForCache(options, write) {
+  // exposed by vue-loader, need to call this if cache hit because
+  // component lifecycle hooks will not be called.
+  var register = options._ssrRegister;
+  if (write.caching && (0, _util2.isDef)(register)) {
+    write.componentBuffer[write.componentBuffer.length - 1].add(register);
+  }
+  return register;
+}
+
+function renderComponent(node, isRoot, context) {
+  var write = context.write,
+      next = context.next,
+      userContext = context.userContext;
+
+  // check cache hit
+
+  var Ctor = node.componentOptions.Ctor;
+  var getKey = Ctor.options.serverCacheKey;
+  var name = Ctor.options.name;
+  var cache = context.cache;
+  var registerComponent = registerComponentForCache(Ctor.options, write);
+
+  if ((0, _util2.isDef)(getKey) && (0, _util2.isDef)(cache) && (0, _util2.isDef)(name)) {
+    var key = name + '::' + getKey(node.componentOptions.propsData);
+    var has = context.has,
+        get = context.get;
+
+    if ((0, _util2.isDef)(has)) {
+      has(key, function (hit) {
+        if (hit === true && (0, _util2.isDef)(get)) {
+          get(key, function (res) {
+            if ((0, _util2.isDef)(registerComponent)) {
+              registerComponent(userContext);
+            }
+            res.components.forEach(function (register) {
+              return register(userContext);
+            });
+            write(res.html, next);
+          });
+        } else {
+          renderComponentWithCache(node, isRoot, key, context);
+        }
+      });
+    } else if ((0, _util2.isDef)(get)) {
+      get(key, function (res) {
+        if ((0, _util2.isDef)(res)) {
+          if ((0, _util2.isDef)(registerComponent)) {
+            registerComponent(userContext);
+          }
+          res.components.forEach(function (register) {
+            return register(userContext);
+          });
+          write(res.html, next);
+        } else {
+          renderComponentWithCache(node, isRoot, key, context);
+        }
+      });
+    }
+  } else {
+    if ((0, _util2.isDef)(getKey) && (0, _util2.isUndef)(cache)) {
+      warnOnce('[vue-server-renderer] Component ' + (Ctor.options.name || '(anonymous)') + ' implemented serverCacheKey, ' + 'but no cache was provided to the renderer.');
+    }
+    if ((0, _util2.isDef)(getKey) && (0, _util2.isUndef)(name)) {
+      warnOnce('[vue-server-renderer] Components that implement "serverCacheKey" ' + 'must also define a unique "name" option.');
+    }
+    renderComponentInner(node, isRoot, context);
+  }
+}
+
+function renderComponentWithCache(node, isRoot, key, context) {
+  var write = context.write;
+  write.caching = true;
+  var buffer = write.cacheBuffer;
+  var bufferIndex = buffer.push('') - 1;
+  var componentBuffer = write.componentBuffer;
+  componentBuffer.push(new Set());
+  context.renderStates.push({
+    type: 'ComponentWithCache',
+    key: key,
+    buffer: buffer,
+    bufferIndex: bufferIndex,
+    componentBuffer: componentBuffer
+  });
+  renderComponentInner(node, isRoot, context);
+}
+
+function renderComponentInner(node, isRoot, context) {
+  var prevActive = context.activeInstance;
+  // expose userContext on vnode
+  node.ssrContext = context.userContext;
+  var child = context.activeInstance = (0, _createComponent.createComponentInstanceForVnode)(node, context.activeInstance);
+  normalizeRender(child);
+  var childNode = child._render();
+  childNode.parent = node;
+  context.renderStates.push({
+    type: 'Component',
+    prevActive: prevActive
+  });
+  renderNode(childNode, isRoot, context);
+}
+
+function renderAsyncComponent(node, isRoot, context) {
+  var factory = node.asyncFactory;
+
+  var resolve = function resolve(comp) {
+    if (comp.__esModule && comp.default) {
+      comp = comp.default;
+    }
+    var _node$asyncMeta = node.asyncMeta,
+        data = _node$asyncMeta.data,
+        children = _node$asyncMeta.children,
+        tag = _node$asyncMeta.tag;
+
+    var nodeContext = node.asyncMeta.context;
+    var resolvedNode = (0, _createComponent.createComponent)(comp, data, nodeContext, children, tag);
+    if (resolvedNode) {
+      if (resolvedNode.componentOptions) {
+        // normal component
+        renderComponent(resolvedNode, isRoot, context);
+      } else if (!Array.isArray(resolvedNode)) {
+        // single return node from functional component
+        renderNode(resolvedNode, isRoot, context);
+      } else {
+        // multiple return nodes from functional component
+        context.renderStates.push({
+          type: 'Fragment',
+          children: resolvedNode,
+          rendered: 0,
+          total: resolvedNode.length
+        });
+        context.next();
+      }
+    } else {
+      // invalid component, but this does not throw on the client
+      // so render empty comment node
+      context.write('<!---->', context.next);
+    }
+  };
+
+  if (factory.resolved) {
+    resolve(factory.resolved);
+    return;
+  }
+
+  var reject = context.done;
+  var res = void 0;
+  try {
+    res = factory(resolve, reject);
+  } catch (e) {
+    reject(e);
+  }
+  if (res) {
+    if (typeof res.then === 'function') {
+      res.then(resolve, reject).catch(reject);
+    } else {
+      // new syntax in 2.3
+      var comp = res.component;
+      if (comp && typeof comp.then === 'function') {
+        comp.then(resolve, reject).catch(reject);
+      }
+    }
+  }
+}
+
+function renderStringNode(el, context) {
+  var write = context.write,
+      next = context.next;
+
+  if ((0, _util2.isUndef)(el.children) || el.children.length === 0) {
+    write(el.open + (el.close || ''), next);
+  } else {
+    var children = el.children;
+    context.renderStates.push({
+      type: 'Element',
+      children: children,
+      rendered: 0,
+      total: children.length,
+      endTag: el.close
+    });
+    write(el.open, next);
+  }
+}
+
+function renderElement(el, isRoot, context) {
+  var write = context.write,
+      next = context.next;
+
+
+  if ((0, _util2.isTrue)(isRoot)) {
+    if (!el.data) el.data = {};
+    if (!el.data.attrs) el.data.attrs = {};
+    el.data.attrs[_constants.SSR_ATTR] = 'true';
+  }
+
+  if (el.fnOptions) {
+    registerComponentForCache(el.fnOptions, write);
+  }
+
+  var startTag = renderStartingTag(el, context);
+  var endTag = '</' + el.tag + '>';
+  if (context.isUnaryTag(el.tag)) {
+    write(startTag, next);
+  } else if ((0, _util2.isUndef)(el.children) || el.children.length === 0) {
+    write(startTag + endTag, next);
+  } else {
+    var children = el.children;
+    context.renderStates.push({
+      type: 'Element',
+      children: children,
+      rendered: 0,
+      total: children.length,
+      endTag: endTag
+    });
+    write(startTag, next);
+  }
+}
+
+function hasAncestorData(node) {
+  var parentNode = node.parent;
+  return (0, _util2.isDef)(parentNode) && ((0, _util2.isDef)(parentNode.data) || hasAncestorData(parentNode));
+}
+
+function getVShowDirectiveInfo(node) {
+  var dir = void 0;
+  var tmp = void 0;
+
+  while ((0, _util2.isDef)(node)) {
+    if (node.data && node.data.directives) {
+      tmp = node.data.directives.find(function (dir) {
+        return dir.name === 'show';
+      });
+      if (tmp) {
+        dir = tmp;
+      }
+    }
+    node = node.parent;
+  }
+  return dir;
+}
+
+function renderStartingTag(node, context) {
+  var markup = '<' + node.tag;
+  var directives = context.directives,
+      modules = context.modules;
+
+  // construct synthetic data for module processing
+  // because modules like style also produce code by parent VNode data
+
+  if ((0, _util2.isUndef)(node.data) && hasAncestorData(node)) {
+    node.data = {};
+  }
+  if ((0, _util2.isDef)(node.data)) {
+    // check directives
+    var dirs = node.data.directives;
+    if (dirs) {
+      for (var i = 0; i < dirs.length; i++) {
+        var name = dirs[i].name;
+        var dirRenderer = directives[name];
+        if (dirRenderer && name !== 'show') {
+          // directives mutate the node's data
+          // which then gets rendered by modules
+          dirRenderer(node, dirs[i]);
+        }
+      }
+    }
+
+    // v-show directive needs to be merged from parent to child
+    var vshowDirectiveInfo = getVShowDirectiveInfo(node);
+    if (vshowDirectiveInfo) {
+      directives.show(node, vshowDirectiveInfo);
+    }
+
+    // apply other modules
+    for (var _i = 0; _i < modules.length; _i++) {
+      var res = modules[_i](node);
+      if (res) {
+        markup += res;
+      }
+    }
+  }
+  // attach scoped CSS ID
+  var scopeId = void 0;
+  var activeInstance = context.activeInstance;
+  if ((0, _util2.isDef)(activeInstance) && activeInstance !== node.context && (0, _util2.isDef)(scopeId = activeInstance.$options._scopeId)) {
+    markup += ' ' + scopeId;
+  }
+  if ((0, _util2.isDef)(node.fnScopeId)) {
+    markup += ' ' + node.fnScopeId;
+  } else {
+    while ((0, _util2.isDef)(node)) {
+      if ((0, _util2.isDef)(scopeId = node.context.$options._scopeId)) {
+        markup += ' ' + scopeId;
+      }
+      node = node.parent;
+    }
+  }
+  return markup + '>';
+}
+
+function createRenderFunction(modules, directives, isUnaryTag, cache) {
+  return function render(component, write, userContext, done) {
+    warned = Object.create(null);
+    var context = new _renderContext.RenderContext({
+      activeInstance: component,
+      userContext: userContext,
+      write: write, done: done, renderNode: renderNode,
+      isUnaryTag: isUnaryTag, modules: modules, directives: directives,
+      cache: cache
+    });
+    (0, _runtimeHelpers.installSSRHelpers)(component);
+    normalizeRender(component);
+    renderNode(component._render(), true, context);
+  };
+}
+

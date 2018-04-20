@@ -1,0 +1,45 @@
+'use strict';
+
+var _style = require('web/util/style');
+
+var base64ImgUrl = 'url("data:image/webp;base64,UklGRkoAAABXRUJQVlA4WAoAAAAQAAAAAAAAAAAAQUxQSAwAAAARBxAR/Q9ERP8DAABWUDggGAAAABQBAJ0BKgEAAQAAAP4AAA3AAP7mtQAAAA==")';
+var logoUrl = 'url(https://vuejs.org/images/logo.png)';
+
+it('should parse normal static style', function () {
+  var staticStyle = 'font-size: 12px;background: ' + logoUrl + ';color:red';
+  var res = (0, _style.parseStyleText)(staticStyle);
+  expect(res.background).toBe(logoUrl);
+  expect(res.color).toBe('red');
+  expect(res['font-size']).toBe('12px');
+});
+
+it('should parse base64 background', function () {
+  var staticStyle = 'background: ' + base64ImgUrl;
+  var res = (0, _style.parseStyleText)(staticStyle);
+  expect(res.background).toBe(base64ImgUrl);
+});
+
+it('should parse multiple background images ', function () {
+  var staticStyle = 'background: ' + logoUrl + ', ' + logoUrl + ';';
+  var res = (0, _style.parseStyleText)(staticStyle);
+  expect(res.background).toBe(logoUrl + ', ' + logoUrl);
+
+  staticStyle = 'background: ' + base64ImgUrl + ', ' + base64ImgUrl;
+  res = (0, _style.parseStyleText)(staticStyle);
+  expect(res.background).toBe(base64ImgUrl + ', ' + base64ImgUrl);
+});
+
+it('should parse other images ', function () {
+  var staticStyle = 'shape-outside: ' + logoUrl;
+  var res = (0, _style.parseStyleText)(staticStyle);
+  expect(res['shape-outside']).toBe(logoUrl);
+
+  staticStyle = 'list-style-image: ' + logoUrl;
+  res = (0, _style.parseStyleText)(staticStyle);
+  expect(res['list-style-image']).toBe(logoUrl);
+
+  staticStyle = 'border-image: ' + logoUrl + ' 30 30 repeat';
+  res = (0, _style.parseStyleText)(staticStyle);
+  expect(res['border-image']).toBe(logoUrl + ' 30 30 repeat');
+});
+

@@ -1,0 +1,68 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _vueRuntimeCommon = require('../../../dist/vue.runtime.common.js');
+
+var _vueRuntimeCommon2 = _interopRequireDefault(_vueRuntimeCommon);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function createRegisterFn(id) {
+  return function (context) {
+    context = context || this.$vnode.ssrContext;
+    context.registered.push(id);
+  };
+}
+
+function addHooks(comp) {
+  var hook = createRegisterFn(comp.name);
+  return Object.assign(comp, {
+    _ssrRegister: hook,
+    beforeCreate: hook
+  });
+}
+
+var grandchild = addHooks({
+  name: 'grandchild',
+  props: ['id'],
+  serverCacheKey: function serverCacheKey(props) {
+    return props.id;
+  },
+  render: function render(h) {
+    return h('div', '/test');
+  }
+});
+
+var child = addHooks({
+  name: 'child',
+  props: ['id'],
+  serverCacheKey: function serverCacheKey(props) {
+    return props.id;
+  },
+  render: function render(h) {
+    return h(grandchild, { props: { id: this.id } });
+  }
+});
+
+var app = addHooks({
+  name: 'app',
+  props: ['id'],
+  serverCacheKey: function serverCacheKey(props) {
+    return props.id;
+  },
+  render: function render(h) {
+    return h(child, { props: { id: this.id } });
+  }
+});
+
+exports.default = function () {
+  return Promise.resolve(new _vueRuntimeCommon2.default({
+    render: function render(h) {
+      return h(app, { props: { id: 1 } });
+    }
+  }));
+};
+

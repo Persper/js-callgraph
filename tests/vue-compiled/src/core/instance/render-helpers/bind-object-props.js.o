@@ -1,0 +1,55 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.bindObjectProps = bindObjectProps;
+
+var _config = require('core/config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _index = require('core/util/index');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * Runtime helper for merging v-bind="object" into a VNode's data.
+ */
+function bindObjectProps(data, tag, value, asProp, isSync) {
+  if (value) {
+    if (!(0, _index.isObject)(value)) {
+      process.env.NODE_ENV !== 'production' && (0, _index.warn)('v-bind without argument expects an Object or Array value', this);
+    } else {
+      if (Array.isArray(value)) {
+        value = (0, _index.toObject)(value);
+      }
+      var hash = void 0;
+
+      var _loop = function _loop(key) {
+        if (key === 'class' || key === 'style' || (0, _index.isReservedAttribute)(key)) {
+          hash = data;
+        } else {
+          var type = data.attrs && data.attrs.type;
+          hash = asProp || _config2.default.mustUseProp(tag, type, key) ? data.domProps || (data.domProps = {}) : data.attrs || (data.attrs = {});
+        }
+        if (!(key in hash)) {
+          hash[key] = value[key];
+
+          if (isSync) {
+            var on = data.on || (data.on = {});
+            on['update:' + key] = function ($event) {
+              value[key] = $event;
+            };
+          }
+        }
+      };
+
+      for (var key in value) {
+        _loop(key);
+      }
+    }
+  }
+  return data;
+}
+

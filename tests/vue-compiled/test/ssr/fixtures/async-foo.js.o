@@ -1,0 +1,23 @@
+'use strict';
+
+require('./test.css');
+
+var _test = require('./test.woff2');
+
+var _test2 = _interopRequireDefault(_test);
+
+var _test3 = require('./test.png');
+
+var _test4 = _interopRequireDefault(_test3);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+module.exports = {
+  beforeCreate: function beforeCreate() {
+    this.$vnode.ssrContext._registeredComponents.add('__MODULE_ID__');
+  },
+  render: function render(h) {
+    return h('div', 'async ' + _test2.default + ' ' + _test4.default);
+  }
+}; // import image and font
+

@@ -1,0 +1,135 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.initEvents = initEvents;
+exports.updateComponentListeners = updateComponentListeners;
+exports.eventsMixin = eventsMixin;
+
+var _index = require('../util/index');
+
+var _index2 = require('../vdom/helpers/index');
+
+function initEvents(vm) {
+  vm._events = Object.create(null);
+  vm._hasHookEvent = false;
+  // init parent attached events
+  var listeners = vm.$options._parentListeners;
+  if (listeners) {
+    updateComponentListeners(vm, listeners);
+  }
+}
+
+var target = void 0;
+
+function add(event, fn, once) {
+  if (once) {
+    target.$once(event, fn);
+  } else {
+    target.$on(event, fn);
+  }
+}
+
+function remove(event, fn) {
+  target.$off(event, fn);
+}
+
+function updateComponentListeners(vm, listeners, oldListeners) {
+  target = vm;
+  (0, _index2.updateListeners)(listeners, oldListeners || {}, add, remove, vm);
+  target = undefined;
+}
+
+function eventsMixin(Vue) {
+  var hookRE = /^hook:/;
+  Vue.prototype.$on = function (event, fn) {
+    var vm = this;
+    if (Array.isArray(event)) {
+      for (var i = 0, l = event.length; i < l; i++) {
+        this.$on(event[i], fn);
+      }
+    } else {
+      (vm._events[event] || (vm._events[event] = [])).push(fn);
+      // optimize hook:event cost by using a boolean flag marked at registration
+      // instead of a hash lookup
+      if (hookRE.test(event)) {
+        vm._hasHookEvent = true;
+      }
+    }
+    return vm;
+  };
+
+  Vue.prototype.$once = function (event, fn) {
+    var vm = this;
+    function on() {
+      vm.$off(event, on);
+      fn.apply(vm, arguments);
+    }
+    on.fn = fn;
+    vm.$on(event, on);
+    return vm;
+  };
+
+  Vue.prototype.$off = function (event, fn) {
+    var vm = this;
+    // all
+    if (!arguments.length) {
+      vm._events = Object.create(null);
+      return vm;
+    }
+    // array of events
+    if (Array.isArray(event)) {
+      for (var i = 0, l = event.length; i < l; i++) {
+        this.$off(event[i], fn);
+      }
+      return vm;
+    }
+    // specific event
+    var cbs = vm._events[event];
+    if (!cbs) {
+      return vm;
+    }
+    if (!fn) {
+      vm._events[event] = null;
+      return vm;
+    }
+    if (fn) {
+      // specific handler
+      var cb = void 0;
+      var _i = cbs.length;
+      while (_i--) {
+        cb = cbs[_i];
+        if (cb === fn || cb.fn === fn) {
+          cbs.splice(_i, 1);
+          break;
+        }
+      }
+    }
+    return vm;
+  };
+
+  Vue.prototype.$emit = function (event) {
+    var vm = this;
+    if (process.env.NODE_ENV !== 'production') {
+      var lowerCaseEvent = event.toLowerCase();
+      if (lowerCaseEvent !== event && vm._events[lowerCaseEvent]) {
+        (0, _index.tip)('Event "' + lowerCaseEvent + '" is emitted in component ' + ((0, _index.formatComponentName)(vm) + ' but the handler is registered for "' + event + '". ') + 'Note that HTML attributes are case-insensitive and you cannot use ' + 'v-on to listen to camelCase events when using in-DOM templates. ' + ('You should probably use "' + (0, _index.hyphenate)(event) + '" instead of "' + event + '".'));
+      }
+    }
+    var cbs = vm._events[event];
+    if (cbs) {
+      cbs = cbs.length > 1 ? (0, _index.toArray)(cbs) : cbs;
+      var args = (0, _index.toArray)(arguments, 1);
+      for (var i = 0, l = cbs.length; i < l; i++) {
+        try {
+          cbs[i].apply(vm, args);
+        } catch (e) {
+          (0, _index.handleError)(e, vm, 'event handler for "' + event + '"');
+        }
+      }
+    }
+    return vm;
+  };
+}
+

@@ -1,0 +1,108 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _env = require('core/util/env');
+
+var _util = require('shared/util');
+
+var _index = require('web/util/index');
+
+function updateAttrs(oldVnode, vnode) {
+  var opts = vnode.componentOptions;
+  if ((0, _util.isDef)(opts) && opts.Ctor.options.inheritAttrs === false) {
+    return;
+  }
+  if ((0, _util.isUndef)(oldVnode.data.attrs) && (0, _util.isUndef)(vnode.data.attrs)) {
+    return;
+  }
+  var key = void 0,
+      cur = void 0,
+      old = void 0;
+  var elm = vnode.elm;
+  var oldAttrs = oldVnode.data.attrs || {};
+  var attrs = vnode.data.attrs || {};
+  // clone observed objects, as the user probably wants to mutate it
+  if ((0, _util.isDef)(attrs.__ob__)) {
+    attrs = vnode.data.attrs = (0, _util.extend)({}, attrs);
+  }
+
+  for (key in attrs) {
+    cur = attrs[key];
+    old = oldAttrs[key];
+    if (old !== cur) {
+      setAttr(elm, key, cur);
+    }
+  }
+  // #4391: in IE9, setting type can reset value for input[type=radio]
+  // #6666: IE/Edge forces progress value down to 1 before setting a max
+  /* istanbul ignore if */
+  if ((_env.isIE || _env.isEdge) && attrs.value !== oldAttrs.value) {
+    setAttr(elm, 'value', attrs.value);
+  }
+  for (key in oldAttrs) {
+    if ((0, _util.isUndef)(attrs[key])) {
+      if ((0, _index.isXlink)(key)) {
+        elm.removeAttributeNS(_index.xlinkNS, (0, _index.getXlinkProp)(key));
+      } else if (!(0, _index.isEnumeratedAttr)(key)) {
+        elm.removeAttribute(key);
+      }
+    }
+  }
+}
+
+function setAttr(el, key, value) {
+  if (el.tagName.indexOf('-') > -1) {
+    baseSetAttr(el, key, value);
+  } else if ((0, _index.isBooleanAttr)(key)) {
+    // set attribute for blank value
+    // e.g. <option disabled>Select one</option>
+    if ((0, _index.isFalsyAttrValue)(value)) {
+      el.removeAttribute(key);
+    } else {
+      // technically allowfullscreen is a boolean attribute for <iframe>,
+      // but Flash expects a value of "true" when used on <embed> tag
+      value = key === 'allowfullscreen' && el.tagName === 'EMBED' ? 'true' : key;
+      el.setAttribute(key, value);
+    }
+  } else if ((0, _index.isEnumeratedAttr)(key)) {
+    el.setAttribute(key, (0, _index.isFalsyAttrValue)(value) || value === 'false' ? 'false' : 'true');
+  } else if ((0, _index.isXlink)(key)) {
+    if ((0, _index.isFalsyAttrValue)(value)) {
+      el.removeAttributeNS(_index.xlinkNS, (0, _index.getXlinkProp)(key));
+    } else {
+      el.setAttributeNS(_index.xlinkNS, key, value);
+    }
+  } else {
+    baseSetAttr(el, key, value);
+  }
+}
+
+function baseSetAttr(el, key, value) {
+  if ((0, _index.isFalsyAttrValue)(value)) {
+    el.removeAttribute(key);
+  } else {
+    // #7138: IE10 & 11 fires input event when setting placeholder on
+    // <textarea>... block the first input event and remove the blocker
+    // immediately.
+    /* istanbul ignore if */
+    if (_env.isIE && !_env.isIE9 && el.tagName === 'TEXTAREA' && key === 'placeholder' && !el.__ieph) {
+      var blocker = function blocker(e) {
+        e.stopImmediatePropagation();
+        el.removeEventListener('input', blocker);
+      };
+      el.addEventListener('input', blocker);
+      // $flow-disable-line
+      el.__ieph = true; /* IE placeholder patched */
+    }
+    el.setAttribute(key, value);
+  }
+}
+
+exports.default = {
+  create: updateAttrs,
+  update: updateAttrs
+};
+

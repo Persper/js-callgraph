@@ -1,0 +1,277 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _testObjectOption = require('../../../helpers/test-object-option');
+
+var _testObjectOption2 = _interopRequireDefault(_testObjectOption);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Options computed', function () {
+  (0, _testObjectOption2.default)('computed');
+
+  it('basic usage', function (done) {
+    var vm = new _vue2.default({
+      template: '<div>{{ b }}</div>',
+      data: {
+        a: 1
+      },
+      computed: {
+        b: function b() {
+          return this.a + 1;
+        }
+      }
+    }).$mount();
+    expect(vm.b).toBe(2);
+    expect(vm.$el.textContent).toBe('2');
+    vm.a = 2;
+    expect(vm.b).toBe(3);
+    waitForUpdate(function () {
+      expect(vm.$el.textContent).toBe('3');
+    }).then(done);
+  });
+
+  it('with setter', function (done) {
+    var vm = new _vue2.default({
+      template: '<div>{{ b }}</div>',
+      data: {
+        a: 1
+      },
+      computed: {
+        b: {
+          get: function get() {
+            return this.a + 1;
+          },
+          set: function set(v) {
+            this.a = v - 1;
+          }
+        }
+      }
+    }).$mount();
+    expect(vm.b).toBe(2);
+    expect(vm.$el.textContent).toBe('2');
+    vm.a = 2;
+    expect(vm.b).toBe(3);
+    waitForUpdate(function () {
+      expect(vm.$el.textContent).toBe('3');
+      vm.b = 1;
+      expect(vm.a).toBe(0);
+    }).then(function () {
+      expect(vm.$el.textContent).toBe('1');
+    }).then(done);
+  });
+
+  it('warn with setter and no getter', function () {
+    var vm = new _vue2.default({
+      template: '\n        <div>\n          <test></test>\n        </div>\n      ',
+      components: {
+        test: {
+          data: function data() {
+            return {
+              a: 1
+            };
+          },
+
+          computed: {
+            b: {
+              set: function set(v) {
+                this.a = v;
+              }
+            }
+          },
+          template: '<div>{{a}}</div>'
+        }
+      }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<div>1</div>');
+    expect('Getter is missing for computed property "b".').toHaveBeenWarned();
+  });
+
+  it('warn assigning to computed with no setter', function () {
+    var vm = new _vue2.default({
+      computed: {
+        b: function b() {
+          return 1;
+        }
+      }
+    });
+    vm.b = 2;
+    expect('Computed property "b" was assigned to but it has no setter.').toHaveBeenWarned();
+  });
+
+  it('watching computed', function (done) {
+    var spy = jasmine.createSpy('watch computed');
+    var vm = new _vue2.default({
+      data: {
+        a: 1
+      },
+      computed: {
+        b: function b() {
+          return this.a + 1;
+        }
+      }
+    });
+    vm.$watch('b', spy);
+    vm.a = 2;
+    waitForUpdate(function () {
+      expect(spy).toHaveBeenCalledWith(3, 2);
+    }).then(done);
+  });
+
+  it('caching', function () {
+    var spy = jasmine.createSpy('cached computed');
+    var vm = new _vue2.default({
+      data: {
+        a: 1
+      },
+      computed: {
+        b: function b() {
+          spy();
+          return this.a + 1;
+        }
+      }
+    });
+    expect(spy.calls.count()).toBe(0);
+    vm.b;
+    expect(spy.calls.count()).toBe(1);
+    vm.b;
+    expect(spy.calls.count()).toBe(1);
+  });
+
+  it('cache: false', function () {
+    var spy = jasmine.createSpy('cached computed');
+    var vm = new _vue2.default({
+      data: {
+        a: 1
+      },
+      computed: {
+        b: {
+          cache: false,
+          get: function get() {
+            spy();
+            return this.a + 1;
+          }
+        }
+      }
+    });
+    expect(spy.calls.count()).toBe(0);
+    vm.b;
+    expect(spy.calls.count()).toBe(1);
+    vm.b;
+    expect(spy.calls.count()).toBe(2);
+  });
+
+  it('as component', function (done) {
+    var Comp = _vue2.default.extend({
+      template: '<div>{{ b }} {{ c }}</div>',
+      data: function data() {
+        return { a: 1 };
+      },
+
+      computed: {
+        // defined on prototype
+        b: function b() {
+          return this.a + 1;
+        }
+      }
+    });
+
+    var vm = new Comp({
+      computed: {
+        // defined at instantiation
+        c: function c() {
+          return this.b + 1;
+        }
+      }
+    }).$mount();
+    expect(vm.b).toBe(2);
+    expect(vm.c).toBe(3);
+    expect(vm.$el.textContent).toBe('2 3');
+    vm.a = 2;
+    expect(vm.b).toBe(3);
+    expect(vm.c).toBe(4);
+    waitForUpdate(function () {
+      expect(vm.$el.textContent).toBe('3 4');
+    }).then(done);
+  });
+
+  it('warn conflict with data', function () {
+    new _vue2.default({
+      data: {
+        a: 1
+      },
+      computed: {
+        a: function a() {
+          return 2;
+        }
+      }
+    });
+    expect('computed property "a" is already defined in data').toHaveBeenWarned();
+  });
+
+  it('warn conflict with props', function () {
+    new _vue2.default({
+      props: ['a'],
+      propsData: { a: 1 },
+      computed: {
+        a: function a() {
+          return 2;
+        }
+      }
+    });
+    expect('computed property "a" is already defined as a prop').toHaveBeenWarned();
+  });
+
+  it('rethrow computed error', function () {
+    var vm = new _vue2.default({
+      computed: {
+        a: function a() {
+          throw new Error('rethrow');
+        }
+      }
+    });
+    expect(function () {
+      return vm.a;
+    }).toThrowError('rethrow');
+  });
+
+  // #7767
+  it('should avoid unnecessary re-renders', function (done) {
+    var computedSpy = jasmine.createSpy('computed');
+    var updatedSpy = jasmine.createSpy('updated');
+    var vm = new _vue2.default({
+      data: {
+        msg: 'bar'
+      },
+      computed: {
+        a: function a() {
+          computedSpy();
+          return this.msg !== 'foo';
+        }
+      },
+      template: '<div>{{ a }}</div>',
+      updated: updatedSpy
+    }).$mount();
+
+    expect(vm.$el.textContent).toBe('true');
+    expect(computedSpy.calls.count()).toBe(1);
+    expect(updatedSpy.calls.count()).toBe(0);
+
+    vm.msg = 'baz';
+    waitForUpdate(function () {
+      expect(vm.$el.textContent).toBe('true');
+      expect(computedSpy.calls.count()).toBe(2);
+      expect(updatedSpy.calls.count()).toBe(0);
+    }).then(function () {
+      vm.msg = 'foo';
+    }).then(function () {
+      expect(vm.$el.textContent).toBe('false');
+      expect(computedSpy.calls.count()).toBe(3);
+      expect(updatedSpy.calls.count()).toBe(1);
+    }).then(done);
+  });
+});
+

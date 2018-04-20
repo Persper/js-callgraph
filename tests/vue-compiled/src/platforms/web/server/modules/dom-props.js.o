@@ -1,0 +1,62 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = renderDOMProps;
+
+var _vnode = require('core/vdom/vnode');
+
+var _vnode2 = _interopRequireDefault(_vnode);
+
+var _attrs = require('./attrs');
+
+var _util = require('shared/util');
+
+var _util2 = require('../util');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function renderDOMProps(node) {
+  var props = node.data.domProps;
+  var res = '';
+
+  var parent = node.parent;
+  while ((0, _util.isDef)(parent)) {
+    if (parent.data && parent.data.domProps) {
+      props = (0, _util.extend)((0, _util.extend)({}, props), parent.data.domProps);
+    }
+    parent = parent.parent;
+  }
+
+  if ((0, _util.isUndef)(props)) {
+    return res;
+  }
+
+  var attrs = node.data.attrs;
+  for (var key in props) {
+    if (key === 'innerHTML') {
+      setText(node, props[key], true);
+    } else if (key === 'textContent') {
+      setText(node, props[key], false);
+    } else if (key === 'value' && node.tag === 'textarea') {
+      setText(node, props[key], false);
+    } else {
+      // $flow-disable-line (WTF?)
+      var attr = _util2.propsToAttrMap[key] || key.toLowerCase();
+      if ((0, _util2.isRenderableAttr)(attr) &&
+      // avoid rendering double-bound props/attrs twice
+      !((0, _util.isDef)(attrs) && (0, _util.isDef)(attrs[attr]))) {
+        res += (0, _attrs.renderAttr)(attr, props[key]);
+      }
+    }
+  }
+  return res;
+}
+
+function setText(node, text, raw) {
+  var child = new _vnode2.default(undefined, undefined, undefined, text);
+  child.raw = raw;
+  node.children = [child];
+}
+

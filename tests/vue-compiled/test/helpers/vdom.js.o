@@ -1,0 +1,12 @@
+'use strict';
+
+var _vnode = require('core/vdom/vnode');
+
+var _vnode2 = _interopRequireDefault(_vnode);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+window.createTextVNode = function (text) {
+  return new _vnode2.default(undefined, undefined, undefined, text);
+};
+

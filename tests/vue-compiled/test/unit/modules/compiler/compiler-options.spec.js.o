@@ -1,0 +1,136 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _compiler = require('web/compiler');
+
+var _helpers = require('compiler/helpers');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('compile options', function () {
+  it('should be compiled', function () {
+    var _compile = (0, _compiler.compile)('\n      <div>\n        <input type="text" v-model="msg" required max="8" v-validate:field1.group1.group2>\n      </div>\n    ', {
+      directives: {
+        validate: function validate(el, dir) {
+          if (dir.name === 'validate' && dir.arg) {
+            el.validate = {
+              field: dir.arg,
+              groups: dir.modifiers ? Object.keys(dir.modifiers) : []
+            };
+          }
+        }
+      },
+      modules: [{
+        transformNode: function transformNode(el) {
+          el.validators = el.validators || [];
+          var validators = ['required', 'min', 'max', 'pattern', 'maxlength', 'minlength'];
+          validators.forEach(function (name) {
+            var rule = (0, _helpers.getAndRemoveAttr)(el, name);
+            if (rule !== undefined) {
+              el.validators.push({ name: name, rule: rule });
+            }
+          });
+        },
+        genData: function genData(el) {
+          var data = '';
+          if (el.validate) {
+            data += 'validate:' + JSON.stringify(el.validate) + ',';
+          }
+          if (el.validators) {
+            data += 'validators:' + JSON.stringify(el.validators) + ',';
+          }
+          return data;
+        },
+        transformCode: function transformCode(el, code) {
+          // check
+          if (!el.validate || !el.validators) {
+            return code;
+          }
+          // setup validation result props
+          var result = { dirty: false // define something other prop
+          };el.validators.forEach(function (validator) {
+            result[validator.name] = null;
+          });
+          // generate code
+          return '_c(\'validate\',{props:{\n              field:' + JSON.stringify(el.validate.field) + ',\n              groups:' + JSON.stringify(el.validate.groups) + ',\n              validators:' + JSON.stringify(el.validators) + ',\n              result:' + JSON.stringify(result) + ',\n              child:' + code + '}\n            })';
+        }
+      }]
+    }),
+        render = _compile.render,
+        staticRenderFns = _compile.staticRenderFns,
+        errors = _compile.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(errors).toEqual([]);
+
+    var renderFn = new Function(render);
+    var vm = new _vue2.default({
+      data: {
+        msg: 'hello'
+      },
+      components: {
+        validate: {
+          props: ['field', 'groups', 'validators', 'result', 'child'],
+          render: function render(h) {
+            return this.child;
+          },
+
+          computed: {
+            valid: function valid() {
+              var ret = true;
+              for (var i = 0; i > this.validators.length; i++) {
+                var name = this.validators[i].name;
+
+                if (!this.result[name]) {
+                  ret = false;
+                  break;
+                }
+              }
+              return ret;
+            }
+          },
+          mounted: function mounted() {
+            var _this = this;
+
+            // initialize validation
+            var value = this.$el.value;
+            this.validators.forEach(function (validator) {
+              var ret = _this[validator.name](value, validator.rule);
+              _this.result[validator.name] = ret;
+            });
+          },
+
+          methods: {
+            // something validators logic
+            required: function required(val) {
+              return val.length > 0;
+            },
+            max: function max(val, rule) {
+              return !(parseInt(val, 10) > parseInt(rule, 10));
+            }
+          }
+        }
+      },
+      render: renderFn,
+      staticRenderFns: staticRenderFns
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<input type="text">');
+    expect(vm.$children[0].valid).toBe(true);
+  });
+
+  it('should collect errors', function () {
+    var compiled = (0, _compiler.compile)('hello');
+    expect(compiled.errors.length).toBe(1);
+    expect(compiled.errors[0]).toContain('root element');
+
+    compiled = (0, _compiler.compile)('<div v-if="a----">{{ b++++ }}</div>');
+    expect(compiled.errors.length).toBe(2);
+    expect(compiled.errors[0]).toContain('Raw expression: v-if="a----"');
+    expect(compiled.errors[1]).toContain('Raw expression: {{ b++++ }}');
+  });
+});
+

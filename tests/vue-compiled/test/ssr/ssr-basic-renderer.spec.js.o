@@ -1,0 +1,58 @@
+'use strict';
+
+var _vueRuntimeCommon = require('../../dist/vue.runtime.common.js');
+
+var _vueRuntimeCommon2 = _interopRequireDefault(_vueRuntimeCommon);
+
+var _basic = require('../../packages/vue-server-renderer/basic');
+
+var _basic2 = _interopRequireDefault(_basic);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('SSR: basicRenderer', function () {
+  it('should work', function (done) {
+    (0, _basic2.default)(new _vueRuntimeCommon2.default({
+      template: '\n        <div>\n          <p class="hi">yoyo</p>\n          <div id="ho" :class="{ red: isRed }"></div>\n          <span>{{ test }}</span>\n          <input :value="test">\n          <img :src="imageUrl">\n          <test></test>\n          <test-async></test-async>\n        </div>\n      ',
+      data: {
+        test: 'hi',
+        isRed: true,
+        imageUrl: 'https://vuejs.org/images/logo.png'
+      },
+      components: {
+        test: {
+          render: function render() {
+            return this.$createElement('div', { class: ['a'] }, 'test');
+          }
+        },
+        testAsync: function testAsync(resolve) {
+          resolve({
+            render: function render() {
+              return this.$createElement('span', { class: ['b'] }, 'testAsync');
+            }
+          });
+        }
+      }
+    }), function (err, result) {
+      expect(err).toBeNull();
+      expect(result).toContain('<div data-server-rendered="true">' + '<p class="hi">yoyo</p> ' + '<div id="ho" class="red"></div> ' + '<span>hi</span> ' + '<input value="hi"> ' + '<img src="https://vuejs.org/images/logo.png"> ' + '<div class="a">test</div> ' + '<span class="b">testAsync</span>' + '</div>');
+      done();
+    });
+  });
+
+  // #5941
+  it('should work peoperly when accessing $ssrContext in root component', function (done) {
+    var ssrContext = void 0;
+    (0, _basic2.default)(new _vueRuntimeCommon2.default({
+      template: '\n        <div></div>\n      ',
+      created: function created() {
+        ssrContext = this.$ssrContext;
+      }
+    }), function (err, result) {
+      expect(err).toBeNull();
+      expect(ssrContext).toBeUndefined();
+      done();
+    });
+  });
+});
+

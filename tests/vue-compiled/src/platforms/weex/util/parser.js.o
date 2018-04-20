@@ -1,0 +1,75 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.nodeToBinding = nodeToBinding;
+exports.generateBinding = generateBinding;
+
+
+// import { warn } from 'core/util/index'
+
+// this will be preserved during build
+// $flow-disable-line
+var acorn = require('acorn'); // $flow-disable-line
+var walk = require('acorn/dist/walk'); // $flow-disable-line
+var escodegen = require('escodegen');
+
+function nodeToBinding(node) {
+  switch (node.type) {
+    case 'Literal':
+      return node.value;
+    case 'Identifier':
+    case 'UnaryExpression':
+    case 'BinaryExpression':
+    case 'LogicalExpression':
+    case 'ConditionalExpression':
+    case 'MemberExpression':
+      return { '@binding': escodegen.generate(node) };
+    case 'ArrayExpression':
+      return node.elements.map(function (_) {
+        return nodeToBinding(_);
+      });
+    case 'ObjectExpression':
+      {
+        var object = {};
+        node.properties.forEach(function (prop) {
+          if (!prop.key || prop.key.type !== 'Identifier') {
+            return;
+          }
+          var key = escodegen.generate(prop.key);
+          var value = nodeToBinding(prop.value);
+          if (key && value) {
+            object[key] = value;
+          }
+        });
+        return object;
+      }
+    default:
+      {
+        // warn(`Not support ${node.type}: "${escodegen.generate(node)}"`)
+        return '';
+      }
+  }
+}
+
+function generateBinding(exp) {
+  if (exp && typeof exp === 'string') {
+    var ast = null;
+    try {
+      ast = acorn.parse('(' + exp + ')');
+    } catch (e) {
+      // warn(`Failed to parse the expression: "${exp}"`)
+      return '';
+    }
+
+    var output = '';
+    walk.simple(ast, {
+      Expression: function Expression(node) {
+        output = nodeToBinding(node);
+      }
+    });
+    return output;
+  }
+}
+

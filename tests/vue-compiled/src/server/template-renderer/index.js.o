@@ -1,0 +1,254 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
+var _util = require('../util');
+
+var _templateStream = require('./template-stream');
+
+var _templateStream2 = _interopRequireDefault(_templateStream);
+
+var _parseTemplate = require('./parse-template');
+
+var _createAsyncFileMapper = require('./create-async-file-mapper');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var path = require('path');
+var serialize = require('serialize-javascript');
+
+var TemplateRenderer = function () {
+  function TemplateRenderer(options) {
+    _classCallCheck(this, TemplateRenderer);
+
+    this.options = options;
+    this.inject = options.inject !== false;
+    // if no template option is provided, the renderer is created
+    // as a utility object for rendering assets like preload links and scripts.
+    this.parsedTemplate = options.template ? (0, _parseTemplate.parseTemplate)(options.template) : null;
+
+    // extra functionality with client manifest
+    if (options.clientManifest) {
+      var _clientManifest = this.clientManifest = options.clientManifest;
+      this.publicPath = _clientManifest.publicPath.replace(/\/$/, '');
+      // preload/prefetch directives
+      this.preloadFiles = (_clientManifest.initial || []).map(normalizeFile);
+      this.prefetchFiles = (_clientManifest.async || []).map(normalizeFile);
+      // initial async chunk mapping
+      this.mapFiles = (0, _createAsyncFileMapper.createMapper)(_clientManifest);
+    }
+  }
+
+  _createClass(TemplateRenderer, [{
+    key: 'bindRenderFns',
+    value: function bindRenderFns(context) {
+      var renderer = this;['ResourceHints', 'State', 'Scripts', 'Styles'].forEach(function (type) {
+        context['render' + type] = renderer['render' + type].bind(renderer, context);
+      });
+      // also expose getPreloadFiles, useful for HTTP/2 push
+      context.getPreloadFiles = renderer.getPreloadFiles.bind(renderer, context);
+    }
+
+    // render synchronously given rendered app content and render context
+
+  }, {
+    key: 'renderSync',
+    value: function renderSync(content, context) {
+      var template = this.parsedTemplate;
+      if (!template) {
+        throw new Error('renderSync cannot be called without a template.');
+      }
+      context = context || {};
+      if (this.inject) {
+        return template.head(context) + (context.head || '') + this.renderResourceHints(context) + this.renderStyles(context) + template.neck(context) + content + this.renderState(context) + this.renderScripts(context) + template.tail(context);
+      } else {
+        return template.head(context) + template.neck(context) + content + template.tail(context);
+      }
+    }
+  }, {
+    key: 'renderStyles',
+    value: function renderStyles(context) {
+      var _this = this;
+
+      var cssFiles = this.clientManifest ? this.clientManifest.all.filter(_util.isCSS) : [];
+      return (
+        // render links for css files
+        (cssFiles.length ? cssFiles.map(function (file) {
+          return '<link rel="stylesheet" href="' + _this.publicPath + '/' + file + '">';
+        }).join('') : '') + (
+        // context.styles is a getter exposed by vue-style-loader which contains
+        // the inline component styles collected during SSR
+        context.styles || '')
+      );
+    }
+  }, {
+    key: 'renderResourceHints',
+    value: function renderResourceHints(context) {
+      return this.renderPreloadLinks(context) + this.renderPrefetchLinks(context);
+    }
+  }, {
+    key: 'getPreloadFiles',
+    value: function getPreloadFiles(context) {
+      var usedAsyncFiles = this.getUsedAsyncFiles(context);
+      if (this.preloadFiles || usedAsyncFiles) {
+        return (this.preloadFiles || []).concat(usedAsyncFiles || []);
+      } else {
+        return [];
+      }
+    }
+  }, {
+    key: 'renderPreloadLinks',
+    value: function renderPreloadLinks(context) {
+      var _this2 = this;
+
+      var files = this.getPreloadFiles(context);
+      var shouldPreload = this.options.shouldPreload;
+      if (files.length) {
+        return files.map(function (_ref) {
+          var file = _ref.file,
+              extension = _ref.extension,
+              fileWithoutQuery = _ref.fileWithoutQuery,
+              asType = _ref.asType;
+
+          var extra = '';
+          // by default, we only preload scripts or css
+          if (!shouldPreload && asType !== 'script' && asType !== 'style') {
+            return '';
+          }
+          // user wants to explicitly control what to preload
+          if (shouldPreload && !shouldPreload(fileWithoutQuery, asType)) {
+            return '';
+          }
+          if (asType === 'font') {
+            extra = ' type="font/' + extension + '" crossorigin';
+          }
+          return '<link rel="preload" href="' + _this2.publicPath + '/' + file + '"' + (asType !== '' ? ' as="' + asType + '"' : '') + extra + '>';
+        }).join('');
+      } else {
+        return '';
+      }
+    }
+  }, {
+    key: 'renderPrefetchLinks',
+    value: function renderPrefetchLinks(context) {
+      var _this3 = this;
+
+      var shouldPrefetch = this.options.shouldPrefetch;
+      if (this.prefetchFiles) {
+        var usedAsyncFiles = this.getUsedAsyncFiles(context);
+        var alreadyRendered = function alreadyRendered(file) {
+          return usedAsyncFiles && usedAsyncFiles.some(function (f) {
+            return f.file === file;
+          });
+        };
+        return this.prefetchFiles.map(function (_ref2) {
+          var file = _ref2.file,
+              fileWithoutQuery = _ref2.fileWithoutQuery,
+              asType = _ref2.asType;
+
+          if (shouldPrefetch && !shouldPrefetch(fileWithoutQuery, asType)) {
+            return '';
+          }
+          if (alreadyRendered(file)) {
+            return '';
+          }
+          return '<link rel="prefetch" href="' + _this3.publicPath + '/' + file + '">';
+        }).join('');
+      } else {
+        return '';
+      }
+    }
+  }, {
+    key: 'renderState',
+    value: function renderState(context, options) {
+      var _ref3 = options || {},
+          _ref3$contextKey = _ref3.contextKey,
+          contextKey = _ref3$contextKey === undefined ? 'state' : _ref3$contextKey,
+          _ref3$windowKey = _ref3.windowKey,
+          windowKey = _ref3$windowKey === undefined ? '__INITIAL_STATE__' : _ref3$windowKey;
+
+      var state = serialize(context[contextKey], { isJSON: true });
+      var autoRemove = process.env.NODE_ENV === 'production' ? ';(function(){var s;(s=document.currentScript||document.scripts[document.scripts.length-1]).parentNode.removeChild(s);}());' : '';
+      return context[contextKey] ? '<script>window.' + windowKey + '=' + state + autoRemove + '</script>' : '';
+    }
+  }, {
+    key: 'renderScripts',
+    value: function renderScripts(context) {
+      var _this4 = this;
+
+      if (this.clientManifest) {
+        var _initial = this.preloadFiles;
+        var _async = this.getUsedAsyncFiles(context);
+        var needed = [_initial[0]].concat(_async || [], _initial.slice(1));
+        return needed.filter(function (_ref4) {
+          var file = _ref4.file;
+          return (0, _util.isJS)(file);
+        }).map(function (_ref5) {
+          var file = _ref5.file;
+
+          return '<script src="' + _this4.publicPath + '/' + file + '" defer></script>';
+        }).join('');
+      } else {
+        return '';
+      }
+    }
+  }, {
+    key: 'getUsedAsyncFiles',
+    value: function getUsedAsyncFiles(context) {
+      if (!context._mappedFiles && context._registeredComponents && this.mapFiles) {
+        var registered = Array.from(context._registeredComponents);
+        context._mappedFiles = this.mapFiles(registered).map(normalizeFile);
+      }
+      return context._mappedFiles;
+    }
+
+    // create a transform stream
+
+  }, {
+    key: 'createStream',
+    value: function createStream(context) {
+      if (!this.parsedTemplate) {
+        throw new Error('createStream cannot be called without a template.');
+      }
+      return new _templateStream2.default(this, this.parsedTemplate, context || {});
+    }
+  }]);
+
+  return TemplateRenderer;
+}();
+
+exports.default = TemplateRenderer;
+
+
+function normalizeFile(file) {
+  var withoutQuery = file.replace(/\?.*/, '');
+  var extension = path.extname(withoutQuery).slice(1);
+  return {
+    file: file,
+    extension: extension,
+    fileWithoutQuery: withoutQuery,
+    asType: getPreloadType(extension)
+  };
+}
+
+function getPreloadType(ext) {
+  if (ext === 'js') {
+    return 'script';
+  } else if (ext === 'css') {
+    return 'style';
+  } else if (/jpe?g|png|svg|gif|webp|ico/.test(ext)) {
+    return 'image';
+  } else if (/woff2?|ttf|otf|eot/.test(ext)) {
+    return 'font';
+  } else {
+    // not exhausting all possibilities here, but above covers common cases
+    return '';
+  }
+}
+

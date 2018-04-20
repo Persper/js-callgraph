@@ -1,0 +1,46 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Options inheritAttrs', function () {
+  it('should work', function (done) {
+    var vm = new _vue2.default({
+      template: '<foo :id="foo"/>',
+      data: { foo: 'foo' },
+      components: {
+        foo: {
+          inheritAttrs: false,
+          template: '<div>foo</div>'
+        }
+      }
+    }).$mount();
+    expect(vm.$el.id).toBe('');
+    vm.foo = 'bar';
+    waitForUpdate(function () {
+      expect(vm.$el.id).toBe('');
+    }).then(done);
+  });
+
+  it('with inner v-bind', function (done) {
+    var vm = new _vue2.default({
+      template: '<foo :id="foo"/>',
+      data: { foo: 'foo' },
+      components: {
+        foo: {
+          inheritAttrs: false,
+          template: '<div><div v-bind="$attrs"></div></div>'
+        }
+      }
+    }).$mount();
+    expect(vm.$el.children[0].id).toBe('foo');
+    vm.foo = 'bar';
+    waitForUpdate(function () {
+      expect(vm.$el.children[0].id).toBe('bar');
+    }).then(done);
+  });
+});
+

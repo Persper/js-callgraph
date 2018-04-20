@@ -1,0 +1,23 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = injectStyles;
+function insertCSS(text) {
+  var cssEl = document.createElement('style');
+  cssEl.textContent = text.trim();
+  document.head.appendChild(cssEl);
+}
+
+var duration = process.env.TRANSITION_DURATION || 50;
+var buffer = process.env.TRANSITION_BUFFER || 10;
+var injected = false;
+
+function injectStyles() {
+  if (injected) return { duration: duration, buffer: buffer };
+  injected = true;
+  insertCSS('\n    .test {\n      -webkit-transition: opacity ' + duration + 'ms ease;\n      transition: opacity ' + duration + 'ms ease;\n    }\n    .group-move {\n      -webkit-transition: -webkit-transform ' + duration + 'ms ease;\n      transition: transform ' + duration + 'ms ease;\n    }\n    .v-appear, .v-enter, .v-leave-active,\n    .test-appear, .test-enter, .test-leave-active,\n    .hello, .bye.active,\n    .changed-enter {\n      opacity: 0;\n    }\n    .test-anim-enter-active {\n      animation: test-enter ' + duration + 'ms;\n      -webkit-animation: test-enter ' + duration + 'ms;\n    }\n    .test-anim-leave-active {\n      animation: test-leave ' + duration + 'ms;\n      -webkit-animation: test-leave ' + duration + 'ms;\n    }\n    .test-anim-long-enter-active {\n      animation: test-enter ' + duration * 2 + 'ms;\n      -webkit-animation: test-enter ' + duration * 2 + 'ms;\n    }\n    .test-anim-long-leave-active {\n      animation: test-leave ' + duration * 2 + 'ms;\n      -webkit-animation: test-leave ' + duration * 2 + 'ms;\n    }\n    @keyframes test-enter {\n      from { opacity: 0 }\n      to { opacity: 1 }\n    }\n    @-webkit-keyframes test-enter {\n      from { opacity: 0 }\n      to { opacity: 1 }\n    }\n    @keyframes test-leave {\n      from { opacity: 1 }\n      to { opacity: 0 }\n    }\n    @-webkit-keyframes test-leave {\n      from { opacity: 1 }\n      to { opacity: 0 }\n    }\n  ');
+  return { duration: duration, buffer: buffer };
+}
+

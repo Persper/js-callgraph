@@ -1,0 +1,74 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Directive v-html', function () {
+  it('should render html', function () {
+    var vm = new _vue2.default({
+      template: '<div v-html="a"></div>',
+      data: { a: 'hello' }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('hello');
+  });
+
+  it('should encode html entities', function () {
+    var vm = new _vue2.default({
+      template: '<div v-html="a"></div>',
+      data: { a: '<span>&lt;</span>' }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<span>&lt;</span>');
+  });
+
+  it('should work inline', function () {
+    var vm = new _vue2.default({
+      template: '<div v-html="\'<span>&lt;</span>\'"></div>'
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<span>&lt;</span>');
+  });
+
+  it('should work inline in DOM', function () {
+    var el = document.createElement('div');
+    el.innerHTML = '<div v-html="\'<span>&lt;</span>\'"></div>';
+    var vm = new _vue2.default({ el: el });
+    expect(vm.$el.children[0].innerHTML).toBe('<span>&lt;</span>');
+  });
+
+  it('should support all value types', function (done) {
+    var vm = new _vue2.default({
+      template: '<div v-html="a"></div>',
+      data: { a: false }
+    }).$mount();
+    waitForUpdate(function () {
+      expect(vm.$el.innerHTML).toBe('false');
+      vm.a = [];
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe('[]');
+      vm.a = {};
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe('{}');
+      vm.a = 123;
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe('123');
+      vm.a = 0;
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe('0');
+      vm.a = ' ';
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe(' ');
+      vm.a = '    ';
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe('    ');
+      vm.a = null;
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe('');
+      vm.a = undefined;
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe('');
+    }).then(done);
+  });
+});
+

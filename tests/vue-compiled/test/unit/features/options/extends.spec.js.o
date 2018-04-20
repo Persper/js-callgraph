@@ -1,0 +1,83 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _env = require('core/util/env');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Options extends', function () {
+  it('should work on objects', function () {
+    var A = {
+      data: function data() {
+        return { a: 1 };
+      }
+    };
+    var B = {
+      extends: A,
+      data: function data() {
+        return { b: 2 };
+      }
+    };
+    var vm = new _vue2.default({
+      extends: B,
+      data: {
+        c: 3
+      }
+    });
+    expect(vm.a).toBe(1);
+    expect(vm.b).toBe(2);
+    expect(vm.c).toBe(3);
+  });
+
+  it('should work on extended constructors', function () {
+    var A = _vue2.default.extend({
+      data: function data() {
+        return { a: 1 };
+      }
+    });
+    var B = _vue2.default.extend({
+      extends: A,
+      data: function data() {
+        return { b: 2 };
+      }
+    });
+    var vm = new _vue2.default({
+      extends: B,
+      data: {
+        c: 3
+      }
+    });
+    expect(vm.a).toBe(1);
+    expect(vm.b).toBe(2);
+    expect(vm.c).toBe(3);
+  });
+
+  if (_env.nativeWatch) {
+    it('should work with global mixins + Object.prototype.watch', function (done) {
+      _vue2.default.mixin({});
+
+      var spy = jasmine.createSpy('watch');
+      var A = _vue2.default.extend({
+        data: function data() {
+          return { a: 1 };
+        },
+        watch: {
+          a: spy
+        },
+        created: function created() {
+          this.a = 2;
+        }
+      });
+      new _vue2.default({
+        extends: A
+      });
+      waitForUpdate(function () {
+        expect(spy).toHaveBeenCalledWith(2, 1);
+      }).then(done);
+    });
+  }
+});
+

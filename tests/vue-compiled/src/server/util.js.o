@@ -1,0 +1,30 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createPromiseCallback = createPromiseCallback;
+var isJS = exports.isJS = function isJS(file) {
+  return (/\.js(\?[^.]+)?$/.test(file)
+  );
+};
+
+var isCSS = exports.isCSS = function isCSS(file) {
+  return (/\.css(\?[^.]+)?$/.test(file)
+  );
+};
+
+function createPromiseCallback() {
+  var resolve = void 0,
+      reject = void 0;
+  var promise = new Promise(function (_resolve, _reject) {
+    resolve = _resolve;
+    reject = _reject;
+  });
+  var cb = function cb(err, res) {
+    if (err) return reject(err);
+    resolve(res || '');
+  };
+  return { promise: promise, cb: cb };
+}
+

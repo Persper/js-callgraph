@@ -1,0 +1,143 @@
+'use strict';
+
+var _patch = require('web/runtime/patch');
+
+var _vnode = require('core/vdom/vnode');
+
+var _vnode2 = _interopRequireDefault(_vnode);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('vdom events module', function () {
+  it('should attach event handler to element', function () {
+    var click = jasmine.createSpy();
+    var vnode = new _vnode2.default('a', { on: { click: click } });
+
+    var elm = (0, _patch.patch)(null, vnode);
+    document.body.appendChild(elm);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(1);
+  });
+
+  it('should not duplicate the same listener', function () {
+    var click = jasmine.createSpy();
+    var vnode1 = new _vnode2.default('a', { on: { click: click } });
+    var vnode2 = new _vnode2.default('a', { on: { click: click } });
+
+    var elm = (0, _patch.patch)(null, vnode1);
+    (0, _patch.patch)(vnode1, vnode2);
+    document.body.appendChild(elm);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(1);
+  });
+
+  it('should update different listener', function () {
+    var click = jasmine.createSpy();
+    var click2 = jasmine.createSpy();
+    var vnode1 = new _vnode2.default('a', { on: { click: click } });
+    var vnode2 = new _vnode2.default('a', { on: { click: click2 } });
+
+    var elm = (0, _patch.patch)(null, vnode1);
+    document.body.appendChild(elm);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(1);
+    expect(click2.calls.count()).toBe(0);
+
+    (0, _patch.patch)(vnode1, vnode2);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(1);
+    expect(click2.calls.count()).toBe(1);
+  });
+
+  it('should attach Array of multiple handlers', function () {
+    var click = jasmine.createSpy();
+    var vnode = new _vnode2.default('a', { on: { click: [click, click] } });
+
+    var elm = (0, _patch.patch)(null, vnode);
+    document.body.appendChild(elm);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(2);
+  });
+
+  it('should update Array of multiple handlers', function () {
+    var click = jasmine.createSpy();
+    var click2 = jasmine.createSpy();
+    var vnode1 = new _vnode2.default('a', { on: { click: [click, click2] } });
+    var vnode2 = new _vnode2.default('a', { on: { click: [click] } });
+
+    var elm = (0, _patch.patch)(null, vnode1);
+    document.body.appendChild(elm);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(1);
+    expect(click2.calls.count()).toBe(1);
+
+    (0, _patch.patch)(vnode1, vnode2);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(2);
+    expect(click2.calls.count()).toBe(1);
+  });
+
+  it('should remove handlers that are no longer present', function () {
+    var click = jasmine.createSpy();
+    var vnode1 = new _vnode2.default('a', { on: { click: click } });
+    var vnode2 = new _vnode2.default('a', {});
+
+    var elm = (0, _patch.patch)(null, vnode1);
+    document.body.appendChild(elm);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(1);
+
+    (0, _patch.patch)(vnode1, vnode2);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(1);
+  });
+
+  it('should remove Array handlers that are no longer present', function () {
+    var click = jasmine.createSpy();
+    var vnode1 = new _vnode2.default('a', { on: { click: [click, click] } });
+    var vnode2 = new _vnode2.default('a', {});
+
+    var elm = (0, _patch.patch)(null, vnode1);
+    document.body.appendChild(elm);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(2);
+
+    (0, _patch.patch)(vnode1, vnode2);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(2);
+  });
+
+  // #4650
+  it('should handle single -> array or array -> single handler changes', function () {
+    var click = jasmine.createSpy();
+    var click2 = jasmine.createSpy();
+    var click3 = jasmine.createSpy();
+    var vnode0 = new _vnode2.default('a', { on: { click: click } });
+    var vnode1 = new _vnode2.default('a', { on: { click: [click, click2] } });
+    var vnode2 = new _vnode2.default('a', { on: { click: click } });
+    var vnode3 = new _vnode2.default('a', { on: { click: [click2, click3] } });
+
+    var elm = (0, _patch.patch)(null, vnode0);
+    document.body.appendChild(elm);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(1);
+    expect(click2.calls.count()).toBe(0);
+
+    (0, _patch.patch)(vnode0, vnode1);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(2);
+    expect(click2.calls.count()).toBe(1);
+
+    (0, _patch.patch)(vnode1, vnode2);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(3);
+    expect(click2.calls.count()).toBe(1);
+
+    (0, _patch.patch)(vnode2, vnode3);
+    triggerEvent(elm, 'click');
+    expect(click.calls.count()).toBe(3);
+    expect(click2.calls.count()).toBe(2);
+    expect(click3.calls.count()).toBe(1);
+  });
+});
+

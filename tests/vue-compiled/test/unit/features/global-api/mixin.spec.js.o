@@ -1,0 +1,182 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Global API: mixin', function () {
+  var options = void 0;
+  beforeEach(function () {
+    options = _vue2.default.options;
+  });
+  afterEach(function () {
+    _vue2.default.options = options;
+  });
+
+  it('should work', function () {
+    var spy = jasmine.createSpy('global mixin');
+    _vue2.default.mixin({
+      created: function created() {
+        spy(this.$options.myOption);
+      }
+    });
+    new _vue2.default({
+      myOption: 'hello'
+    });
+    expect(spy).toHaveBeenCalledWith('hello');
+  });
+
+  it('should work for constructors created before mixin is applied', function () {
+    var calls = [];
+    var Test = _vue2.default.extend({
+      name: 'test',
+      beforeCreate: function beforeCreate() {
+        calls.push(this.$options.myOption + ' local');
+      }
+    });
+    _vue2.default.mixin({
+      beforeCreate: function beforeCreate() {
+        calls.push(this.$options.myOption + ' global');
+      }
+    });
+    expect(Test.options.name).toBe('test');
+    new Test({
+      myOption: 'hello'
+    });
+    expect(calls).toEqual(['hello global', 'hello local']);
+  });
+
+  // #3957
+  it('should work for global props', function () {
+    var Test = _vue2.default.extend({
+      template: '<div>{{ prop }}</div>'
+    });
+
+    _vue2.default.mixin({
+      props: ['prop']
+    });
+
+    // test child component
+    var vm = new _vue2.default({
+      template: '<test prop="hi"></test>',
+      components: { Test: Test }
+    }).$mount();
+
+    expect(vm.$el.textContent).toBe('hi');
+  });
+
+  // vue-loader#433
+  it('should not drop late-set render functions', function () {
+    var Test = _vue2.default.extend({});
+    Test.options.render = function (h) {
+      return h('div', 'hello');
+    };
+
+    _vue2.default.mixin({});
+
+    var vm = new _vue2.default({
+      render: function render(h) {
+        return h(Test);
+      }
+    }).$mount();
+
+    expect(vm.$el.textContent).toBe('hello');
+  });
+
+  // #4266
+  it('should not drop scopedId', function () {
+    var Test = _vue2.default.extend({});
+    Test.options._scopeId = 'foo';
+
+    _vue2.default.mixin({});
+
+    var vm = new Test({
+      template: '<div><p>hi</p></div>'
+    }).$mount();
+
+    expect(vm.$el.children[0].hasAttribute('foo')).toBe(true);
+  });
+
+  // #4976
+  it('should not drop late-attached custom options on existing constructors', function () {
+    var baseSpy = jasmine.createSpy('base');
+    var Base = _vue2.default.extend({
+      beforeCreate: baseSpy
+    });
+
+    var Test = Base.extend({});
+
+    // Inject options later
+    // vue-loader and vue-hot-reload-api are doing like this
+    Test.options.computed = {
+      $style: function $style() {
+        return 123;
+      }
+    };
+
+    var spy = jasmine.createSpy('late attached');
+    Test.options.beforeCreate = Test.options.beforeCreate.concat(spy);
+
+    // Update super constructor's options
+    var mixinSpy = jasmine.createSpy('mixin');
+    _vue2.default.mixin({
+      beforeCreate: mixinSpy
+    });
+
+    // mount the component
+    var vm = new Test({
+      template: '<div>{{ $style }}</div>'
+    }).$mount();
+
+    expect(spy.calls.count()).toBe(1);
+    expect(baseSpy.calls.count()).toBe(1);
+    expect(mixinSpy.calls.count()).toBe(1);
+    expect(vm.$el.textContent).toBe('123');
+    expect(vm.$style).toBe(123);
+
+    // Should not be dropped
+    expect(Test.options.computed.$style()).toBe(123);
+    expect(Test.options.beforeCreate).toEqual([mixinSpy, baseSpy, spy]);
+  });
+
+  // vue-class-component#83
+  it('should work for a constructor mixin', function () {
+    var spy = jasmine.createSpy('global mixin');
+    var Mixin = _vue2.default.extend({
+      created: function created() {
+        spy(this.$options.myOption);
+      }
+    });
+
+    _vue2.default.mixin(Mixin);
+
+    new _vue2.default({
+      myOption: 'hello'
+    });
+    expect(spy).toHaveBeenCalledWith('hello');
+  });
+
+  // vue-class-component#87
+  it('should not drop original lifecycle hooks', function () {
+    var base = jasmine.createSpy('base');
+
+    var Base = _vue2.default.extend({
+      beforeCreate: base
+    });
+
+    var injected = jasmine.createSpy('injected');
+
+    // inject a function
+    Base.options.beforeCreate = Base.options.beforeCreate.concat(injected);
+
+    _vue2.default.mixin({});
+
+    new Base({});
+
+    expect(base).toHaveBeenCalled();
+    expect(injected).toHaveBeenCalled();
+  });
+});
+

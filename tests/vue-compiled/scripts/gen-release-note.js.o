@@ -1,0 +1,19 @@
+'use strict';
+
+var version = process.argv[2] || process.env.VERSION;
+var cc = require('conventional-changelog');
+var file = './RELEASE_NOTE' + (version ? '_' + version : '') + '.md';
+var fileStream = require('fs').createWriteStream(file);
+
+cc({
+  preset: 'angular',
+  pkg: {
+    transform: function transform(pkg) {
+      pkg.version = 'v' + version;
+      return pkg;
+    }
+  }
+}).pipe(fileStream).on('close', function () {
+  console.log('Generated release note at ' + file);
+});
+

@@ -1,0 +1,185 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _index = require('core/util/index');
+
+var _classUtil = require('../class-util');
+
+var _transition = require('./transition');
+
+var _transitionUtil = require('../transition-util');
+
+// Provides transition support for list items.
+// supports move transitions using the FLIP technique.
+
+// Because the vdom's children update algorithm is "unstable" - i.e.
+// it doesn't guarantee the relative positioning of removed elements,
+// we force transition-group to update its children into two passes:
+// in the first pass, we remove all nodes that need to be removed,
+// triggering their leaving transition; in the second pass, we insert/move
+// into the final desired state. This way in the second pass removed
+// nodes will remain where they should be.
+
+var props = (0, _index.extend)({
+  tag: String,
+  moveClass: String
+}, _transition.transitionProps);
+
+delete props.mode;
+
+exports.default = {
+  props: props,
+
+  beforeMount: function beforeMount() {
+    var _this = this;
+
+    var update = this._update;
+    this._update = function (vnode, hydrating) {
+      // force removing pass
+      _this.__patch__(_this._vnode, _this.kept, false, // hydrating
+      true // removeOnly (!important, avoids unnecessary moves)
+      );
+      _this._vnode = _this.kept;
+      update.call(_this, vnode, hydrating);
+    };
+  },
+  render: function render(h) {
+    var tag = this.tag || this.$vnode.data.tag || 'span';
+    var map = Object.create(null);
+    var prevChildren = this.prevChildren = this.children;
+    var rawChildren = this.$slots.default || [];
+    var children = this.children = [];
+    var transitionData = (0, _transition.extractTransitionData)(this);
+
+    for (var i = 0; i < rawChildren.length; i++) {
+      var c = rawChildren[i];
+      if (c.tag) {
+        if (c.key != null && String(c.key).indexOf('__vlist') !== 0) {
+          children.push(c);
+          map[c.key] = c;(c.data || (c.data = {})).transition = transitionData;
+        } else if (process.env.NODE_ENV !== 'production') {
+          var opts = c.componentOptions;
+          var name = opts ? opts.Ctor.options.name || opts.tag || '' : c.tag;
+          (0, _index.warn)('<transition-group> children must be keyed: <' + name + '>');
+        }
+      }
+    }
+
+    if (prevChildren) {
+      var kept = [];
+      var removed = [];
+      for (var _i = 0; _i < prevChildren.length; _i++) {
+        var _c = prevChildren[_i];
+        _c.data.transition = transitionData;
+        _c.data.pos = _c.elm.getBoundingClientRect();
+        if (map[_c.key]) {
+          kept.push(_c);
+        } else {
+          removed.push(_c);
+        }
+      }
+      this.kept = h(tag, null, kept);
+      this.removed = removed;
+    }
+
+    return h(tag, null, children);
+  },
+  updated: function updated() {
+    var children = this.prevChildren;
+    var moveClass = this.moveClass || (this.name || 'v') + '-move';
+    if (!children.length || !this.hasMove(children[0].elm, moveClass)) {
+      return;
+    }
+
+    // we divide the work into three loops to avoid mixing DOM reads and writes
+    // in each iteration - which helps prevent layout thrashing.
+    children.forEach(callPendingCbs);
+    children.forEach(recordPosition);
+    children.forEach(applyTranslation);
+
+    // force reflow to put everything in position
+    // assign to this to avoid being removed in tree-shaking
+    // $flow-disable-line
+    this._reflow = document.body.offsetHeight;
+
+    children.forEach(function (c) {
+      if (c.data.moved) {
+        var el = c.elm;
+        var s = el.style;
+        (0, _transitionUtil.addTransitionClass)(el, moveClass);
+        s.transform = s.WebkitTransform = s.transitionDuration = '';
+        el.addEventListener(_transitionUtil.transitionEndEvent, el._moveCb = function cb(e) {
+          if (!e || /transform$/.test(e.propertyName)) {
+            el.removeEventListener(_transitionUtil.transitionEndEvent, cb);
+            el._moveCb = null;
+            (0, _transitionUtil.removeTransitionClass)(el, moveClass);
+          }
+        });
+      }
+    });
+  },
+
+
+  methods: {
+    hasMove: function hasMove(el, moveClass) {
+      /* istanbul ignore if */
+      if (!_transitionUtil.hasTransition) {
+        return false;
+      }
+      /* istanbul ignore if */
+      if (this._hasMove) {
+        return this._hasMove;
+      }
+      // Detect whether an element with the move class applied has
+      // CSS transitions. Since the element may be inside an entering
+      // transition at this very moment, we make a clone of it and remove
+      // all other transition classes applied to ensure only the move class
+      // is applied.
+      var clone = el.cloneNode();
+      if (el._transitionClasses) {
+        el._transitionClasses.forEach(function (cls) {
+          (0, _classUtil.removeClass)(clone, cls);
+        });
+      }
+      (0, _classUtil.addClass)(clone, moveClass);
+      clone.style.display = 'none';
+      this.$el.appendChild(clone);
+      var info = (0, _transitionUtil.getTransitionInfo)(clone);
+      this.$el.removeChild(clone);
+      return this._hasMove = info.hasTransform;
+    }
+  }
+};
+
+
+function callPendingCbs(c) {
+  /* istanbul ignore if */
+  if (c.elm._moveCb) {
+    c.elm._moveCb();
+  }
+  /* istanbul ignore if */
+  if (c.elm._enterCb) {
+    c.elm._enterCb();
+  }
+}
+
+function recordPosition(c) {
+  c.data.newPos = c.elm.getBoundingClientRect();
+}
+
+function applyTranslation(c) {
+  var oldPos = c.data.pos;
+  var newPos = c.data.newPos;
+  var dx = oldPos.left - newPos.left;
+  var dy = oldPos.top - newPos.top;
+  if (dx || dy) {
+    c.data.moved = true;
+    var s = c.elm.style;
+    s.transform = s.WebkitTransform = 'translate(' + dx + 'px,' + dy + 'px)';
+    s.transitionDuration = '0s';
+  }
+}
+

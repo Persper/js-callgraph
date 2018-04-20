@@ -1,0 +1,38 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.initAssetRegisters = initAssetRegisters;
+
+var _constants = require('shared/constants');
+
+var _index = require('../util/index');
+
+function initAssetRegisters(Vue) {
+  /**
+   * Create asset registration methods.
+   */
+  _constants.ASSET_TYPES.forEach(function (type) {
+    Vue[type] = function (id, definition) {
+      if (!definition) {
+        return this.options[type + 's'][id];
+      } else {
+        /* istanbul ignore if */
+        if (process.env.NODE_ENV !== 'production' && type === 'component') {
+          (0, _index.validateComponentName)(id);
+        }
+        if (type === 'component' && (0, _index.isPlainObject)(definition)) {
+          definition.name = definition.name || id;
+          definition = this.options._base.extend(definition);
+        }
+        if (type === 'directive' && typeof definition === 'function') {
+          definition = { bind: definition, update: definition };
+        }
+        this.options[type + 's'][id] = definition;
+        return definition;
+      }
+    };
+  });
+}
+

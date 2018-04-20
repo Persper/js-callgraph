@@ -1,0 +1,59 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Global API: use', function () {
+  var def = {};
+  var options = {};
+  var pluginStub = {
+    install: function install(Vue, opts) {
+      Vue.directive('plugin-test', def);
+      expect(opts).toBe(options);
+    }
+  };
+
+  it('should apply Object plugin', function () {
+    _vue2.default.use(pluginStub, options);
+    expect(_vue2.default.options.directives['plugin-test']).toBe(def);
+    delete _vue2.default.options.directives['plugin-test'];
+    expect(_vue2.default.options.directives['plugin-test']).toBeUndefined();
+
+    // should not double apply
+    _vue2.default.use(pluginStub, options);
+    expect(_vue2.default.options.directives['plugin-test']).toBeUndefined();
+  });
+
+  it('should apply Function plugin', function () {
+    _vue2.default.use(pluginStub.install, options);
+    expect(_vue2.default.options.directives['plugin-test']).toBe(def);
+    delete _vue2.default.options.directives['plugin-test'];
+  });
+
+  it('should work on extended constructors without polluting the base', function () {
+    var Ctor = _vue2.default.extend({});
+    Ctor.use(pluginStub, options);
+    expect(_vue2.default.options.directives['plugin-test']).toBeUndefined();
+    expect(Ctor.options.directives['plugin-test']).toBe(def);
+  });
+
+  // GitHub issue #5970
+  it('should work on multi version', function () {
+    var Ctor1 = _vue2.default.extend({});
+    var Ctor2 = _vue2.default.extend({});
+
+    Ctor1.use(pluginStub, options);
+    expect(_vue2.default.options.directives['plugin-test']).toBeUndefined();
+    expect(Ctor1.options.directives['plugin-test']).toBe(def);
+
+    // multi version Vue Ctor with the same cid
+    Ctor2.cid = Ctor1.cid;
+    Ctor2.use(pluginStub, options);
+    expect(_vue2.default.options.directives['plugin-test']).toBeUndefined();
+    expect(Ctor2.options.directives['plugin-test']).toBe(def);
+  });
+});
+

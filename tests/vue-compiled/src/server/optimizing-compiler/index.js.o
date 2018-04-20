@@ -1,0 +1,26 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createCompiler = undefined;
+
+var _index = require('compiler/parser/index');
+
+var _codegen = require('./codegen');
+
+var _optimizer = require('./optimizer');
+
+var _createCompiler = require('compiler/create-compiler');
+
+var createCompiler = exports.createCompiler = (0, _createCompiler.createCompilerCreator)(function baseCompile(template, options) {
+  var ast = (0, _index.parse)(template.trim(), options);
+  (0, _optimizer.optimize)(ast, options);
+  var code = (0, _codegen.generate)(ast, options);
+  return {
+    ast: ast,
+    render: code.render,
+    staticRenderFns: code.staticRenderFns
+  };
+});
+

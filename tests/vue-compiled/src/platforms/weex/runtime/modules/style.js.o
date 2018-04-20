@@ -1,0 +1,84 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _util = require('shared/util');
+
+var normalize = (0, _util.cached)(_util.camelize);
+
+function createStyle(oldVnode, vnode) {
+  if (!vnode.data.staticStyle) {
+    updateStyle(oldVnode, vnode);
+    return;
+  }
+  var elm = vnode.elm;
+  var staticStyle = vnode.data.staticStyle;
+  var supportBatchUpdate = typeof elm.setStyles === 'function';
+  var batchedStyles = {};
+  for (var name in staticStyle) {
+    if (staticStyle[name]) {
+      supportBatchUpdate ? batchedStyles[normalize(name)] = staticStyle[name] : elm.setStyle(normalize(name), staticStyle[name]);
+    }
+  }
+  if (supportBatchUpdate) {
+    elm.setStyles(batchedStyles);
+  }
+  updateStyle(oldVnode, vnode);
+}
+
+function updateStyle(oldVnode, vnode) {
+  if (!oldVnode.data.style && !vnode.data.style) {
+    return;
+  }
+  var cur = void 0,
+      name = void 0;
+  var elm = vnode.elm;
+  var oldStyle = oldVnode.data.style || {};
+  var style = vnode.data.style || {};
+
+  var needClone = style.__ob__;
+
+  // handle array syntax
+  if (Array.isArray(style)) {
+    style = vnode.data.style = toObject(style);
+  }
+
+  // clone the style for future updates,
+  // in case the user mutates the style object in-place.
+  if (needClone) {
+    style = vnode.data.style = (0, _util.extend)({}, style);
+  }
+
+  var supportBatchUpdate = typeof elm.setStyles === 'function';
+  var batchedStyles = {};
+  for (name in oldStyle) {
+    if (!style[name]) {
+      supportBatchUpdate ? batchedStyles[normalize(name)] = '' : elm.setStyle(normalize(name), '');
+    }
+  }
+  for (name in style) {
+    cur = style[name];
+    supportBatchUpdate ? batchedStyles[normalize(name)] = cur : elm.setStyle(normalize(name), cur);
+  }
+  if (supportBatchUpdate) {
+    elm.setStyles(batchedStyles);
+  }
+}
+
+function toObject(arr) {
+  var res = {};
+  for (var i = 0; i < arr.length; i++) {
+    if (arr[i]) {
+      (0, _util.extend)(res, arr[i]);
+    }
+  }
+  return res;
+}
+
+exports.default = {
+  create: createStyle,
+  update: updateStyle
+};
+

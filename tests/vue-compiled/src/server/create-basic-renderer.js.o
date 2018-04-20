@@ -1,0 +1,45 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createBasicRenderer = createBasicRenderer;
+
+var _write = require('./write');
+
+var _render = require('./render');
+
+function createBasicRenderer() {
+  var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+      _ref$modules = _ref.modules,
+      modules = _ref$modules === undefined ? [] : _ref$modules,
+      _ref$directives = _ref.directives,
+      directives = _ref$directives === undefined ? {} : _ref$directives,
+      _ref$isUnaryTag = _ref.isUnaryTag,
+      isUnaryTag = _ref$isUnaryTag === undefined ? function () {
+    return false;
+  } : _ref$isUnaryTag,
+      cache = _ref.cache;
+
+  var render = (0, _render.createRenderFunction)(modules, directives, isUnaryTag, cache);
+
+  return function renderToString(component, context, done) {
+    if (typeof context === 'function') {
+      done = context;
+      context = {};
+    }
+    var result = '';
+    var write = (0, _write.createWriteFunction)(function (text) {
+      result += text;
+      return false;
+    }, done);
+    try {
+      render(component, write, context, function () {
+        done(null, result);
+      });
+    } catch (e) {
+      done(e);
+    }
+  };
+}
+

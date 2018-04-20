@@ -1,0 +1,73 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.initProvide = initProvide;
+exports.initInjections = initInjections;
+exports.resolveInject = resolveInject;
+
+var _util = require('shared/util');
+
+var _index = require('../util/index');
+
+var _index2 = require('../observer/index');
+
+function initProvide(vm) {
+  var provide = vm.$options.provide;
+  if (provide) {
+    vm._provided = typeof provide === 'function' ? provide.call(vm) : provide;
+  }
+}
+
+function initInjections(vm) {
+  var result = resolveInject(vm.$options.inject, vm);
+  if (result) {
+    (0, _index2.toggleObserving)(false);
+    Object.keys(result).forEach(function (key) {
+      /* istanbul ignore else */
+      if (process.env.NODE_ENV !== 'production') {
+        (0, _index2.defineReactive)(vm, key, result[key], function () {
+          (0, _index.warn)('Avoid mutating an injected value directly since the changes will be ' + 'overwritten whenever the provided component re-renders. ' + ('injection being mutated: "' + key + '"'), vm);
+        });
+      } else {
+        (0, _index2.defineReactive)(vm, key, result[key]);
+      }
+    });
+    (0, _index2.toggleObserving)(true);
+  }
+}
+
+function resolveInject(inject, vm) {
+  if (inject) {
+    // inject is :any because flow is not smart enough to figure out cached
+    var result = Object.create(null);
+    var keys = _index.hasSymbol ? Reflect.ownKeys(inject).filter(function (key) {
+      /* istanbul ignore next */
+      return Object.getOwnPropertyDescriptor(inject, key).enumerable;
+    }) : Object.keys(inject);
+
+    for (var i = 0; i < keys.length; i++) {
+      var key = keys[i];
+      var provideKey = inject[key].from;
+      var source = vm;
+      while (source) {
+        if (source._provided && (0, _util.hasOwn)(source._provided, provideKey)) {
+          result[key] = source._provided[provideKey];
+          break;
+        }
+        source = source.$parent;
+      }
+      if (!source) {
+        if ('default' in inject[key]) {
+          var provideDefault = inject[key].default;
+          result[key] = typeof provideDefault === 'function' ? provideDefault.call(vm) : provideDefault;
+        } else if (process.env.NODE_ENV !== 'production') {
+          (0, _index.warn)('Injection "' + key + '" not found', vm);
+        }
+      }
+    }
+    return result;
+  }
+}
+

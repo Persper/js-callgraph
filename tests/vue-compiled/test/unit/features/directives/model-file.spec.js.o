@@ -1,0 +1,20 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Directive v-model file', function () {
+  it('warn to use @change instead', function () {
+    new _vue2.default({
+      data: {
+        file: ''
+      },
+      template: '<input v-model="file" type="file">'
+    }).$mount();
+    expect('Use a v-on:change listener instead').toHaveBeenWarned();
+  });
+});
+

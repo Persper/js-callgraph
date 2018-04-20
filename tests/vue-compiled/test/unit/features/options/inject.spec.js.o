@@ -1,0 +1,674 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _index = require('core/observer/index');
+
+var _index2 = require('core/util/index');
+
+var _testObjectOption = require('../../../helpers/test-object-option');
+
+var _testObjectOption2 = _interopRequireDefault(_testObjectOption);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
+describe('Options provide/inject', function () {
+  (0, _testObjectOption2.default)('inject');
+
+  var injected = void 0;
+  var injectedComp = {
+    inject: ['foo', 'bar'],
+    render: function render() {},
+    created: function created() {
+      injected = [this.foo, this.bar];
+    }
+  };
+
+  beforeEach(function () {
+    injected = null;
+  });
+
+  it('should work', function () {
+    new _vue2.default({
+      template: '<child/>',
+      provide: {
+        foo: 1,
+        bar: false
+      },
+      components: {
+        child: {
+          template: '<injected-comp/>',
+          components: {
+            injectedComp: injectedComp
+          }
+        }
+      }
+    }).$mount();
+
+    expect(injected).toEqual([1, false]);
+  });
+
+  it('should use closest parent', function () {
+    new _vue2.default({
+      template: '<child/>',
+      provide: {
+        foo: 1,
+        bar: null
+      },
+      components: {
+        child: {
+          provide: {
+            foo: 3
+          },
+          template: '<injected-comp/>',
+          components: {
+            injectedComp: injectedComp
+          }
+        }
+      }
+    }).$mount();
+
+    expect(injected).toEqual([3, null]);
+  });
+
+  it('provide function', function () {
+    new _vue2.default({
+      template: '<child/>',
+      data: {
+        a: 1,
+        b: false
+      },
+      provide: function provide() {
+        return {
+          foo: this.a,
+          bar: this.b
+        };
+      },
+
+      components: {
+        child: {
+          template: '<injected-comp/>',
+          components: {
+            injectedComp: injectedComp
+          }
+        }
+      }
+    }).$mount();
+
+    expect(injected).toEqual([1, false]);
+  });
+
+  it('inject with alias', function () {
+    var injectAlias = {
+      inject: {
+        baz: 'foo',
+        qux: 'bar'
+      },
+      render: function render() {},
+      created: function created() {
+        injected = [this.baz, this.qux];
+      }
+    };
+
+    new _vue2.default({
+      template: '<child/>',
+      provide: {
+        foo: false,
+        bar: 2
+      },
+      components: {
+        child: {
+          template: '<inject-alias/>',
+          components: {
+            injectAlias: injectAlias
+          }
+        }
+      }
+    }).$mount();
+
+    expect(injected).toEqual([false, 2]);
+  });
+
+  it('inject before resolving data/props', function () {
+    var vm = new _vue2.default({
+      provide: {
+        foo: 1
+      }
+    });
+
+    var child = new _vue2.default({
+      parent: vm,
+      inject: ['foo'],
+      data: function data() {
+        return {
+          bar: this.foo + 1
+        };
+      },
+
+      props: {
+        baz: {
+          default: function _default() {
+            return this.foo + 2;
+          }
+        }
+      }
+    });
+
+    expect(child.foo).toBe(1);
+    expect(child.bar).toBe(2);
+    expect(child.baz).toBe(3);
+  });
+
+  // GitHub issue #5194
+  it('should work with functional', function () {
+    new _vue2.default({
+      template: '<child/>',
+      provide: {
+        foo: 1,
+        bar: false
+      },
+      components: {
+        child: {
+          functional: true,
+          inject: ['foo', 'bar'],
+          render: function render(h, context) {
+            var injections = context.injections;
+
+            injected = [injections.foo, injections.bar];
+          }
+        }
+      }
+    }).$mount();
+
+    expect(injected).toEqual([1, false]);
+  });
+
+  if (typeof Reflect !== 'undefined' && (0, _index2.isNative)(Reflect.ownKeys)) {
+    it('with Symbol keys', function () {
+      var s = Symbol();
+      var vm = new _vue2.default({
+        template: '<child/>',
+        provide: _defineProperty({}, s, 123),
+        components: {
+          child: {
+            inject: { s: s },
+            template: '<div>{{ s }}</div>'
+          }
+        }
+      }).$mount();
+      expect(vm.$el.textContent).toBe('123');
+    });
+  }
+
+  // GitHub issue #5223
+  it('should work with reactive array', function (done) {
+    var vm = new _vue2.default({
+      template: '<div><child></child></div>',
+      data: function data() {
+        return {
+          foo: []
+        };
+      },
+      provide: function provide() {
+        return {
+          foo: this.foo
+        };
+      },
+
+      components: {
+        child: {
+          inject: ['foo'],
+          template: '<span>{{foo.length}}</span>'
+        }
+      }
+    }).$mount();
+
+    expect(vm.$el.innerHTML).toEqual('<span>0</span>');
+    vm.foo.push(vm.foo.length);
+    vm.$nextTick(function () {
+      expect(vm.$el.innerHTML).toEqual('<span>1</span>');
+      vm.foo.pop();
+      vm.$nextTick(function () {
+        expect(vm.$el.innerHTML).toEqual('<span>0</span>');
+        done();
+      });
+    });
+  });
+
+  it('should extend properly', function () {
+    var parent = _vue2.default.extend({
+      template: '<span/>',
+      inject: ['foo']
+    });
+
+    var child = parent.extend({
+      template: '<span/>',
+      inject: ['bar'],
+      created: function created() {
+        injected = [this.foo, this.bar];
+      }
+    });
+
+    new _vue2.default({
+      template: '<div><parent/><child/></div>',
+      provide: {
+        foo: 1,
+        bar: false
+      },
+      components: {
+        parent: parent,
+        child: child
+      }
+    }).$mount();
+
+    expect(injected).toEqual([1, false]);
+  });
+
+  it('should merge from mixins properly (objects)', function () {
+    var mixinA = { inject: { foo: 'foo' } };
+    var mixinB = { inject: { bar: 'bar' } };
+    var child = {
+      mixins: [mixinA, mixinB],
+      template: '<span/>',
+      created: function created() {
+        injected = [this.foo, this.bar];
+      }
+    };
+    new _vue2.default({
+      provide: { foo: 'foo', bar: 'bar', baz: 'baz' },
+      render: function render(h) {
+        return h(child);
+      }
+    }).$mount();
+
+    expect(injected).toEqual(['foo', 'bar']);
+  });
+
+  it('should merge from mixins properly (arrays)', function () {
+    var mixinA = { inject: ['foo'] };
+    var mixinB = { inject: ['bar'] };
+    var child = {
+      mixins: [mixinA, mixinB],
+      inject: ['baz'],
+      template: '<span/>',
+      created: function created() {
+        injected = [this.foo, this.bar, this.baz];
+      }
+    };
+    new _vue2.default({
+      provide: { foo: 'foo', bar: 'bar', baz: 'baz' },
+      render: function render(h) {
+        return h(child);
+      }
+    }).$mount();
+
+    expect(injected).toEqual(['foo', 'bar', 'baz']);
+  });
+
+  it('should merge from mixins properly (mix of objects and arrays)', function () {
+    var mixinA = { inject: { foo: 'foo' } };
+    var mixinB = { inject: ['bar'] };
+    var child = {
+      mixins: [mixinA, mixinB],
+      inject: { qux: 'baz' },
+      template: '<span/>',
+      created: function created() {
+        injected = [this.foo, this.bar, this.qux];
+      }
+    };
+    new _vue2.default({
+      provide: { foo: 'foo', bar: 'bar', baz: 'baz' },
+      render: function render(h) {
+        return h(child);
+      }
+    }).$mount();
+
+    expect(injected).toEqual(['foo', 'bar', 'baz']);
+  });
+
+  it('should warn when injections has been modified', function () {
+    var key = 'foo';
+    var vm = new _vue2.default({
+      provide: {
+        foo: 1
+      }
+    });
+
+    var child = new _vue2.default({
+      parent: vm,
+      inject: ['foo']
+    });
+
+    expect(child.foo).toBe(1);
+    child.foo = 2;
+    expect('Avoid mutating an injected value directly since the changes will be ' + 'overwritten whenever the provided component re-renders. ' + ('injection being mutated: "' + key + '"')).toHaveBeenWarned();
+  });
+
+  it('should warn when injections cannot be found', function () {
+    var vm = new _vue2.default({});
+    new _vue2.default({
+      parent: vm,
+      inject: ['foo', 'bar'],
+      created: function created() {}
+    });
+    expect('Injection "foo" not found').toHaveBeenWarned();
+    expect('Injection "bar" not found').toHaveBeenWarned();
+  });
+
+  it('should not warn when injections can be found', function () {
+    var vm = new _vue2.default({
+      provide: {
+        foo: 1,
+        bar: false,
+        baz: undefined
+      }
+    });
+    new _vue2.default({
+      parent: vm,
+      inject: ['foo', 'bar', 'baz'],
+      created: function created() {}
+    });
+    expect('Injection "foo" not found').not.toHaveBeenWarned();
+    expect('Injection "bar" not found').not.toHaveBeenWarned();
+    expect('Injection "baz" not found').not.toHaveBeenWarned();
+  });
+
+  it('should not warn when injection key which is not provided is not enumerable', function () {
+    var parent = new _vue2.default({ provide: { foo: 1 } });
+    var inject = { foo: 'foo' };
+    Object.defineProperty(inject, '__ob__', { enumerable: false, value: '__ob__' });
+    new _vue2.default({ parent: parent, inject: inject });
+    expect('Injection "__ob__" not found').not.toHaveBeenWarned();
+  });
+
+  // Github issue #6097
+  it('should not warn when injections cannot be found but have default value', function () {
+    var vm = new _vue2.default({});
+    new _vue2.default({
+      parent: vm,
+      inject: {
+        foo: { default: 1 },
+        bar: { default: false },
+        baz: { default: undefined }
+      },
+      created: function created() {
+        injected = [this.foo, this.bar, this.baz];
+      }
+    });
+    expect(injected).toEqual([1, false, undefined]);
+  });
+
+  it('should support name alias and default together', function () {
+    var vm = new _vue2.default({
+      provide: {
+        FOO: 2
+      }
+    });
+    new _vue2.default({
+      parent: vm,
+      inject: {
+        foo: { from: 'FOO', default: 1 },
+        bar: { default: false },
+        baz: { default: undefined }
+      },
+      created: function created() {
+        injected = [this.foo, this.bar, this.baz];
+      }
+    });
+    expect(injected).toEqual([2, false, undefined]);
+  });
+
+  it('should use provided value even if inject has default', function () {
+    var vm = new _vue2.default({
+      provide: {
+        foo: 1,
+        bar: false,
+        baz: undefined
+      }
+    });
+    new _vue2.default({
+      parent: vm,
+      inject: {
+        foo: { default: 2 },
+        bar: { default: 2 },
+        baz: { default: 2 }
+      },
+      created: function created() {
+        injected = [this.foo, this.bar, this.baz];
+      }
+    });
+    expect(injected).toEqual([1, false, undefined]);
+  });
+
+  // Github issue #6008
+  it('should merge provide from mixins (objects)', function () {
+    var mixinA = { provide: { foo: 'foo' } };
+    var mixinB = { provide: { bar: 'bar' } };
+    var child = {
+      inject: ['foo', 'bar'],
+      template: '<span/>',
+      created: function created() {
+        injected = [this.foo, this.bar];
+      }
+    };
+    new _vue2.default({
+      mixins: [mixinA, mixinB],
+      render: function render(h) {
+        return h(child);
+      }
+    }).$mount();
+
+    expect(injected).toEqual(['foo', 'bar']);
+  });
+
+  it('should merge provide from mixins (functions)', function () {
+    var mixinA = { provide: function provide() {
+        return { foo: 'foo' };
+      } };
+    var mixinB = { provide: function provide() {
+        return { bar: 'bar' };
+      } };
+    var child = {
+      inject: ['foo', 'bar'],
+      template: '<span/>',
+      created: function created() {
+        injected = [this.foo, this.bar];
+      }
+    };
+    new _vue2.default({
+      mixins: [mixinA, mixinB],
+      render: function render(h) {
+        return h(child);
+      }
+    }).$mount();
+
+    expect(injected).toEqual(['foo', 'bar']);
+  });
+
+  it('should merge provide from mixins (mix of objects and functions)', function () {
+    var mixinA = { provide: { foo: 'foo' } };
+    var mixinB = { provide: function provide() {
+        return { bar: 'bar' };
+      } };
+    var mixinC = { provide: { baz: 'baz' } };
+    var mixinD = { provide: function provide() {
+        return { bam: 'bam' };
+      } };
+    var child = {
+      inject: ['foo', 'bar', 'baz', 'bam'],
+      template: '<span/>',
+      created: function created() {
+        injected = [this.foo, this.bar, this.baz, this.bam];
+      }
+    };
+    new _vue2.default({
+      mixins: [mixinA, mixinB, mixinC, mixinD],
+      render: function render(h) {
+        return h(child);
+      }
+    }).$mount();
+
+    expect(injected).toEqual(['foo', 'bar', 'baz', 'bam']);
+  });
+
+  it('should merge provide from mixins and override existing keys', function () {
+    var mixinA = { provide: { foo: 'foo' } };
+    var mixinB = { provide: { foo: 'bar' } };
+    var child = {
+      inject: ['foo'],
+      template: '<span/>',
+      created: function created() {
+        injected = [this.foo];
+      }
+    };
+    new _vue2.default({
+      mixins: [mixinA, mixinB],
+      render: function render(h) {
+        return h(child);
+      }
+    }).$mount();
+
+    expect(injected).toEqual(['bar']);
+  });
+
+  it('should merge provide when Vue.extend', function () {
+    var mixinA = { provide: function provide() {
+        return { foo: 'foo' };
+      } };
+    var child = {
+      inject: ['foo', 'bar'],
+      template: '<span/>',
+      created: function created() {
+        injected = [this.foo, this.bar];
+      }
+    };
+    var Ctor = _vue2.default.extend({
+      mixins: [mixinA],
+      provide: { bar: 'bar' },
+      render: function render(h) {
+        return h(child);
+      }
+    });
+
+    new Ctor().$mount();
+
+    expect(injected).toEqual(['foo', 'bar']);
+  });
+
+  // #5913
+  it('should keep the reactive with provide', function () {
+    function isObserver(obj) {
+      if ((0, _index2.isObject)(obj)) {
+        return (0, _index2.hasOwn)(obj, '__ob__') && obj.__ob__ instanceof _index.Observer;
+      }
+      return false;
+    }
+
+    var vm = new _vue2.default({
+      template: '<div><child ref=\'child\'></child></div>',
+      data: function data() {
+        return {
+          foo: {},
+          $foo: {},
+          foo1: []
+        };
+      },
+      provide: function provide() {
+        return {
+          foo: this.foo,
+          $foo: this.$foo,
+          foo1: this.foo1,
+          bar: {},
+          baz: []
+        };
+      },
+
+      components: {
+        child: {
+          inject: ['foo', '$foo', 'foo1', 'bar', 'baz'],
+          template: '<span/>'
+        }
+      }
+    }).$mount();
+    var child = vm.$refs.child;
+    expect(isObserver(child.foo)).toBe(true);
+    expect(isObserver(child.$foo)).toBe(false);
+    expect(isObserver(child.foo1)).toBe(true);
+    expect(isObserver(child.bar)).toBe(false);
+    expect(isObserver(child.baz)).toBe(false);
+  });
+
+  // #6175
+  it('merge provide properly from mixins', function () {
+    var ProvideFooMixin = {
+      provide: {
+        foo: 'foo injected'
+      }
+    };
+
+    var ProvideBarMixin = {
+      provide: {
+        bar: 'bar injected'
+      }
+    };
+
+    var Child = {
+      inject: ['foo', 'bar'],
+      render: function render(h) {
+        return h('div', ['foo: ' + this.foo + ', ', 'bar: ' + this.bar]);
+      }
+    };
+
+    var Parent = {
+      mixins: [ProvideFooMixin, ProvideBarMixin],
+      render: function render(h) {
+        return h(Child);
+      }
+    };
+
+    var vm = new _vue2.default({
+      render: function render(h) {
+        return h(Parent);
+      }
+    }).$mount();
+
+    expect(vm.$el.textContent).toBe('foo: foo injected, bar: bar injected');
+  });
+
+  it('merge provide with object syntax when using Vue.extend', function () {
+    var child = {
+      inject: ['foo'],
+      template: '<span/>',
+      created: function created() {
+        injected = this.foo;
+      }
+    };
+    var Ctor = _vue2.default.extend({
+      provide: { foo: 'foo' },
+      render: function render(h) {
+        return h(child);
+      }
+    });
+
+    new Ctor().$mount();
+
+    expect(injected).toEqual('foo');
+  });
+
+  // #7284
+  it('should not inject prototype properties', function () {
+    var vm = new _vue2.default({
+      provide: {}
+    });
+    new _vue2.default({
+      parent: vm,
+      inject: ['constructor']
+    });
+    expect('Injection "constructor" not found').toHaveBeenWarned();
+  });
+});
+

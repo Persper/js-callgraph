@@ -1,0 +1,190 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _scheduler = require('core/observer/scheduler');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function queueWatcher(watcher) {
+  watcher.vm = {}; // mock vm
+  (0, _scheduler.queueWatcher)(watcher);
+}
+
+describe('Scheduler', function () {
+  var spy = void 0;
+  beforeEach(function () {
+    spy = jasmine.createSpy('scheduler');
+  });
+
+  it('queueWatcher', function (done) {
+    queueWatcher({
+      run: spy
+    });
+    waitForUpdate(function () {
+      expect(spy.calls.count()).toBe(1);
+    }).then(done);
+  });
+
+  it('dedup', function (done) {
+    queueWatcher({
+      id: 1,
+      run: spy
+    });
+    queueWatcher({
+      id: 1,
+      run: spy
+    });
+    waitForUpdate(function () {
+      expect(spy.calls.count()).toBe(1);
+    }).then(done);
+  });
+
+  it('allow duplicate when flushing', function (done) {
+    var job = {
+      id: 1,
+      run: spy
+    };
+    queueWatcher(job);
+    queueWatcher({
+      id: 2,
+      run: function run() {
+        queueWatcher(job);
+      }
+    });
+    waitForUpdate(function () {
+      expect(spy.calls.count()).toBe(2);
+    }).then(done);
+  });
+
+  it('call user watchers before component re-render', function (done) {
+    var calls = [];
+    var vm = new _vue2.default({
+      data: {
+        a: 1
+      },
+      template: '<div>{{ a }}</div>',
+      watch: {
+        a: function a() {
+          calls.push(1);
+        }
+      },
+      beforeUpdate: function beforeUpdate() {
+        calls.push(2);
+      }
+    }).$mount();
+    vm.a = 2;
+    waitForUpdate(function () {
+      expect(calls).toEqual([1, 2]);
+    }).then(done);
+  });
+
+  it('call user watcher triggered by component re-render immediately', function (done) {
+    // this happens when a component re-render updates the props of a child
+    var calls = [];
+    var vm = new _vue2.default({
+      data: {
+        a: 1
+      },
+      watch: {
+        a: function a() {
+          calls.push(1);
+        }
+      },
+      beforeUpdate: function beforeUpdate() {
+        calls.push(2);
+      },
+
+      template: '<div><test :a="a"></test></div>',
+      components: {
+        test: {
+          props: ['a'],
+          template: '<div>{{ a }}</div>',
+          watch: {
+            a: function a() {
+              calls.push(3);
+            }
+          },
+          beforeUpdate: function beforeUpdate() {
+            calls.push(4);
+          }
+        }
+      }
+    }).$mount();
+    vm.a = 2;
+    waitForUpdate(function () {
+      expect(calls).toEqual([1, 2, 3, 4]);
+    }).then(done);
+  });
+
+  it('warn against infinite update loops', function (done) {
+    var count = 0;
+    var job = {
+      id: 1,
+      run: function run() {
+        count++;
+        queueWatcher(job);
+      }
+    };
+    queueWatcher(job);
+    waitForUpdate(function () {
+      expect(count).toBe(_scheduler.MAX_UPDATE_COUNT + 1);
+      expect('infinite update loop').toHaveBeenWarned();
+    }).then(done);
+  });
+
+  it('should call newly pushed watcher after current watcher is done', function (done) {
+    var callOrder = [];
+    queueWatcher({
+      id: 1,
+      user: true,
+      run: function run() {
+        callOrder.push(1);
+        queueWatcher({
+          id: 2,
+          run: function run() {
+            callOrder.push(3);
+          }
+        });
+        callOrder.push(2);
+      }
+    });
+    waitForUpdate(function () {
+      expect(callOrder).toEqual([1, 2, 3]);
+    }).then(done);
+  });
+
+  // GitHub issue #5191
+  it('emit should work when updated hook called', function (done) {
+    var el = document.createElement('div');
+    var vm = new _vue2.default({
+      template: '<div><child @change="bar" :foo="foo"></child></div>',
+      data: {
+        foo: 0
+      },
+      methods: {
+        bar: spy
+      },
+      components: {
+        child: {
+          template: '<div>{{foo}}</div>',
+          props: ['foo'],
+          updated: function updated() {
+            this.$emit('change');
+          }
+        }
+      }
+    }).$mount(el);
+    vm.$nextTick(function () {
+      vm.foo = 1;
+      vm.$nextTick(function () {
+        expect(vm.$el.innerHTML).toBe('<div>1</div>');
+        expect(spy).toHaveBeenCalled();
+        done();
+      });
+    });
+  });
+});
+

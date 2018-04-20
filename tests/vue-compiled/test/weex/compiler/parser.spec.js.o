@@ -1,0 +1,82 @@
+'use strict';
+
+var _parser = require('../../../src/platforms/weex/util/parser');
+
+describe('expression parser', function () {
+  describe('generateBinding', function () {
+    it('primitive literal', function () {
+      expect((0, _parser.generateBinding)('15')).toEqual(15);
+      expect((0, _parser.generateBinding)('"xxx"')).toEqual('xxx');
+    });
+
+    it('identifiers', function () {
+      expect((0, _parser.generateBinding)('x')).toEqual({ '@binding': 'x' });
+      expect((0, _parser.generateBinding)('x.y')).toEqual({ '@binding': 'x.y' });
+      expect((0, _parser.generateBinding)('x.y[\'z\']')).toEqual({ '@binding': 'x.y[\'z\']' });
+    });
+
+    it('object literal', function () {
+      expect((0, _parser.generateBinding)('{}')).toEqual({});
+      expect((0, _parser.generateBinding)('{ abc: 25 }')).toEqual({ abc: 25 });
+      expect((0, _parser.generateBinding)('{ abc: 25, def: "xxx" }')).toEqual({ abc: 25, def: 'xxx' });
+      expect((0, _parser.generateBinding)('{ a: 3, b: { bb: "bb", bbb: { bbc: "BBC" } } }')).toEqual({ a: 3, b: { bb: 'bb', bbb: { bbc: 'BBC' } } });
+    });
+
+    it('array literal', function () {
+      expect((0, _parser.generateBinding)('[]')).toEqual([]);
+      expect((0, _parser.generateBinding)('[{ abc: 25 }]')).toEqual([{ abc: 25 }]);
+      expect((0, _parser.generateBinding)('[{ abc: 25, def: ["xxx"] }]')).toEqual([{ abc: 25, def: ['xxx'] }]);
+      expect((0, _parser.generateBinding)('{ a: [3,16], b: [{ bb: ["aa","bb"], bbb: [{bbc:"BBC"}] }] }')).toEqual({ a: [3, 16], b: [{ bb: ['aa', 'bb'], bbb: [{ bbc: 'BBC' }] }] });
+    });
+
+    it('expressions', function () {
+      expect((0, _parser.generateBinding)('3 + 5')).toEqual({ '@binding': '3 + 5' });
+      expect((0, _parser.generateBinding)('\'x\' + 2')).toEqual({ '@binding': '\'x\' + 2' });
+      expect((0, _parser.generateBinding)('`xx` + 2')).toEqual({ '@binding': '`xx` + 2' });
+      expect((0, _parser.generateBinding)('item.size * 23 + \'px\'')).toEqual({ '@binding': 'item.size * 23 + \'px\'' });
+    });
+
+    it('object bindings', function () {
+      expect((0, _parser.generateBinding)('{ color: textColor }')).toEqual({
+        color: { '@binding': 'textColor' }
+      });
+      expect((0, _parser.generateBinding)('{ color: \'#FF\' + 66 * 100, fontSize: item.size }')).toEqual({
+        color: { '@binding': '\'#FF\' + 66 * 100' },
+        fontSize: { '@binding': 'item.size' }
+      });
+      expect((0, _parser.generateBinding)('{\n        x: { xx: obj, xy: -2 + 5 },\n        y: {\n          yy: { yyy: obj.y || yy },\n          yz: typeof object.yz === \'string\' ? object.yz : \'\'\n        }\n      }')).toEqual({
+        x: { xx: { '@binding': 'obj' }, xy: { '@binding': '-2 + 5' } },
+        y: {
+          yy: { yyy: { '@binding': 'obj.y || yy' } },
+          yz: { '@binding': 'typeof object.yz === \'string\' ? object.yz : \'\'' }
+        }
+      });
+    });
+
+    it('array bindings', function () {
+      expect((0, _parser.generateBinding)('[textColor, 3 + 5, \'string\']')).toEqual([{ '@binding': 'textColor' }, { '@binding': '3 + 5' }, 'string']);
+      expect((0, _parser.generateBinding)('[\n        { color: \'#FF\' + 66 * -100 },\n        item && item.style,\n        { fontSize: item.size | 0 }\n      ]')).toEqual([{ color: { '@binding': '\'#FF\' + 66 * -100' } }, { '@binding': 'item && item.style' }, { fontSize: { '@binding': 'item.size | 0' } }]);
+      expect((0, _parser.generateBinding)('[{\n        x: [{ xx: [fn instanceof Function ? \'function\' : \'\' , 25] }],\n        y: {\n          yy: [{ yyy: [obj.yy.y, obj.y.yy] }],\n          yz: [object.yz, void 0]\n        }\n      }]')).toEqual([{
+        x: [{ xx: [{ '@binding': 'fn instanceof Function ? \'function\' : \'\'' }, 25] }],
+        y: {
+          yy: [{ yyy: [{ '@binding': 'obj.yy.y' }, { '@binding': 'obj.y.yy' }] }],
+          yz: [{ '@binding': 'object.yz' }, { '@binding': 'void 0' }]
+        }
+      }]);
+    });
+
+    it('unsupported bindings', function () {
+      expect((0, _parser.generateBinding)('() => {}')).toEqual('');
+      expect((0, _parser.generateBinding)('function(){}')).toEqual('');
+      expect((0, _parser.generateBinding)('(function(){})()')).toEqual('');
+      expect((0, _parser.generateBinding)('var abc = 35')).toEqual('');
+      expect((0, _parser.generateBinding)('abc++')).toEqual('');
+      expect((0, _parser.generateBinding)('x.y(0)')).toEqual('');
+      expect((0, _parser.generateBinding)('class X {}')).toEqual('');
+      expect((0, _parser.generateBinding)('if (typeof x == null) { 35 }')).toEqual('');
+      expect((0, _parser.generateBinding)('while (x == null)')).toEqual('');
+      expect((0, _parser.generateBinding)('new Function()')).toEqual('');
+    });
+  });
+});
+

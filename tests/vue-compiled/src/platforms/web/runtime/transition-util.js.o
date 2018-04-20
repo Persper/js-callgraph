@@ -1,0 +1,181 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.animationEndEvent = exports.animationProp = exports.transitionEndEvent = exports.transitionProp = exports.hasTransition = undefined;
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+exports.resolveTransition = resolveTransition;
+exports.nextFrame = nextFrame;
+exports.addTransitionClass = addTransitionClass;
+exports.removeTransitionClass = removeTransitionClass;
+exports.whenTransitionEnds = whenTransitionEnds;
+exports.getTransitionInfo = getTransitionInfo;
+
+var _index = require('core/util/index');
+
+var _classUtil = require('./class-util');
+
+var _util = require('shared/util');
+
+function resolveTransition(def) {
+  if (!def) {
+    return;
+  }
+  /* istanbul ignore else */
+  if ((typeof def === 'undefined' ? 'undefined' : _typeof(def)) === 'object') {
+    var res = {};
+    if (def.css !== false) {
+      (0, _util.extend)(res, autoCssTransition(def.name || 'v'));
+    }
+    (0, _util.extend)(res, def);
+    return res;
+  } else if (typeof def === 'string') {
+    return autoCssTransition(def);
+  }
+}
+
+var autoCssTransition = (0, _util.cached)(function (name) {
+  return {
+    enterClass: name + '-enter',
+    enterToClass: name + '-enter-to',
+    enterActiveClass: name + '-enter-active',
+    leaveClass: name + '-leave',
+    leaveToClass: name + '-leave-to',
+    leaveActiveClass: name + '-leave-active'
+  };
+});
+
+var hasTransition = exports.hasTransition = _index.inBrowser && !_index.isIE9;
+var TRANSITION = 'transition';
+var ANIMATION = 'animation';
+
+// Transition property/event sniffing
+var transitionProp = exports.transitionProp = 'transition';
+var transitionEndEvent = exports.transitionEndEvent = 'transitionend';
+var animationProp = exports.animationProp = 'animation';
+var animationEndEvent = exports.animationEndEvent = 'animationend';
+if (hasTransition) {
+  /* istanbul ignore if */
+  if (window.ontransitionend === undefined && window.onwebkittransitionend !== undefined) {
+    exports.transitionProp = transitionProp = 'WebkitTransition';
+    exports.transitionEndEvent = transitionEndEvent = 'webkitTransitionEnd';
+  }
+  if (window.onanimationend === undefined && window.onwebkitanimationend !== undefined) {
+    exports.animationProp = animationProp = 'WebkitAnimation';
+    exports.animationEndEvent = animationEndEvent = 'webkitAnimationEnd';
+  }
+}
+
+// binding to window is necessary to make hot reload work in IE in strict mode
+var raf = _index.inBrowser ? window.requestAnimationFrame ? window.requestAnimationFrame.bind(window) : setTimeout : /* istanbul ignore next */function (fn) {
+  return fn();
+};
+
+function nextFrame(fn) {
+  raf(function () {
+    raf(fn);
+  });
+}
+
+function addTransitionClass(el, cls) {
+  var transitionClasses = el._transitionClasses || (el._transitionClasses = []);
+  if (transitionClasses.indexOf(cls) < 0) {
+    transitionClasses.push(cls);
+    (0, _classUtil.addClass)(el, cls);
+  }
+}
+
+function removeTransitionClass(el, cls) {
+  if (el._transitionClasses) {
+    (0, _util.remove)(el._transitionClasses, cls);
+  }
+  (0, _classUtil.removeClass)(el, cls);
+}
+
+function whenTransitionEnds(el, expectedType, cb) {
+  var _getTransitionInfo = getTransitionInfo(el, expectedType),
+      type = _getTransitionInfo.type,
+      timeout = _getTransitionInfo.timeout,
+      propCount = _getTransitionInfo.propCount;
+
+  if (!type) return cb();
+  var event = type === TRANSITION ? transitionEndEvent : animationEndEvent;
+  var ended = 0;
+  var end = function end() {
+    el.removeEventListener(event, onEnd);
+    cb();
+  };
+  var onEnd = function onEnd(e) {
+    if (e.target === el) {
+      if (++ended >= propCount) {
+        end();
+      }
+    }
+  };
+  setTimeout(function () {
+    if (ended < propCount) {
+      end();
+    }
+  }, timeout + 1);
+  el.addEventListener(event, onEnd);
+}
+
+var transformRE = /\b(transform|all)(,|$)/;
+
+function getTransitionInfo(el, expectedType) {
+  var styles = window.getComputedStyle(el);
+  var transitionDelays = styles[transitionProp + 'Delay'].split(', ');
+  var transitionDurations = styles[transitionProp + 'Duration'].split(', ');
+  var transitionTimeout = getTimeout(transitionDelays, transitionDurations);
+  var animationDelays = styles[animationProp + 'Delay'].split(', ');
+  var animationDurations = styles[animationProp + 'Duration'].split(', ');
+  var animationTimeout = getTimeout(animationDelays, animationDurations);
+
+  var type = void 0;
+  var timeout = 0;
+  var propCount = 0;
+  /* istanbul ignore if */
+  if (expectedType === TRANSITION) {
+    if (transitionTimeout > 0) {
+      type = TRANSITION;
+      timeout = transitionTimeout;
+      propCount = transitionDurations.length;
+    }
+  } else if (expectedType === ANIMATION) {
+    if (animationTimeout > 0) {
+      type = ANIMATION;
+      timeout = animationTimeout;
+      propCount = animationDurations.length;
+    }
+  } else {
+    timeout = Math.max(transitionTimeout, animationTimeout);
+    type = timeout > 0 ? transitionTimeout > animationTimeout ? TRANSITION : ANIMATION : null;
+    propCount = type ? type === TRANSITION ? transitionDurations.length : animationDurations.length : 0;
+  }
+  var hasTransform = type === TRANSITION && transformRE.test(styles[transitionProp + 'Property']);
+  return {
+    type: type,
+    timeout: timeout,
+    propCount: propCount,
+    hasTransform: hasTransform
+  };
+}
+
+function getTimeout(delays, durations) {
+  /* istanbul ignore next */
+  while (delays.length < durations.length) {
+    delays = delays.concat(delays);
+  }
+
+  return Math.max.apply(null, durations.map(function (d, i) {
+    return toMs(d) + toMs(delays[i]);
+  }));
+}
+
+function toMs(s) {
+  return Number(s.slice(0, -1)) * 1000;
+}
+

@@ -1,0 +1,76 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _util = require('shared/util');
+
+function updateClass(oldVnode, vnode) {
+  var el = vnode.elm;
+  var ctx = vnode.context;
+
+  var data = vnode.data;
+  var oldData = oldVnode.data;
+  if (!data.staticClass && !data.class && (!oldData || !oldData.staticClass && !oldData.class)) {
+    return;
+  }
+
+  var oldClassList = [];
+  // unlike web, weex vnode staticClass is an Array
+  var oldStaticClass = oldData.staticClass;
+  if (oldStaticClass) {
+    oldClassList.push.apply(oldClassList, oldStaticClass);
+  }
+  if (oldData.class) {
+    oldClassList.push.apply(oldClassList, oldData.class);
+  }
+
+  var classList = [];
+  // unlike web, weex vnode staticClass is an Array
+  var staticClass = data.staticClass;
+  if (staticClass) {
+    classList.push.apply(classList, staticClass);
+  }
+  if (data.class) {
+    classList.push.apply(classList, data.class);
+  }
+
+  if (typeof el.setClassList === 'function') {
+    el.setClassList(classList);
+  } else {
+    var style = getStyle(oldClassList, classList, ctx);
+    if (typeof el.setStyles === 'function') {
+      el.setStyles(style);
+    } else {
+      for (var key in style) {
+        el.setStyle(key, style[key]);
+      }
+    }
+  }
+}
+
+function getStyle(oldClassList, classList, ctx) {
+  // style is a weex-only injected object
+  var stylesheet = ctx.$options.style || {};
+  var result = {};
+  classList.forEach(function (name) {
+    var style = stylesheet[name];
+    (0, _util.extend)(result, style);
+  });
+  oldClassList.forEach(function (name) {
+    var style = stylesheet[name];
+    for (var key in style) {
+      if (!result.hasOwnProperty(key)) {
+        result[key] = '';
+      }
+    }
+  });
+  return result;
+}
+
+exports.default = {
+  create: updateClass,
+  update: updateClass
+};
+

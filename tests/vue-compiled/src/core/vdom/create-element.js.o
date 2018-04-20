@@ -1,0 +1,134 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createElement = createElement;
+exports._createElement = _createElement;
+
+var _config = require('../config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _vnode = require('./vnode');
+
+var _vnode2 = _interopRequireDefault(_vnode);
+
+var _createComponent = require('./create-component');
+
+var _traverse = require('../observer/traverse');
+
+var _index = require('../util/index');
+
+var _index2 = require('./helpers/index');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var SIMPLE_NORMALIZE = 1;
+var ALWAYS_NORMALIZE = 2;
+
+// wrapper function for providing a more flexible interface
+// without getting yelled at by flow
+function createElement(context, tag, data, children, normalizationType, alwaysNormalize) {
+  if (Array.isArray(data) || (0, _index.isPrimitive)(data)) {
+    normalizationType = children;
+    children = data;
+    data = undefined;
+  }
+  if ((0, _index.isTrue)(alwaysNormalize)) {
+    normalizationType = ALWAYS_NORMALIZE;
+  }
+  return _createElement(context, tag, data, children, normalizationType);
+}
+
+function _createElement(context, tag, data, children, normalizationType) {
+  if ((0, _index.isDef)(data) && (0, _index.isDef)(data.__ob__)) {
+    process.env.NODE_ENV !== 'production' && (0, _index.warn)('Avoid using observed data object as vnode data: ' + JSON.stringify(data) + '\n' + 'Always create fresh vnode data objects in each render!', context);
+    return (0, _vnode.createEmptyVNode)();
+  }
+  // object syntax in v-bind
+  if ((0, _index.isDef)(data) && (0, _index.isDef)(data.is)) {
+    tag = data.is;
+  }
+  if (!tag) {
+    // in case of component :is set to falsy value
+    return (0, _vnode.createEmptyVNode)();
+  }
+  // warn against non-primitive key
+  if (process.env.NODE_ENV !== 'production' && (0, _index.isDef)(data) && (0, _index.isDef)(data.key) && !(0, _index.isPrimitive)(data.key)) {
+    if (!__WEEX__ || !('@binding' in data.key)) {
+      (0, _index.warn)('Avoid using non-primitive value as key, ' + 'use string/number value instead.', context);
+    }
+  }
+  // support single function children as default scoped slot
+  if (Array.isArray(children) && typeof children[0] === 'function') {
+    data = data || {};
+    data.scopedSlots = { default: children[0] };
+    children.length = 0;
+  }
+  if (normalizationType === ALWAYS_NORMALIZE) {
+    children = (0, _index2.normalizeChildren)(children);
+  } else if (normalizationType === SIMPLE_NORMALIZE) {
+    children = (0, _index2.simpleNormalizeChildren)(children);
+  }
+  var vnode = void 0,
+      ns = void 0;
+  if (typeof tag === 'string') {
+    var Ctor = void 0;
+    ns = context.$vnode && context.$vnode.ns || _config2.default.getTagNamespace(tag);
+    if (_config2.default.isReservedTag(tag)) {
+      // platform built-in elements
+      vnode = new _vnode2.default(_config2.default.parsePlatformTagName(tag), data, children, undefined, undefined, context);
+    } else if ((0, _index.isDef)(Ctor = (0, _index.resolveAsset)(context.$options, 'components', tag))) {
+      // component
+      vnode = (0, _createComponent.createComponent)(Ctor, data, context, children, tag);
+    } else {
+      // unknown or unlisted namespaced elements
+      // check at runtime because it may get assigned a namespace when its
+      // parent normalizes children
+      vnode = new _vnode2.default(tag, data, children, undefined, undefined, context);
+    }
+  } else {
+    // direct component options / constructor
+    vnode = (0, _createComponent.createComponent)(tag, data, context, children);
+  }
+  if (Array.isArray(vnode)) {
+    return vnode;
+  } else if ((0, _index.isDef)(vnode)) {
+    if ((0, _index.isDef)(ns)) applyNS(vnode, ns);
+    if ((0, _index.isDef)(data)) registerDeepBindings(data);
+    return vnode;
+  } else {
+    return (0, _vnode.createEmptyVNode)();
+  }
+}
+
+function applyNS(vnode, ns, force) {
+  vnode.ns = ns;
+  if (vnode.tag === 'foreignObject') {
+    // use default namespace inside foreignObject
+    ns = undefined;
+    force = true;
+  }
+  if ((0, _index.isDef)(vnode.children)) {
+    for (var i = 0, l = vnode.children.length; i < l; i++) {
+      var child = vnode.children[i];
+      if ((0, _index.isDef)(child.tag) && ((0, _index.isUndef)(child.ns) || (0, _index.isTrue)(force) && child.tag !== 'svg')) {
+        applyNS(child, ns, force);
+      }
+    }
+  }
+}
+
+// ref #5318
+// necessary to ensure parent re-render when deep bindings like :style and
+// :class are used on slot nodes
+function registerDeepBindings(data) {
+  if ((0, _index.isObject)(data.style)) {
+    (0, _traverse.traverse)(data.style);
+  }
+  if ((0, _index.isObject)(data.class)) {
+    (0, _traverse.traverse)(data.class);
+  }
+}
+

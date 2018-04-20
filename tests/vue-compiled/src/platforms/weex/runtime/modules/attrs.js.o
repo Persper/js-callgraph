@@ -1,0 +1,47 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _util = require('shared/util');
+
+function updateAttrs(oldVnode, vnode) {
+  if (!oldVnode.data.attrs && !vnode.data.attrs) {
+    return;
+  }
+  var key = void 0,
+      cur = void 0,
+      old = void 0;
+  var elm = vnode.elm;
+  var oldAttrs = oldVnode.data.attrs || {};
+  var attrs = vnode.data.attrs || {};
+  // clone observed objects, as the user probably wants to mutate it
+  if (attrs.__ob__) {
+    attrs = vnode.data.attrs = (0, _util.extend)({}, attrs);
+  }
+
+  var supportBatchUpdate = typeof elm.setAttrs === 'function';
+  var batchedAttrs = {};
+  for (key in attrs) {
+    cur = attrs[key];
+    old = oldAttrs[key];
+    if (old !== cur) {
+      supportBatchUpdate ? batchedAttrs[key] = cur : elm.setAttr(key, cur);
+    }
+  }
+  for (key in oldAttrs) {
+    if (attrs[key] == null) {
+      supportBatchUpdate ? batchedAttrs[key] = undefined : elm.setAttr(key);
+    }
+  }
+  if (supportBatchUpdate) {
+    elm.setAttrs(batchedAttrs);
+  }
+}
+
+exports.default = {
+  create: updateAttrs,
+  update: updateAttrs
+};
+

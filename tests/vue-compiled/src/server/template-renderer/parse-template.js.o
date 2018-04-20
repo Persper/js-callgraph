@@ -1,0 +1,43 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+exports.parseTemplate = parseTemplate;
+var compile = require('lodash.template');
+var compileOptions = {
+  escape: /{{([^{][\s\S]+?[^}])}}/g,
+  interpolate: /{{{([\s\S]+?)}}}/g
+};
+
+function parseTemplate(template) {
+  var contentPlaceholder = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '<!--vue-ssr-outlet-->';
+
+  if ((typeof template === 'undefined' ? 'undefined' : _typeof(template)) === 'object') {
+    return template;
+  }
+
+  var i = template.indexOf('</head>');
+  var j = template.indexOf(contentPlaceholder);
+
+  if (j < 0) {
+    throw new Error('Content placeholder not found in template.');
+  }
+
+  if (i < 0) {
+    i = template.indexOf('<body>');
+    if (i < 0) {
+      i = j;
+    }
+  }
+
+  return {
+    head: compile(template.slice(0, i), compileOptions),
+    neck: compile(template.slice(i, j), compileOptions),
+    tail: compile(template.slice(j + contentPlaceholder.length), compileOptions)
+  };
+}
+

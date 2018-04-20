@@ -1,0 +1,28 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.measure = exports.mark = undefined;
+
+var _env = require('./env');
+
+var mark = exports.mark = void 0;
+var measure = exports.measure = void 0;
+
+if (process.env.NODE_ENV !== 'production') {
+  var perf = _env.inBrowser && window.performance;
+  /* istanbul ignore if */
+  if (perf && perf.mark && perf.measure && perf.clearMarks && perf.clearMeasures) {
+    exports.mark = mark = function mark(tag) {
+      return perf.mark(tag);
+    };
+    exports.measure = measure = function measure(name, startTag, endTag) {
+      perf.measure(name, startTag, endTag);
+      perf.clearMarks(startTag);
+      perf.clearMarks(endTag);
+      perf.clearMeasures(name);
+    };
+  }
+}
+

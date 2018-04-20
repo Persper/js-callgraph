@@ -1,0 +1,398 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _index = require('core/observer/index');
+
+var _dep = require('core/observer/dep');
+
+var _dep2 = _interopRequireDefault(_dep);
+
+var _index2 = require('core/util/index');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Observer', function () {
+  it('create on non-observables', function () {
+    // skip primitive value
+    var ob1 = (0, _index.observe)(1);
+    expect(ob1).toBeUndefined();
+    // avoid vue instance
+    var ob2 = (0, _index.observe)(new _vue2.default());
+    expect(ob2).toBeUndefined();
+    // avoid frozen objects
+    var ob3 = (0, _index.observe)(Object.freeze({}));
+    expect(ob3).toBeUndefined();
+  });
+
+  it('create on object', function () {
+    // on object
+    var obj = {
+      a: {},
+      b: {}
+    };
+    var ob1 = (0, _index.observe)(obj);
+    expect(ob1 instanceof _index.Observer).toBe(true);
+    expect(ob1.value).toBe(obj);
+    expect(obj.__ob__).toBe(ob1);
+    // should've walked children
+    expect(obj.a.__ob__ instanceof _index.Observer).toBe(true);
+    expect(obj.b.__ob__ instanceof _index.Observer).toBe(true);
+    // should return existing ob on already observed objects
+    var ob2 = (0, _index.observe)(obj);
+    expect(ob2).toBe(ob1);
+  });
+
+  it('create on null', function () {
+    // on null
+    var obj = Object.create(null);
+    obj.a = {};
+    obj.b = {};
+    var ob1 = (0, _index.observe)(obj);
+    expect(ob1 instanceof _index.Observer).toBe(true);
+    expect(ob1.value).toBe(obj);
+    expect(obj.__ob__).toBe(ob1);
+    // should've walked children
+    expect(obj.a.__ob__ instanceof _index.Observer).toBe(true);
+    expect(obj.b.__ob__ instanceof _index.Observer).toBe(true);
+    // should return existing ob on already observed objects
+    var ob2 = (0, _index.observe)(obj);
+    expect(ob2).toBe(ob1);
+  });
+
+  it('create on already observed object', function () {
+    // on object
+    var obj = {};
+    var val = 0;
+    var getCount = 0;
+    Object.defineProperty(obj, 'a', {
+      configurable: true,
+      enumerable: true,
+      get: function get() {
+        getCount++;
+        return val;
+      },
+      set: function set(v) {
+        val = v;
+      }
+    });
+
+    var ob1 = (0, _index.observe)(obj);
+    expect(ob1 instanceof _index.Observer).toBe(true);
+    expect(ob1.value).toBe(obj);
+    expect(obj.__ob__).toBe(ob1);
+
+    getCount = 0;
+    // Each read of 'a' should result in only one get underlying get call
+    obj.a;
+    expect(getCount).toBe(1);
+    obj.a;
+    expect(getCount).toBe(2);
+
+    // should return existing ob on already observed objects
+    var ob2 = (0, _index.observe)(obj);
+    expect(ob2).toBe(ob1);
+
+    // should call underlying setter
+    obj.a = 10;
+    expect(val).toBe(10);
+  });
+
+  it('create on property with only getter', function () {
+    // on object
+    var obj = {};
+    Object.defineProperty(obj, 'a', {
+      configurable: true,
+      enumerable: true,
+      get: function get() {
+        return 123;
+      }
+    });
+
+    var ob1 = (0, _index.observe)(obj);
+    expect(ob1 instanceof _index.Observer).toBe(true);
+    expect(ob1.value).toBe(obj);
+    expect(obj.__ob__).toBe(ob1);
+
+    // should be able to read
+    expect(obj.a).toBe(123);
+
+    // should return existing ob on already observed objects
+    var ob2 = (0, _index.observe)(obj);
+    expect(ob2).toBe(ob1);
+
+    // since there is no setter, you shouldn't be able to write to it
+    // PhantomJS throws when a property with no setter is set
+    // but other real browsers don't
+    try {
+      obj.a = 101;
+    } catch (e) {}
+    expect(obj.a).toBe(123);
+  });
+
+  it('create on property with only setter', function () {
+    // on object
+    var obj = {};
+    var val = 10;
+    Object.defineProperty(obj, 'a', { // eslint-disable-line accessor-pairs
+      configurable: true,
+      enumerable: true,
+      set: function set(v) {
+        val = v;
+      }
+    });
+
+    var ob1 = (0, _index.observe)(obj);
+    expect(ob1 instanceof _index.Observer).toBe(true);
+    expect(ob1.value).toBe(obj);
+    expect(obj.__ob__).toBe(ob1);
+
+    // reads should return undefined
+    expect(obj.a).toBe(undefined);
+
+    // should return existing ob on already observed objects
+    var ob2 = (0, _index.observe)(obj);
+    expect(ob2).toBe(ob1);
+
+    // writes should call the set function
+    obj.a = 100;
+    expect(val).toBe(100);
+  });
+
+  it('create on property which is marked not configurable', function () {
+    // on object
+    var obj = {};
+    Object.defineProperty(obj, 'a', {
+      configurable: false,
+      enumerable: true,
+      val: 10
+    });
+
+    var ob1 = (0, _index.observe)(obj);
+    expect(ob1 instanceof _index.Observer).toBe(true);
+    expect(ob1.value).toBe(obj);
+    expect(obj.__ob__).toBe(ob1);
+  });
+
+  it('create on array', function () {
+    // on object
+    var arr = [{}, {}];
+    var ob1 = (0, _index.observe)(arr);
+    expect(ob1 instanceof _index.Observer).toBe(true);
+    expect(ob1.value).toBe(arr);
+    expect(arr.__ob__).toBe(ob1);
+    // should've walked children
+    expect(arr[0].__ob__ instanceof _index.Observer).toBe(true);
+    expect(arr[1].__ob__ instanceof _index.Observer).toBe(true);
+  });
+
+  it('observing object prop change', function () {
+    var obj = { a: { b: 2 }, c: NaN };
+    (0, _index.observe)(obj);
+    // mock a watcher!
+    var watcher = {
+      deps: [],
+      addDep: function addDep(dep) {
+        this.deps.push(dep);
+        dep.addSub(this);
+      },
+
+      update: jasmine.createSpy()
+      // collect dep
+    };_dep2.default.target = watcher;
+    obj.a.b;
+    _dep2.default.target = null;
+    expect(watcher.deps.length).toBe(3); // obj.a + a + a.b
+    obj.a.b = 3;
+    expect(watcher.update.calls.count()).toBe(1);
+    // swap object
+    obj.a = { b: 4 };
+    expect(watcher.update.calls.count()).toBe(2);
+    watcher.deps = [];
+
+    _dep2.default.target = watcher;
+    obj.a.b;
+    obj.c;
+    _dep2.default.target = null;
+    expect(watcher.deps.length).toBe(4);
+    // set on the swapped object
+    obj.a.b = 5;
+    expect(watcher.update.calls.count()).toBe(3);
+    // should not trigger on NaN -> NaN set
+    obj.c = NaN;
+    expect(watcher.update.calls.count()).toBe(3);
+  });
+
+  it('observing object prop change on defined property', function () {
+    var obj = { val: 2 };
+    Object.defineProperty(obj, 'a', {
+      configurable: true,
+      enumerable: true,
+      get: function get() {
+        return this.val;
+      },
+      set: function set(v) {
+        this.val = v;
+        return this.val;
+      }
+    });
+
+    (0, _index.observe)(obj);
+    // mock a watcher!
+    var watcher = {
+      deps: [],
+      addDep: function addDep(dep) {
+        this.deps.push(dep);
+        dep.addSub(this);
+      },
+      update: jasmine.createSpy()
+      // collect dep
+    };_dep2.default.target = watcher;
+    expect(obj.a).toBe(2); // Make sure 'this' is preserved
+    _dep2.default.target = null;
+    obj.a = 3;
+    expect(obj.val).toBe(3); // make sure 'setter' was called
+    obj.val = 5;
+    expect(obj.a).toBe(5); // make sure 'getter' was called
+  });
+
+  it('observing set/delete', function () {
+    var obj1 = { a: 1 };
+    var ob1 = (0, _index.observe)(obj1);
+    var dep1 = ob1.dep;
+    spyOn(dep1, 'notify');
+    (0, _index.set)(obj1, 'b', 2);
+    expect(obj1.b).toBe(2);
+    expect(dep1.notify.calls.count()).toBe(1);
+    (0, _index.del)(obj1, 'a');
+    expect((0, _index2.hasOwn)(obj1, 'a')).toBe(false);
+    expect(dep1.notify.calls.count()).toBe(2);
+    // set existing key, should be a plain set and not
+    // trigger own ob's notify
+    (0, _index.set)(obj1, 'b', 3);
+    expect(obj1.b).toBe(3);
+    expect(dep1.notify.calls.count()).toBe(2);
+    // set non-existing key
+    (0, _index.set)(obj1, 'c', 1);
+    expect(obj1.c).toBe(1);
+    expect(dep1.notify.calls.count()).toBe(3);
+    // should ignore deleting non-existing key
+    (0, _index.del)(obj1, 'a');
+    expect(dep1.notify.calls.count()).toBe(3);
+    // should work on non-observed objects
+    var obj2 = { a: 1 };
+    (0, _index.del)(obj2, 'a');
+    expect((0, _index2.hasOwn)(obj2, 'a')).toBe(false);
+    // should work on Object.create(null)
+    var obj3 = Object.create(null);
+    obj3.a = 1;
+    var ob3 = (0, _index.observe)(obj3);
+    var dep3 = ob3.dep;
+    spyOn(dep3, 'notify');
+    (0, _index.set)(obj3, 'b', 2);
+    expect(obj3.b).toBe(2);
+    expect(dep3.notify.calls.count()).toBe(1);
+    (0, _index.del)(obj3, 'a');
+    expect((0, _index2.hasOwn)(obj3, 'a')).toBe(false);
+    expect(dep3.notify.calls.count()).toBe(2);
+    // set and delete non-numeric key on array
+    var arr2 = ['a'];
+    var ob2 = (0, _index.observe)(arr2);
+    var dep2 = ob2.dep;
+    spyOn(dep2, 'notify');
+    (0, _index.set)(arr2, 'b', 2);
+    expect(arr2.b).toBe(2);
+    expect(dep2.notify.calls.count()).toBe(1);
+    (0, _index.del)(arr2, 'b');
+    expect((0, _index2.hasOwn)(arr2, 'b')).toBe(false);
+    expect(dep2.notify.calls.count()).toBe(2);
+  });
+
+  it('warning set/delete on a Vue instance', function (done) {
+    var vm = new _vue2.default({
+      template: '<div>{{a}}</div>',
+      data: { a: 1 }
+    }).$mount();
+    expect(vm.$el.outerHTML).toBe('<div>1</div>');
+    _vue2.default.set(vm, 'a', 2);
+    waitForUpdate(function () {
+      expect(vm.$el.outerHTML).toBe('<div>2</div>');
+      expect('Avoid adding reactive properties to a Vue instance').not.toHaveBeenWarned();
+      _vue2.default.delete(vm, 'a');
+    }).then(function () {
+      expect('Avoid deleting properties on a Vue instance').toHaveBeenWarned();
+      expect(vm.$el.outerHTML).toBe('<div>2</div>');
+      _vue2.default.set(vm, 'b', 123);
+      expect('Avoid adding reactive properties to a Vue instance').toHaveBeenWarned();
+    }).then(done);
+  });
+
+  it('warning set/delete on Vue instance root $data', function (done) {
+    var data = { a: 1 };
+    var vm = new _vue2.default({
+      template: '<div>{{a}}</div>',
+      data: data
+    }).$mount();
+    expect(vm.$el.outerHTML).toBe('<div>1</div>');
+    expect(_vue2.default.set(data, 'a', 2)).toBe(2);
+    waitForUpdate(function () {
+      expect(vm.$el.outerHTML).toBe('<div>2</div>');
+      expect('Avoid adding reactive properties to a Vue instance').not.toHaveBeenWarned();
+      _vue2.default.delete(data, 'a');
+    }).then(function () {
+      expect('Avoid deleting properties on a Vue instance').toHaveBeenWarned();
+      expect(vm.$el.outerHTML).toBe('<div>2</div>');
+      expect(_vue2.default.set(data, 'b', 123)).toBe(123);
+      expect('Avoid adding reactive properties to a Vue instance').toHaveBeenWarned();
+    }).then(done);
+  });
+
+  it('observing array mutation', function () {
+    var arr = [];
+    var ob = (0, _index.observe)(arr);
+    var dep = ob.dep;
+    spyOn(dep, 'notify');
+    var objs = [{}, {}, {}];
+    arr.push(objs[0]);
+    arr.pop();
+    arr.unshift(objs[1]);
+    arr.shift();
+    arr.splice(0, 0, objs[2]);
+    arr.sort();
+    arr.reverse();
+    expect(dep.notify.calls.count()).toBe(7);
+    // inserted elements should be observed
+    objs.forEach(function (obj) {
+      expect(obj.__ob__ instanceof _index.Observer).toBe(true);
+    });
+  });
+
+  it('warn set/delete on non valid values', function () {
+    try {
+      (0, _index.set)(null, 'foo', 1);
+    } catch (e) {}
+    expect('Cannot set reactive property on non-object/array value').toHaveBeenWarned();
+
+    try {
+      (0, _index.del)(null, 'foo');
+    } catch (e) {}
+    expect('Cannot delete reactive property on non-object/array value').toHaveBeenWarned();
+  });
+
+  it('should lazy invoke existing getters', function () {
+    var obj = {};
+    var called = false;
+    Object.defineProperty(obj, 'getterProp', {
+      enumerable: true,
+      get: function get() {
+        called = true;
+        return 'some value';
+      }
+    });
+    (0, _index.observe)(obj);
+    expect(called).toBe(false);
+  });
+});
+

@@ -1,0 +1,401 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _vnode = require('core/vdom/vnode');
+
+var _vnode2 = _interopRequireDefault(_vnode);
+
+var _patch = require('web/runtime/patch');
+
+var _constants = require('shared/constants');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function createMockSSRDOM(innerHTML) {
+  var dom = document.createElement('div');
+  dom.setAttribute(_constants.SSR_ATTR, 'true');
+  dom.innerHTML = innerHTML;
+  return dom;
+}
+
+describe('vdom patch: hydration', function () {
+  var vnode0 = void 0;
+  beforeEach(function () {
+    vnode0 = new _vnode2.default('p', { attrs: { id: '1' } }, [createTextVNode('hello world')]);
+    (0, _patch.patch)(null, vnode0);
+  });
+
+  it('should hydrate elements when server-rendered DOM tree is same as virtual DOM tree', function () {
+    var result = [];
+    function init(vnode) {
+      result.push(vnode);
+    }
+    function createServerRenderedDOM() {
+      var root = document.createElement('div');
+      root.setAttribute(_constants.SSR_ATTR, 'true');
+      var span = document.createElement('span');
+      root.appendChild(span);
+      var div = document.createElement('div');
+      var child1 = document.createElement('span');
+      var child2 = document.createElement('span');
+      child1.textContent = 'hi';
+      child2.textContent = 'ho';
+      div.appendChild(child1);
+      div.appendChild(child2);
+      root.appendChild(div);
+      return root;
+    }
+    var node0 = createServerRenderedDOM();
+    var vnode1 = new _vnode2.default('div', {}, [new _vnode2.default('span', {}), new _vnode2.default('div', { hook: { init: init } }, [new _vnode2.default('span', {}, [new _vnode2.default(undefined, undefined, undefined, 'hi')]), new _vnode2.default('span', {}, [new _vnode2.default(undefined, undefined, undefined, 'ho')])])]);
+    (0, _patch.patch)(node0, vnode1);
+    expect(result.length).toBe(1);
+
+    function traverseAndAssert(vnode, element) {
+      expect(vnode.elm).toBe(element);
+      if (vnode.children) {
+        vnode.children.forEach(function (node, i) {
+          traverseAndAssert(node, element.childNodes[i]);
+        });
+      }
+    }
+    // ensure vnodes are correctly associated with actual DOM
+    traverseAndAssert(vnode1, node0);
+
+    // check update
+    var vnode2 = new _vnode2.default('div', { attrs: { id: 'foo' } }, [new _vnode2.default('span', { attrs: { id: 'bar' } }), new _vnode2.default('div', { hook: { init: init } }, [new _vnode2.default('span', {}), new _vnode2.default('span', {})])]);
+    (0, _patch.patch)(vnode1, vnode2);
+    expect(node0.id).toBe('foo');
+    expect(node0.children[0].id).toBe('bar');
+  });
+
+  it('should warn message that virtual DOM tree is not matching when hydrate element', function () {
+    function createServerRenderedDOM() {
+      var root = document.createElement('div');
+      root.setAttribute(_constants.SSR_ATTR, 'true');
+      var span = document.createElement('span');
+      root.appendChild(span);
+      var div = document.createElement('div');
+      var child1 = document.createElement('span');
+      div.appendChild(child1);
+      root.appendChild(div);
+      return root;
+    }
+    var node0 = createServerRenderedDOM();
+    var vnode1 = new _vnode2.default('div', {}, [new _vnode2.default('span', {}), new _vnode2.default('div', {}, [new _vnode2.default('span', {}), new _vnode2.default('span', {})])]);
+    (0, _patch.patch)(node0, vnode1);
+    expect('The client-side rendered virtual DOM tree is not matching').toHaveBeenWarned();
+  });
+
+  // component hydration is better off with a more e2e approach
+  it('should hydrate components when server-rendered DOM tree is same as virtual DOM tree', function (done) {
+    var dom = createMockSSRDOM('<span>foo</span><div class="b a"><span>foo qux</span></div><!---->');
+    var originalNode1 = dom.children[0];
+    var originalNode2 = dom.children[1];
+
+    var vm = new _vue2.default({
+      template: '<div><span>{{msg}}</span><test class="a" :msg="msg"></test><p v-if="ok"></p></div>',
+      data: {
+        msg: 'foo',
+        ok: false
+      },
+      components: {
+        test: {
+          props: ['msg'],
+          data: function data() {
+            return { a: 'qux' };
+          },
+
+          template: '<div class="b"><span>{{msg}} {{a}}</span></div>'
+        }
+      }
+    });
+
+    expect(function () {
+      vm.$mount(dom);
+    }).not.toThrow();
+    expect('not matching server-rendered content').not.toHaveBeenWarned();
+    expect(vm.$el).toBe(dom);
+    expect(vm.$children[0].$el).toBe(originalNode2);
+    expect(vm.$el.children[0]).toBe(originalNode1);
+    expect(vm.$el.children[1]).toBe(originalNode2);
+    vm.msg = 'bar';
+    waitForUpdate(function () {
+      expect(vm.$el.innerHTML).toBe('<span>bar</span><div class="b a"><span>bar qux</span></div><!---->');
+      vm.$children[0].a = 'ququx';
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe('<span>bar</span><div class="b a"><span>bar ququx</span></div><!---->');
+      vm.ok = true;
+    }).then(function () {
+      expect(vm.$el.innerHTML).toBe('<span>bar</span><div class="b a"><span>bar ququx</span></div><p></p>');
+    }).then(done);
+  });
+
+  it('should warn failed hydration for non-matching DOM in child component', function () {
+    var dom = createMockSSRDOM('<div><span></span></div>');
+
+    new _vue2.default({
+      template: '<div><test></test></div>',
+      components: {
+        test: {
+          template: '<div><a></a></div>'
+        }
+      }
+    }).$mount(dom);
+
+    expect('not matching server-rendered content').toHaveBeenWarned();
+  });
+
+  it('should warn failed hydration when component is not properly registered', function () {
+    var dom = createMockSSRDOM('<div><foo></foo></div>');
+
+    new _vue2.default({
+      template: '<div><foo></foo></div>'
+    }).$mount(dom);
+
+    expect('not matching server-rendered content').toHaveBeenWarned();
+    expect('Unknown custom element: <foo>').toHaveBeenWarned();
+  });
+
+  it('should overwrite textNodes in the correct position but with mismatching text without warning', function () {
+    var dom = createMockSSRDOM('<div><span>foo</span></div>');
+
+    new _vue2.default({
+      template: '<div><test></test></div>',
+      components: {
+        test: {
+          data: function data() {
+            return { a: 'qux' };
+          },
+
+          template: '<div><span>{{a}}</span></div>'
+        }
+      }
+    }).$mount(dom);
+
+    expect('not matching server-rendered content').not.toHaveBeenWarned();
+    expect(dom.querySelector('span').textContent).toBe('qux');
+  });
+
+  it('should pick up elements with no children and populate without warning', function (done) {
+    var dom = createMockSSRDOM('<div><span></span></div>');
+    var span = dom.querySelector('span');
+
+    var vm = new _vue2.default({
+      template: '<div><test></test></div>',
+      components: {
+        test: {
+          data: function data() {
+            return { a: 'qux' };
+          },
+
+          template: '<div><span>{{a}}</span></div>'
+        }
+      }
+    }).$mount(dom);
+
+    expect('not matching server-rendered content').not.toHaveBeenWarned();
+    expect(span).toBe(vm.$el.querySelector('span'));
+    expect(vm.$el.innerHTML).toBe('<div><span>qux</span></div>');
+
+    vm.$children[0].a = 'foo';
+    waitForUpdate(function () {
+      expect(vm.$el.innerHTML).toBe('<div><span>foo</span></div>');
+    }).then(done);
+  });
+
+  it('should hydrate async component', function (done) {
+    var dom = createMockSSRDOM('<span>foo</span>');
+    var span = dom.querySelector('span');
+
+    var Foo = function Foo(resolve) {
+      return setTimeout(function () {
+        resolve({
+          data: function data() {
+            return { msg: 'foo' };
+          },
+          template: '<span>{{ msg }}</span>'
+        });
+      }, 0);
+    };
+
+    var vm = new _vue2.default({
+      template: '<div><foo ref="foo" /></div>',
+      components: { Foo: Foo }
+    }).$mount(dom);
+
+    expect('not matching server-rendered content').not.toHaveBeenWarned();
+    expect(dom.innerHTML).toBe('<span>foo</span>');
+    expect(vm.$refs.foo).toBeUndefined();
+
+    setTimeout(function () {
+      expect(dom.innerHTML).toBe('<span>foo</span>');
+      expect(vm.$refs.foo).not.toBeUndefined();
+      vm.$refs.foo.msg = 'bar';
+      waitForUpdate(function () {
+        expect(dom.innerHTML).toBe('<span>bar</span>');
+        expect(dom.querySelector('span')).toBe(span);
+      }).then(done);
+    }, 50);
+  });
+
+  it('should hydrate async component without showing loading', function (done) {
+    var dom = createMockSSRDOM('<span>foo</span>');
+    var span = dom.querySelector('span');
+
+    var Foo = function Foo() {
+      return {
+        component: new Promise(function (resolve) {
+          setTimeout(function () {
+            resolve({
+              data: function data() {
+                return { msg: 'foo' };
+              },
+              template: '<span>{{ msg }}</span>'
+            });
+          }, 10);
+        }),
+        delay: 1,
+        loading: {
+          render: function render(h) {
+            return h('span', 'loading');
+          }
+        }
+      };
+    };
+
+    var vm = new _vue2.default({
+      template: '<div><foo ref="foo" /></div>',
+      components: { Foo: Foo }
+    }).$mount(dom);
+
+    expect('not matching server-rendered content').not.toHaveBeenWarned();
+    expect(dom.innerHTML).toBe('<span>foo</span>');
+    expect(vm.$refs.foo).toBeUndefined();
+
+    setTimeout(function () {
+      expect(dom.innerHTML).toBe('<span>foo</span>');
+    }, 2);
+
+    setTimeout(function () {
+      expect(dom.innerHTML).toBe('<span>foo</span>');
+      expect(vm.$refs.foo).not.toBeUndefined();
+      vm.$refs.foo.msg = 'bar';
+      waitForUpdate(function () {
+        expect(dom.innerHTML).toBe('<span>bar</span>');
+        expect(dom.querySelector('span')).toBe(span);
+      }).then(done);
+    }, 50);
+  });
+
+  it('should hydrate async component by replacing DOM if error occurs', function (done) {
+    var dom = createMockSSRDOM('<span>foo</span>');
+
+    var Foo = function Foo() {
+      return {
+        component: new Promise(function (resolve, reject) {
+          setTimeout(function () {
+            reject('something went wrong');
+          }, 10);
+        }),
+        error: {
+          render: function render(h) {
+            return h('span', 'error');
+          }
+        }
+      };
+    };
+
+    new _vue2.default({
+      template: '<div><foo ref="foo" /></div>',
+      components: { Foo: Foo }
+    }).$mount(dom);
+
+    expect('not matching server-rendered content').not.toHaveBeenWarned();
+    expect(dom.innerHTML).toBe('<span>foo</span>');
+
+    setTimeout(function () {
+      expect('Failed to resolve async').toHaveBeenWarned();
+      expect(dom.innerHTML).toBe('<span>error</span>');
+      done();
+    }, 50);
+  });
+
+  it('should hydrate v-html with children', function () {
+    var dom = createMockSSRDOM('<span>foo</span>');
+
+    new _vue2.default({
+      data: {
+        html: '<span>foo</span>'
+      },
+      template: '<div v-html="html">hello</div>'
+    }).$mount(dom);
+
+    expect('not matching server-rendered content').not.toHaveBeenWarned();
+  });
+
+  it('should warn mismatching v-html', function () {
+    var dom = createMockSSRDOM('<span>bar</span>');
+
+    new _vue2.default({
+      data: {
+        html: '<span>foo</span>'
+      },
+      template: '<div v-html="html">hello</div>'
+    }).$mount(dom);
+
+    expect('not matching server-rendered content').toHaveBeenWarned();
+  });
+
+  it('should hydrate with adjacent text nodes from array children (e.g. slots)', function () {
+    var dom = createMockSSRDOM('<div>foo</div> hello');
+
+    new _vue2.default({
+      template: '<test>hello</test>',
+      components: {
+        test: {
+          template: '\n            <div>\n              <div>foo</div>\n              <slot/>\n            </div>\n          '
+        }
+      }
+    }).$mount(dom);
+    expect('not matching server-rendered content').not.toHaveBeenWarned();
+  });
+
+  // #7063
+  it('should properly initialize dynamic style bindings for future updates', function (done) {
+    var dom = createMockSSRDOM('<div style="padding-left:0px"></div>');
+
+    var vm = new _vue2.default({
+      data: {
+        style: { paddingLeft: '0px' }
+      },
+      template: '<div><div :style="style"></div></div>'
+    }).$mount(dom);
+
+    // should update
+    vm.style.paddingLeft = '100px';
+    waitForUpdate(function () {
+      expect(dom.children[0].style.paddingLeft).toBe('100px');
+    }).then(done);
+  });
+
+  it('should properly initialize dynamic class bindings for future updates', function (done) {
+    var dom = createMockSSRDOM('<div class="foo bar"></div>');
+
+    var vm = new _vue2.default({
+      data: {
+        cls: [{ foo: true }, 'bar']
+      },
+      template: '<div><div :class="cls"></div></div>'
+    }).$mount(dom);
+
+    // should update
+    vm.cls[0].foo = false;
+    waitForUpdate(function () {
+      expect(dom.children[0].className).toBe('bar');
+    }).then(done);
+  });
+});
+

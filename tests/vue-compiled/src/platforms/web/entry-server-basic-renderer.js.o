@@ -1,0 +1,27 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _index = require('./server/modules/index');
+
+var _index2 = _interopRequireDefault(_index);
+
+var _index3 = require('./server/directives/index');
+
+var _index4 = _interopRequireDefault(_index3);
+
+var _util = require('./compiler/util');
+
+var _createBasicRenderer = require('server/create-basic-renderer');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = (0, _createBasicRenderer.createBasicRenderer)({
+  modules: _index2.default,
+  directives: _index4.default,
+  isUnaryTag: _util.isUnaryTag,
+  canBeLeftOpenTag: _util.canBeLeftOpenTag
+});
+

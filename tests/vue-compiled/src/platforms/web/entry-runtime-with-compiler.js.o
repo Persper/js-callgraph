@@ -1,0 +1,111 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _config = require('core/config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _index = require('core/util/index');
+
+var _perf = require('core/util/perf');
+
+var _index2 = require('./runtime/index');
+
+var _index3 = _interopRequireDefault(_index2);
+
+var _index4 = require('./util/index');
+
+var _index5 = require('./compiler/index');
+
+var _compat = require('./util/compat');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var idToTemplate = (0, _index.cached)(function (id) {
+  var el = (0, _index4.query)(id);
+  return el && el.innerHTML;
+});
+
+var mount = _index3.default.prototype.$mount;
+_index3.default.prototype.$mount = function (el, hydrating) {
+  el = el && (0, _index4.query)(el);
+
+  /* istanbul ignore if */
+  if (el === document.body || el === document.documentElement) {
+    process.env.NODE_ENV !== 'production' && (0, _index.warn)('Do not mount Vue to <html> or <body> - mount to normal elements instead.');
+    return this;
+  }
+
+  var options = this.$options;
+  // resolve template/el and convert to render function
+  if (!options.render) {
+    var template = options.template;
+    if (template) {
+      if (typeof template === 'string') {
+        if (template.charAt(0) === '#') {
+          template = idToTemplate(template);
+          /* istanbul ignore if */
+          if (process.env.NODE_ENV !== 'production' && !template) {
+            (0, _index.warn)('Template element not found or is empty: ' + options.template, this);
+          }
+        }
+      } else if (template.nodeType) {
+        template = template.innerHTML;
+      } else {
+        if (process.env.NODE_ENV !== 'production') {
+          (0, _index.warn)('invalid template option:' + template, this);
+        }
+        return this;
+      }
+    } else if (el) {
+      template = getOuterHTML(el);
+    }
+    if (template) {
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'production' && _config2.default.performance && _perf.mark) {
+        (0, _perf.mark)('compile');
+      }
+
+      var _compileToFunctions = (0, _index5.compileToFunctions)(template, {
+        shouldDecodeNewlines: _compat.shouldDecodeNewlines,
+        shouldDecodeNewlinesForHref: _compat.shouldDecodeNewlinesForHref,
+        delimiters: options.delimiters,
+        comments: options.comments
+      }, this),
+          render = _compileToFunctions.render,
+          staticRenderFns = _compileToFunctions.staticRenderFns;
+
+      options.render = render;
+      options.staticRenderFns = staticRenderFns;
+
+      /* istanbul ignore if */
+      if (process.env.NODE_ENV !== 'production' && _config2.default.performance && _perf.mark) {
+        (0, _perf.mark)('compile end');
+        (0, _perf.measure)('vue ' + this._name + ' compile', 'compile', 'compile end');
+      }
+    }
+  }
+  return mount.call(this, el, hydrating);
+};
+
+/**
+ * Get outerHTML of elements, taking care
+ * of SVG elements in IE as well.
+ */
+function getOuterHTML(el) {
+  if (el.outerHTML) {
+    return el.outerHTML;
+  } else {
+    var container = document.createElement('div');
+    container.appendChild(el.cloneNode(true));
+    return container.innerHTML;
+  }
+}
+
+_index3.default.compile = _index5.compileToFunctions;
+
+exports.default = _index3.default;
+

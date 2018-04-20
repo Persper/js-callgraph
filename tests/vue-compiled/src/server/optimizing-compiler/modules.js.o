@@ -1,0 +1,107 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.applyModelTransform = applyModelTransform;
+exports.genAttrSegments = genAttrSegments;
+exports.genDOMPropSegments = genDOMPropSegments;
+exports.genClassSegments = genClassSegments;
+exports.genStyleSegments = genStyleSegments;
+
+var _codegen = require('./codegen');
+
+var _util = require('web/server/util');
+
+var _attrs = require('web/util/attrs');
+
+var plainStringRE = /^"(?:[^"\\]|\\.)*"$|^'(?:[^'\\]|\\.)*'$/;
+
+// let the model AST transform translate v-model into appropriate
+// props bindings
+
+
+function applyModelTransform(el, state) {
+  if (el.directives) {
+    for (var i = 0; i < el.directives.length; i++) {
+      var dir = el.directives[i];
+      if (dir.name === 'model') {
+        state.directives.model(el, dir, state.warn);
+        // remove value for textarea as its converted to text
+        if (el.tag === 'textarea' && el.props) {
+          el.props = el.props.filter(function (p) {
+            return p.name !== 'value';
+          });
+        }
+        break;
+      }
+    }
+  }
+}
+
+function genAttrSegments(attrs) {
+  return attrs.map(function (_ref) {
+    var name = _ref.name,
+        value = _ref.value;
+    return genAttrSegment(name, value);
+  });
+}
+
+function genDOMPropSegments(props, attrs) {
+  var segments = [];
+  props.forEach(function (_ref2) {
+    var name = _ref2.name,
+        value = _ref2.value;
+
+    name = _util.propsToAttrMap[name] || name.toLowerCase();
+    if ((0, _util.isRenderableAttr)(name) && !(attrs && attrs.some(function (a) {
+      return a.name === name;
+    }))) {
+      segments.push(genAttrSegment(name, value));
+    }
+  });
+  return segments;
+}
+
+function genAttrSegment(name, value) {
+  if (plainStringRE.test(value)) {
+    // force double quote
+    value = value.replace(/^'|'$/g, '"');
+    // force enumerated attr to "true"
+    if ((0, _attrs.isEnumeratedAttr)(name) && value !== '"false"') {
+      value = '"true"';
+    }
+    return {
+      type: _codegen.RAW,
+      value: (0, _attrs.isBooleanAttr)(name) ? ' ' + name + '="' + name + '"' : value === '""' ? ' ' + name : ' ' + name + '="' + JSON.parse(value) + '"'
+    };
+  } else {
+    return {
+      type: _codegen.EXPRESSION,
+      value: '_ssrAttr(' + JSON.stringify(name) + ',' + value + ')'
+    };
+  }
+}
+
+function genClassSegments(staticClass, classBinding) {
+  if (staticClass && !classBinding) {
+    return [{ type: _codegen.RAW, value: ' class=' + staticClass }];
+  } else {
+    return [{
+      type: _codegen.EXPRESSION,
+      value: '_ssrClass(' + (staticClass || 'null') + ',' + (classBinding || 'null') + ')'
+    }];
+  }
+}
+
+function genStyleSegments(staticStyle, parsedStaticStyle, styleBinding, vShowExpression) {
+  if (staticStyle && !styleBinding && !vShowExpression) {
+    return [{ type: _codegen.RAW, value: ' style=' + JSON.stringify(staticStyle) }];
+  } else {
+    return [{
+      type: _codegen.EXPRESSION,
+      value: '_ssrStyle(' + (parsedStaticStyle || 'null') + ',' + (styleBinding || 'null') + ', ' + (vShowExpression ? '{ display: (' + vShowExpression + ') ? \'\' : \'none\' }' : 'null') + ')'
+    }];
+  }
+}
+

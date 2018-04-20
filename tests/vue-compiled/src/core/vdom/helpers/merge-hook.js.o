@@ -1,0 +1,50 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.mergeVNodeHook = mergeVNodeHook;
+
+var _vnode = require('../vnode');
+
+var _vnode2 = _interopRequireDefault(_vnode);
+
+var _updateListeners = require('./update-listeners');
+
+var _util = require('shared/util');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function mergeVNodeHook(def, hookKey, hook) {
+  if (def instanceof _vnode2.default) {
+    def = def.data.hook || (def.data.hook = {});
+  }
+  var invoker = void 0;
+  var oldHook = def[hookKey];
+
+  function wrappedHook() {
+    hook.apply(this, arguments);
+    // important: remove merged hook to ensure it's called only once
+    // and prevent memory leak
+    (0, _util.remove)(invoker.fns, wrappedHook);
+  }
+
+  if ((0, _util.isUndef)(oldHook)) {
+    // no existing hook
+    invoker = (0, _updateListeners.createFnInvoker)([wrappedHook]);
+  } else {
+    /* istanbul ignore if */
+    if ((0, _util.isDef)(oldHook.fns) && (0, _util.isTrue)(oldHook.merged)) {
+      // already a merged invoker
+      invoker = oldHook;
+      invoker.fns.push(wrappedHook);
+    } else {
+      // existing plain hook
+      invoker = (0, _updateListeners.createFnInvoker)([oldHook, wrappedHook]);
+    }
+  }
+
+  invoker.merged = true;
+  def[hookKey] = invoker;
+}
+

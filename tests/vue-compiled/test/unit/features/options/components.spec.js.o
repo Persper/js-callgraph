@@ -1,0 +1,103 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _env = require('core/util/env');
+
+var _testObjectOption = require('../../../helpers/test-object-option');
+
+var _testObjectOption2 = _interopRequireDefault(_testObjectOption);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Options components', function () {
+  (0, _testObjectOption2.default)('components');
+
+  it('should accept plain object', function () {
+    var vm = new _vue2.default({
+      template: '<test></test>',
+      components: {
+        test: {
+          template: '<div>hi</div>'
+        }
+      }
+    }).$mount();
+    expect(vm.$el.tagName).toBe('DIV');
+    expect(vm.$el.textContent).toBe('hi');
+  });
+
+  it('should accept extended constructor', function () {
+    var Test = _vue2.default.extend({
+      template: '<div>hi</div>'
+    });
+    var vm = new _vue2.default({
+      template: '<test></test>',
+      components: {
+        test: Test
+      }
+    }).$mount();
+    expect(vm.$el.tagName).toBe('DIV');
+    expect(vm.$el.textContent).toBe('hi');
+  });
+
+  it('should accept camelCase', function () {
+    var myComp = {
+      template: '<div>hi</div>'
+    };
+    var vm = new _vue2.default({
+      template: '<my-comp></my-comp>',
+      components: {
+        myComp: myComp
+      }
+    }).$mount();
+    expect(vm.$el.tagName).toBe('DIV');
+    expect(vm.$el.textContent).toBe('hi');
+  });
+
+  it('should accept PascalCase', function () {
+    var MyComp = {
+      template: '<div>hi</div>'
+    };
+    var vm = new _vue2.default({
+      template: '<my-comp></my-comp>',
+      components: {
+        MyComp: MyComp
+      }
+    }).$mount();
+    expect(vm.$el.tagName).toBe('DIV');
+    expect(vm.$el.textContent).toBe('hi');
+  });
+
+  it('should warn native HTML elements', function () {
+    new _vue2.default({
+      components: {
+        div: { template: '<div></div>' }
+      }
+    });
+    expect('Do not use built-in or reserved HTML elements as component').toHaveBeenWarned();
+  });
+
+  it('should warn built-in elements', function () {
+    new _vue2.default({
+      components: {
+        component: { template: '<div></div>' }
+      }
+    });
+    expect('Do not use built-in or reserved HTML elements as component').toHaveBeenWarned();
+  });
+
+  // the HTMLUnknownElement check doesn't work in Android 4.2
+  // but since it doesn't support custom elements nor will any dev use it
+  // as their primary debugging browser, it doesn't really matter.
+  if (!(_env.UA && /android 4\.2/.test(_env.UA))) {
+    it('warn non-existent', function () {
+      new _vue2.default({
+        template: '<test></test>'
+      }).$mount();
+      expect('Unknown custom element: <test>').toHaveBeenWarned();
+    });
+  }
+});
+

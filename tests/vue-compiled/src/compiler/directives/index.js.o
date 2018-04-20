@@ -1,0 +1,24 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _on = require('./on');
+
+var _on2 = _interopRequireDefault(_on);
+
+var _bind = require('./bind');
+
+var _bind2 = _interopRequireDefault(_bind);
+
+var _util = require('shared/util');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = {
+  on: _on2.default,
+  bind: _bind2.default,
+  cloak: _util.noop
+};
+

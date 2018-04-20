@@ -1,0 +1,35 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Options parent', function () {
+  it('should work', function () {
+    var parent = new _vue2.default({
+      render: function render() {}
+    }).$mount();
+
+    var child = new _vue2.default({
+      parent: parent,
+      render: function render() {}
+    }).$mount();
+
+    // this option is straight-forward
+    // it should register 'parent' as a $parent for 'child'
+    // and push 'child' to $children array on 'parent'
+    expect(child.$options.parent).toBeDefined();
+    expect(child.$options.parent).toEqual(parent);
+    expect(child.$parent).toBeDefined();
+    expect(child.$parent).toEqual(parent);
+    expect(parent.$children).toContain(child);
+
+    // destroy 'child' and check if it was removed from 'parent' $children
+    child.$destroy();
+    expect(parent.$children.length).toEqual(0);
+    parent.$destroy();
+  });
+});
+

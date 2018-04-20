@@ -1,0 +1,438 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _injectStyles2 = require('./inject-styles');
+
+var _injectStyles3 = _interopRequireDefault(_injectStyles2);
+
+var _env = require('core/util/env');
+
+var _transitionUtil = require('web/runtime/transition-util');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+if (!_env.isIE9) {
+  describe('Transition mode', function () {
+    var _injectStyles = (0, _injectStyles3.default)(),
+        duration = _injectStyles.duration,
+        buffer = _injectStyles.buffer;
+
+    var components = {
+      one: { template: '<div>one</div>' },
+      two: { template: '<div>two</div>' }
+    };
+
+    var el = void 0;
+    beforeEach(function () {
+      el = document.createElement('div');
+      document.body.appendChild(el);
+    });
+
+    it('dynamic components, simultaneous', function (done) {
+      var vm = new _vue2.default({
+        template: '<div>\n          <transition>\n            <component :is="view" class="test">\n            </component>\n          </transition>\n        </div>',
+        data: { view: 'one' },
+        components: components
+      }).$mount(el);
+      expect(vm.$el.textContent).toBe('one');
+      vm.view = 'two';
+      waitForUpdate(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test v-leave v-leave-active">one</div>' + '<div class="test v-enter v-enter-active">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test v-leave-active v-leave-to">one</div>' + '<div class="test v-enter-active v-enter-to">two</div>');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>');
+      }).then(done);
+    });
+
+    it('dynamic components, out-in', function (done) {
+      var next = void 0;
+      var vm = new _vue2.default({
+        template: '<div>\n          <transition name="test" mode="out-in" @after-leave="afterLeave">\n            <component :is="view" class="test">\n            </component>\n          </transition>\n        </div>',
+        data: { view: 'one' },
+        components: components,
+        methods: {
+          afterLeave: function afterLeave() {
+            next();
+          }
+        }
+      }).$mount(el);
+      expect(vm.$el.textContent).toBe('one');
+      vm.view = 'two';
+      waitForUpdate(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave test-leave-active">one</div><!---->');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave-active test-leave-to">one</div><!---->');
+      }).thenWaitFor(function (_next) {
+        next = _next;
+      }).then(function () {
+        expect(vm.$el.innerHTML).toBe('<!---->');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-enter test-enter-active">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-enter-active test-enter-to">two</div>');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>');
+      }).then(done);
+    });
+
+    // #3440
+    it('dynamic components, out-in (with extra re-render)', function (done) {
+      var next = void 0;
+      var vm = new _vue2.default({
+        template: '<div>\n          <transition name="test" mode="out-in" @after-leave="afterLeave">\n            <component :is="view" class="test">\n            </component>\n          </transition>\n        </div>',
+        data: { view: 'one' },
+        components: components,
+        methods: {
+          afterLeave: function afterLeave() {
+            next();
+          }
+        }
+      }).$mount(el);
+      expect(vm.$el.textContent).toBe('one');
+      vm.view = 'two';
+      waitForUpdate(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave test-leave-active">one</div><!---->');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave-active test-leave-to">one</div><!---->');
+        // Force re-render before the element finishes leaving
+        // this should not cause the incoming element to enter early
+        vm.$forceUpdate();
+      }).thenWaitFor(function (_next) {
+        next = _next;
+      }).then(function () {
+        expect(vm.$el.innerHTML).toBe('<!---->');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-enter test-enter-active">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-enter-active test-enter-to">two</div>');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>');
+      }).then(done);
+    });
+
+    it('dynamic components, in-out', function (done) {
+      var next = void 0;
+      var vm = new _vue2.default({
+        template: '<div>\n          <transition name="test" mode="in-out" @after-enter="afterEnter">\n            <component :is="view" class="test">\n            </component>\n          </transition>\n        </div>',
+        data: { view: 'one' },
+        components: components,
+        methods: {
+          afterEnter: function afterEnter() {
+            next();
+          }
+        }
+      }).$mount(el);
+      expect(vm.$el.textContent).toBe('one');
+      vm.view = 'two';
+      waitForUpdate(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">one</div>' + '<div class="test test-enter test-enter-active">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">one</div>' + '<div class="test test-enter-active test-enter-to">two</div>');
+      }).thenWaitFor(function (_next) {
+        next = _next;
+      }).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">one</div>' + '<div class="test">two</div>');
+      }).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave test-leave-active">one</div>' + '<div class="test">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave-active test-leave-to">one</div>' + '<div class="test">two</div>');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>');
+      }).then(done);
+    });
+
+    it('dynamic components, in-out with early cancel', function (done) {
+      var next = void 0;
+      var vm = new _vue2.default({
+        template: '<div>\n          <transition name="test" mode="in-out" @after-enter="afterEnter">\n            <component :is="view" class="test"></component>\n          </transition>\n        </div>',
+        data: { view: 'one' },
+        components: components,
+        methods: {
+          afterEnter: function afterEnter() {
+            next();
+          }
+        }
+      }).$mount(el);
+      expect(vm.$el.textContent).toBe('one');
+      vm.view = 'two';
+      waitForUpdate(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">one</div>' + '<div class="test test-enter test-enter-active">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">one</div>' + '<div class="test test-enter-active test-enter-to">two</div>');
+        // switch again before enter finishes,
+        // this cancels both enter and leave.
+        vm.view = 'one';
+      }).then(function () {
+        // 1. the pending leaving "one" should be removed instantly.
+        // 2. the entering "two" should be placed into its final state instantly.
+        // 3. a new "one" is created and entering
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>' + '<div class="test test-enter test-enter-active">one</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>' + '<div class="test test-enter-active test-enter-to">one</div>');
+      }).thenWaitFor(function (_next) {
+        next = _next;
+      }).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>' + '<div class="test">one</div>');
+      }).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave test-leave-active">two</div>' + '<div class="test">one</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave-active test-leave-to">two</div>' + '<div class="test">one</div>');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">one</div>');
+      }).then(done).then(done);
+    });
+
+    it('normal elements with different keys, simultaneous', function (done) {
+      var vm = new _vue2.default({
+        template: '<div>\n          <transition>\n            <div :key="view" class="test">{{view}}</div>\n          </transition>\n        </div>',
+        data: { view: 'one' },
+        components: components
+      }).$mount(el);
+      expect(vm.$el.textContent).toBe('one');
+      vm.view = 'two';
+      waitForUpdate(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test v-leave v-leave-active">one</div>' + '<div class="test v-enter v-enter-active">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test v-leave-active v-leave-to">one</div>' + '<div class="test v-enter-active v-enter-to">two</div>');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>');
+      }).then(done);
+    });
+
+    it('normal elements with different keys, out-in', function (done) {
+      var next = void 0;
+      var vm = new _vue2.default({
+        template: '<div>\n          <transition name="test" mode="out-in" @after-leave="afterLeave">\n            <div :key="view" class="test">{{view}}</div>\n          </transition>\n        </div>',
+        data: { view: 'one' },
+        components: components,
+        methods: {
+          afterLeave: function afterLeave() {
+            next();
+          }
+        }
+      }).$mount(el);
+      expect(vm.$el.textContent).toBe('one');
+      vm.view = 'two';
+      waitForUpdate(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave test-leave-active">one</div><!---->');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave-active test-leave-to">one</div><!---->');
+      }).thenWaitFor(function (_next) {
+        next = _next;
+      }).then(function () {
+        expect(vm.$el.innerHTML).toBe('<!---->');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-enter test-enter-active">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-enter-active test-enter-to">two</div>');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>');
+      }).then(done);
+    });
+
+    it('normal elements with different keys, in-out', function (done) {
+      var next = void 0;
+      var vm = new _vue2.default({
+        template: '<div>\n          <transition name="test" mode="in-out" @after-enter="afterEnter">\n            <div :key="view" class="test">{{view}}</div>\n          </transition>\n        </div>',
+        data: { view: 'one' },
+        components: components,
+        methods: {
+          afterEnter: function afterEnter() {
+            next();
+          }
+        }
+      }).$mount(el);
+      expect(vm.$el.textContent).toBe('one');
+      vm.view = 'two';
+      waitForUpdate(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">one</div>' + '<div class="test test-enter test-enter-active">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">one</div>' + '<div class="test test-enter-active test-enter-to">two</div>');
+      }).thenWaitFor(function (_next) {
+        next = _next;
+      }).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">one</div>' + '<div class="test">two</div>');
+      }).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave test-leave-active">one</div>' + '<div class="test">two</div>');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test test-leave-active test-leave-to">one</div>' + '<div class="test">two</div>');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.innerHTML).toBe('<div class="test">two</div>');
+      }).then(done);
+    });
+
+    it('transition out-in on async component (resolve before leave complete)', function (done) {
+      var vm = new _vue2.default({
+        template: '\n          <div>\n            <transition name="test-anim" mode="out-in">\n              <component-a v-if="ok"></component-a>\n              <component-b v-else></component-b>\n            </transition>\n          </div>\n        ',
+        components: {
+          componentA: function componentA(resolve) {
+            setTimeout(function () {
+              resolve({ template: '<div><h1>component A</h1></div>' });
+              next1();
+            }, duration / 2);
+          },
+          componentB: function componentB(resolve) {
+            setTimeout(function () {
+              resolve({ template: '<div><h1>component B</h1></div>' });
+            }, duration / 2);
+          }
+        },
+        data: {
+          ok: true
+        }
+      }).$mount(el);
+
+      expect(vm.$el.innerHTML).toBe('<!---->');
+
+      function next1() {
+        _vue2.default.nextTick(function () {
+          expect(vm.$el.children.length).toBe(1);
+          expect(vm.$el.textContent).toBe('component A');
+          expect(vm.$el.children[0].className).toBe('test-anim-enter test-anim-enter-active');
+          (0, _transitionUtil.nextFrame)(function () {
+            expect(vm.$el.children[0].className).toBe('test-anim-enter-active test-anim-enter-to');
+            setTimeout(function () {
+              expect(vm.$el.children[0].className).toBe('');
+              vm.ok = false;
+              next2();
+            }, duration + buffer);
+          });
+        });
+      }
+
+      function next2() {
+        waitForUpdate(function () {
+          expect(vm.$el.children.length).toBe(1);
+          expect(vm.$el.textContent).toBe('component A');
+          expect(vm.$el.children[0].className).toBe('test-anim-leave test-anim-leave-active');
+        }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+          expect(vm.$el.children[0].className).toBe('test-anim-leave-active test-anim-leave-to');
+        }).thenWaitFor(duration + buffer).then(function () {
+          expect(vm.$el.children.length).toBe(1);
+          expect(vm.$el.textContent).toBe('component B');
+          expect(vm.$el.children[0].className).toMatch('test-anim-enter-active');
+        }).thenWaitFor(duration * 2).then(function () {
+          expect(vm.$el.children[0].className).toBe('');
+        }).then(done);
+      }
+    });
+
+    it('transition out-in on async component (resolve after leave complete)', function (done) {
+      var vm = new _vue2.default({
+        template: '\n          <div>\n            <transition name="test-anim" mode="out-in">\n              <component-a v-if="ok"></component-a>\n              <component-b v-else></component-b>\n            </transition>\n          </div>\n        ',
+        components: {
+          componentA: { template: '<div><h1>component A</h1></div>' },
+          componentB: function componentB(resolve) {
+            setTimeout(function () {
+              resolve({ template: '<div><h1>component B</h1></div>' });
+              _vue2.default.nextTick(next);
+            }, (duration + buffer) * 1.5);
+          }
+        },
+        data: {
+          ok: true
+        }
+      }).$mount(el);
+
+      expect(vm.$el.innerHTML).toBe('<div><h1>component A</h1></div>');
+
+      var next = void 0;
+
+      vm.ok = false;
+      waitForUpdate(function () {
+        expect(vm.$el.children.length).toBe(1);
+        expect(vm.$el.textContent).toBe('component A');
+        expect(vm.$el.children[0].className).toBe('test-anim-leave test-anim-leave-active');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.children[0].className).toBe('test-anim-leave-active test-anim-leave-to');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.children.length).toBe(0);
+        expect(vm.$el.innerHTML).toBe('<!---->');
+      }).thenWaitFor(function (_next) {
+        next = _next;
+      }).then(function () {
+        expect(vm.$el.children.length).toBe(1);
+        expect(vm.$el.textContent).toBe('component B');
+        expect(vm.$el.children[0].className).toBe('test-anim-enter test-anim-enter-active');
+      }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+        expect(vm.$el.children[0].className).toBe('test-anim-enter-active test-anim-enter-to');
+      }).thenWaitFor(duration + buffer).then(function () {
+        expect(vm.$el.children.length).toBe(1);
+        expect(vm.$el.textContent).toBe('component B');
+        expect(vm.$el.children[0].className).toBe('');
+      }).then(done);
+    });
+
+    it('transition in-out on async component', function (done) {
+      var vm = new _vue2.default({
+        template: '\n          <div>\n            <transition name="test-anim" mode="in-out">\n              <component-a v-if="ok"></component-a>\n              <component-b v-else></component-b>\n            </transition>\n          </div>\n        ',
+        components: {
+          componentA: function componentA(resolve) {
+            setTimeout(function () {
+              resolve({ template: '<div><h1>component A</h1></div>' });
+              next1();
+            }, duration / 2);
+          },
+          componentB: function componentB(resolve) {
+            setTimeout(function () {
+              resolve({ template: '<div><h1>component B</h1></div>' });
+              next2();
+            }, duration / 2);
+          }
+        },
+        data: {
+          ok: true
+        }
+      }).$mount(el);
+
+      expect(vm.$el.innerHTML).toBe('<!---->');
+
+      function next1() {
+        _vue2.default.nextTick(function () {
+          expect(vm.$el.children.length).toBe(1);
+          expect(vm.$el.textContent).toBe('component A');
+          expect(vm.$el.children[0].className).toBe('test-anim-enter test-anim-enter-active');
+          (0, _transitionUtil.nextFrame)(function () {
+            expect(vm.$el.children[0].className).toBe('test-anim-enter-active test-anim-enter-to');
+            setTimeout(function () {
+              expect(vm.$el.children[0].className).toBe('');
+              vm.ok = false;
+            }, duration + buffer);
+          });
+        });
+      }
+
+      function next2() {
+        waitForUpdate(function () {
+          expect(vm.$el.children.length).toBe(2);
+          expect(vm.$el.textContent).toBe('component Acomponent B');
+          expect(vm.$el.children[0].className).toBe('');
+          expect(vm.$el.children[1].className).toBe('test-anim-enter test-anim-enter-active');
+        }).thenWaitFor(_transitionUtil.nextFrame).then(function () {
+          expect(vm.$el.children[1].className).toBe('test-anim-enter-active test-anim-enter-to');
+        }).thenWaitFor(duration + buffer).then(function () {
+          expect(vm.$el.children.length).toBe(2);
+          expect(vm.$el.textContent).toBe('component Acomponent B');
+          expect(vm.$el.children[0].className).toMatch('test-anim-leave-active');
+          expect(vm.$el.children[1].className).toBe('');
+        }).thenWaitFor(duration + buffer).then(function () {
+          expect(vm.$el.children.length).toBe(1);
+          expect(vm.$el.textContent).toBe('component B');
+          expect(vm.$el.children[0].className).toBe('');
+        }).then(done);
+      }
+    });
+
+    it('warn invalid mode', function () {
+      new _vue2.default({
+        template: '<transition mode="foo"><div>123</div></transition>'
+      }).$mount();
+      expect('invalid <transition> mode: foo').toHaveBeenWarned();
+    });
+  });
+}
+

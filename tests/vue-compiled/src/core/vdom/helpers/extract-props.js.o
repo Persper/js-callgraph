@@ -1,0 +1,55 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.extractPropsFromVNodeData = extractPropsFromVNodeData;
+
+var _index = require('core/util/index');
+
+function extractPropsFromVNodeData(data, Ctor, tag) {
+  // we are only extracting raw values here.
+  // validation and default values are handled in the child
+  // component itself.
+  var propOptions = Ctor.options.props;
+  if ((0, _index.isUndef)(propOptions)) {
+    return;
+  }
+  var res = {};
+  var attrs = data.attrs,
+      props = data.props;
+
+  if ((0, _index.isDef)(attrs) || (0, _index.isDef)(props)) {
+    for (var key in propOptions) {
+      var altKey = (0, _index.hyphenate)(key);
+      if (process.env.NODE_ENV !== 'production') {
+        var keyInLowerCase = key.toLowerCase();
+        if (key !== keyInLowerCase && attrs && (0, _index.hasOwn)(attrs, keyInLowerCase)) {
+          (0, _index.tip)('Prop "' + keyInLowerCase + '" is passed to component ' + ((0, _index.formatComponentName)(tag || Ctor) + ', but the declared prop name is') + (' "' + key + '". ') + 'Note that HTML attributes are case-insensitive and camelCased ' + 'props need to use their kebab-case equivalents when using in-DOM ' + ('templates. You should probably use "' + altKey + '" instead of "' + key + '".'));
+        }
+      }
+      checkProp(res, props, key, altKey, true) || checkProp(res, attrs, key, altKey, false);
+    }
+  }
+  return res;
+}
+
+function checkProp(res, hash, key, altKey, preserve) {
+  if ((0, _index.isDef)(hash)) {
+    if ((0, _index.hasOwn)(hash, key)) {
+      res[key] = hash[key];
+      if (!preserve) {
+        delete hash[key];
+      }
+      return true;
+    } else if ((0, _index.hasOwn)(hash, altKey)) {
+      res[key] = hash[altKey];
+      if (!preserve) {
+        delete hash[altKey];
+      }
+      return true;
+    }
+  }
+  return false;
+}
+

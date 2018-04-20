@@ -1,0 +1,393 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _es6Promise = require('es6-promise');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Component async', function () {
+  it('normal', function (done) {
+    var vm = new _vue2.default({
+      template: '<div><test></test></div>',
+      components: {
+        test: function test(resolve) {
+          setTimeout(function () {
+            resolve({
+              template: '<div>hi</div>'
+            });
+            // wait for parent update
+            _vue2.default.nextTick(next);
+          }, 0);
+        }
+      }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<!---->');
+    expect(vm.$children.length).toBe(0);
+    function next() {
+      expect(vm.$el.innerHTML).toBe('<div>hi</div>');
+      expect(vm.$children.length).toBe(1);
+      done();
+    }
+  });
+
+  it('resolve ES module default', function (done) {
+    var vm = new _vue2.default({
+      template: '<div><test></test></div>',
+      components: {
+        test: function test(resolve) {
+          setTimeout(function () {
+            resolve({
+              __esModule: true,
+              default: {
+                template: '<div>hi</div>'
+              }
+            });
+            // wait for parent update
+            _vue2.default.nextTick(next);
+          }, 0);
+        }
+      }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<!---->');
+    expect(vm.$children.length).toBe(0);
+    function next() {
+      expect(vm.$el.innerHTML).toBe('<div>hi</div>');
+      expect(vm.$children.length).toBe(1);
+      done();
+    }
+  });
+
+  it('as root', function (done) {
+    var vm = new _vue2.default({
+      template: '<test></test>',
+      components: {
+        test: function test(resolve) {
+          setTimeout(function () {
+            resolve({
+              template: '<div>hi</div>'
+            });
+            // wait for parent update
+            _vue2.default.nextTick(next);
+          }, 0);
+        }
+      }
+    }).$mount();
+    expect(vm.$el.nodeType).toBe(8);
+    expect(vm.$children.length).toBe(0);
+    function next() {
+      expect(vm.$el.nodeType).toBe(1);
+      expect(vm.$el.outerHTML).toBe('<div>hi</div>');
+      expect(vm.$children.length).toBe(1);
+      done();
+    }
+  });
+
+  it('dynamic', function (done) {
+    var vm = new _vue2.default({
+      template: '<component :is="view"></component>',
+      data: {
+        view: 'view-a'
+      },
+      components: {
+        'view-a': function viewA(resolve) {
+          setTimeout(function () {
+            resolve({
+              template: '<div>A</div>'
+            });
+            _vue2.default.nextTick(step1);
+          }, 0);
+        },
+        'view-b': function viewB(resolve) {
+          setTimeout(function () {
+            resolve({
+              template: '<p>B</p>'
+            });
+            _vue2.default.nextTick(step2);
+          }, 0);
+        }
+      }
+    }).$mount();
+    var aCalled = false;
+    function step1() {
+      // ensure A is resolved only once
+      expect(aCalled).toBe(false);
+      aCalled = true;
+      expect(vm.$el.tagName).toBe('DIV');
+      expect(vm.$el.textContent).toBe('A');
+      vm.view = 'view-b';
+    }
+    function step2() {
+      expect(vm.$el.tagName).toBe('P');
+      expect(vm.$el.textContent).toBe('B');
+      vm.view = 'view-a';
+      waitForUpdate(function () {
+        expect(vm.$el.tagName).toBe('DIV');
+        expect(vm.$el.textContent).toBe('A');
+      }).then(done);
+    }
+  });
+
+  it('warn reject', function () {
+    new _vue2.default({
+      template: '<test></test>',
+      components: {
+        test: function test(resolve, reject) {
+          reject('nooooo');
+        }
+      }
+    }).$mount();
+    expect('Reason: nooooo').toHaveBeenWarned();
+  });
+
+  it('with v-for', function (done) {
+    var vm = new _vue2.default({
+      template: '<div><test v-for="n in list" :key="n" :n="n"></test></div>',
+      data: {
+        list: [1, 2, 3]
+      },
+      components: {
+        test: function test(resolve) {
+          setTimeout(function () {
+            resolve({
+              props: ['n'],
+              template: '<div>{{n}}</div>'
+            });
+            _vue2.default.nextTick(next);
+          }, 0);
+        }
+      }
+    }).$mount();
+    function next() {
+      expect(vm.$el.innerHTML).toBe('<div>1</div><div>2</div><div>3</div>');
+      done();
+    }
+  });
+
+  it('returning Promise', function (done) {
+    var vm = new _vue2.default({
+      template: '<div><test></test></div>',
+      components: {
+        test: function test() {
+          return new _es6Promise.Promise(function (resolve) {
+            setTimeout(function () {
+              resolve({
+                template: '<div>hi</div>'
+              });
+              // wait for promise resolve and then parent update
+              _es6Promise.Promise.resolve().then(function () {
+                _vue2.default.nextTick(next);
+              });
+            }, 0);
+          });
+        }
+      }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<!---->');
+    expect(vm.$children.length).toBe(0);
+    function next() {
+      expect(vm.$el.innerHTML).toBe('<div>hi</div>');
+      expect(vm.$children.length).toBe(1);
+      done();
+    }
+  });
+
+  describe('loading/error/timeout', function () {
+    it('with loading component', function (done) {
+      var vm = new _vue2.default({
+        template: '<div><test/></div>',
+        components: {
+          test: function test() {
+            return {
+              component: new _es6Promise.Promise(function (resolve) {
+                setTimeout(function () {
+                  resolve({ template: '<div>hi</div>' });
+                  // wait for promise resolve and then parent update
+                  _es6Promise.Promise.resolve().then(function () {
+                    _vue2.default.nextTick(next);
+                  });
+                }, 50);
+              }),
+              loading: { template: '<div>loading</div>' },
+              delay: 1
+            };
+          }
+        }
+      }).$mount();
+
+      expect(vm.$el.innerHTML).toBe('<!---->');
+
+      var loadingAsserted = false;
+      setTimeout(function () {
+        _vue2.default.nextTick(function () {
+          loadingAsserted = true;
+          expect(vm.$el.textContent).toBe('loading');
+        });
+      }, 1);
+
+      function next() {
+        expect(loadingAsserted).toBe(true);
+        expect(vm.$el.textContent).toBe('hi');
+        done();
+      }
+    });
+
+    it('with loading component (0 delay)', function (done) {
+      var vm = new _vue2.default({
+        template: '<div><test/></div>',
+        components: {
+          test: function test() {
+            return {
+              component: new _es6Promise.Promise(function (resolve) {
+                setTimeout(function () {
+                  resolve({ template: '<div>hi</div>' });
+                  // wait for promise resolve and then parent update
+                  _es6Promise.Promise.resolve().then(function () {
+                    _vue2.default.nextTick(next);
+                  });
+                }, 50);
+              }),
+              loading: { template: '<div>loading</div>' },
+              delay: 0
+            };
+          }
+        }
+      }).$mount();
+
+      expect(vm.$el.textContent).toBe('loading');
+
+      function next() {
+        expect(vm.$el.textContent).toBe('hi');
+        done();
+      }
+    });
+
+    it('with error component', function (done) {
+      var vm = new _vue2.default({
+        template: '<div><test/></div>',
+        components: {
+          test: function test() {
+            return {
+              component: new _es6Promise.Promise(function (resolve, reject) {
+                setTimeout(function () {
+                  reject();
+                  // wait for promise resolve and then parent update
+                  _es6Promise.Promise.resolve().then(function () {
+                    _vue2.default.nextTick(next);
+                  });
+                }, 50);
+              }),
+              loading: { template: '<div>loading</div>' },
+              error: { template: '<div>error</div>' },
+              delay: 0
+            };
+          }
+        }
+      }).$mount();
+
+      expect(vm.$el.textContent).toBe('loading');
+
+      function next() {
+        expect('Failed to resolve async component').toHaveBeenWarned();
+        expect(vm.$el.textContent).toBe('error');
+        done();
+      }
+    });
+
+    it('with error component + timeout', function (done) {
+      var vm = new _vue2.default({
+        template: '<div><test/></div>',
+        components: {
+          test: function test() {
+            return {
+              component: new _es6Promise.Promise(function (resolve, reject) {
+                setTimeout(function () {
+                  resolve({ template: '<div>hi</div>' });
+                  // wait for promise resolve and then parent update
+                  _es6Promise.Promise.resolve().then(function () {
+                    _vue2.default.nextTick(next);
+                  });
+                }, 50);
+              }),
+              loading: { template: '<div>loading</div>' },
+              error: { template: '<div>error</div>' },
+              delay: 0,
+              timeout: 1
+            };
+          }
+        }
+      }).$mount();
+
+      expect(vm.$el.textContent).toBe('loading');
+
+      setTimeout(function () {
+        _vue2.default.nextTick(function () {
+          expect('Failed to resolve async component').toHaveBeenWarned();
+          expect(vm.$el.textContent).toBe('error');
+        });
+      }, 1);
+
+      function next() {
+        expect(vm.$el.textContent).toBe('error'); // late resolve ignored
+        done();
+      }
+    });
+
+    it('should not trigger timeout if resolved', function (done) {
+      var vm = new _vue2.default({
+        template: '<div><test/></div>',
+        components: {
+          test: function test() {
+            return {
+              component: new _es6Promise.Promise(function (resolve, reject) {
+                setTimeout(function () {
+                  resolve({ template: '<div>hi</div>' });
+                }, 10);
+              }),
+              error: { template: '<div>error</div>' },
+              timeout: 20
+            };
+          }
+        }
+      }).$mount();
+
+      setTimeout(function () {
+        expect(vm.$el.textContent).toBe('hi');
+        expect('Failed to resolve async component').not.toHaveBeenWarned();
+        done();
+      }, 50);
+    });
+
+    // #7107
+    it('should work when resolving sync in sibling component\'s mounted hook', function (done) {
+      var resolveTwo = void 0;
+
+      var vm = new _vue2.default({
+        template: '<div><one/> <two/></div>',
+        components: {
+          one: {
+            template: '<div>one</div>',
+            mounted: function mounted() {
+              resolveTwo();
+            }
+          },
+          two: function two(resolve) {
+            resolveTwo = function resolveTwo() {
+              resolve({
+                template: '<div>two</div>'
+              });
+            };
+          }
+        }
+      }).$mount();
+
+      expect(vm.$el.textContent).toBe('one ');
+      waitForUpdate(function () {
+        expect(vm.$el.textContent).toBe('one two');
+      }).then(done);
+    });
+  });
+});
+
