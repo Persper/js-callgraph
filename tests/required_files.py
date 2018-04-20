@@ -19,7 +19,6 @@ def collect_requires(path):
 
     while unread_files:
         uf = unread_files.pop(0)
-        print(uf)
 
         if uf in read_files:
             continue
