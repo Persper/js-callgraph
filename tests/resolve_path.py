@@ -1,6 +1,6 @@
 from pathlib import Path
 
-root = Path('../../vue-compiled/src/').resolve()
+root = Path('./vue-compiled/src/').resolve()
 
 def resolve_path(path, current_loc):
     path = Path(path)
