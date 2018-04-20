@@ -1,0 +1,13 @@
+The steps to making the vue-compiled directory were:
+
+1. copy the entire vue directory to a fold called vue-compiled
+2. Run this script in the directory above it
+
+	for f in $(find ./vue-compiled -name '*.js'); 
+	do 
+	  $(babel --presets flow $f > $f.o)
+	  echo $f
+
+	done
+
+This traverses the directories and runs babel on each of the files and saves their compiled output to a .js.o file with the same name and location.
