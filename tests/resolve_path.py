@@ -1,6 +1,6 @@
 from pathlib import Path
 
-root = Path('./vue-compiled/src/')
+root = Path('../../vue-compiled/src/').resolve()
 
 def resolve_path(path, current_loc):
     path = Path(path)
@@ -12,6 +12,6 @@ def resolve_path(path, current_loc):
 
     elif top in ['web', 'weex']:
         return root.joinpath('platforms').joinpath(path)
-    
+
     else:
         return current_loc.joinpath(path)
