@@ -1,47 +1,31 @@
 Template:
 <filename>:<function_name | undefined>:<line_number> -> <filename>:<function_name | undefined>:<line_number>
 
-File: src/core/vdom/create-component.js
+The general format of a line follows the above syntax.
+An example input and output might be:
 
-create-component.js:defineProperty:3 -> Native
-create-component.js:require:9 -> Native
-create-component.js:_interopRequireDefault:11 -> create-component.js:_interopRequireDefault:27
-create-component.js:require:13 -> Native
-create-component.js:require:15 -> Native
-create-component.js:require:17 -> Native
-create-component.js:require:19 -> Native
-create-component.js:require:21 -> Native
-create-component.js:require:23 -> Native
-create-component.js:require:25 -> Native
-create-component.js:init:29 -> create-component.js:init:33
-create-component.js:prepatch:37 -> create-component.js:prepatch:43
-create-component.js:createComponentInstanceForVnode -> create-component.js:createComponentIntanceForVnode:178
-create-component.js:$mount -> 
-create-component.js:updateChildComponent:46 -> lifecycle.js:updateChildComponent:218
-create-component.js:callHook:58 -> lifecycle.js:callHook:319
-create-component.js:queueActivatedComponent:67 -> scheduler.js:queueActivatedComponent:114
-create-component.js:activateChildComponent:69 -> lifecycle.js:activateChildComponent:285
-create-component.js:$destroy:78 -> lifecycle.js:(undefined):113
-create-component.js:deactivateChildComponent:80 -> lifecycle.js:deactivateChildComponent:303
-create-component.js:keys:86 -> Native
-create-component.js:extend:97 -> 
-create-component.js:warn:104 -> debug.js:warn:30
-create-component.js:String:104 -> Native
-create-component.js:isUndef:111 -> util.js:isUndef:37
-create-component.js:resolveAsyncComponent:113 -> resolve-async-component.js:resolveAsyncComponent:27
-create-component.js:createAsyncPlaceholder:118 -> resolve-async-component.js:createAsyncPlaceholder:20
-create-component.js:resolveConstructorOptions:126 -> init.js:resolveConstructorOptions:111
-create-component.js:isDef:129 -> util.js:isDef:41
-create-component.js:transformModel:130 -> create-component.js:transformModel:206
-create-component.js:extractPropsFromVNodeData:134 -> extract-props.js:extractPropsFromVNodeData:10
-create-component.js:isTrue:137 -> util.js:isTrue:45
-create-component.js:createFunctionalComponent:138 -> create-functional-component.js:createFunctionalComponent:81
-create-component.js:isTrue:148 -> util.js:isTrue:45
-create-component.js:installComponentHooks:161 -> create-component.js:installComponentHooks:196
-create-component.js:default:165 -> vnode.js:VNode:23
-create-component.js:isRecyclableComponent:171 -> render-component-template.js:isRecyclableComponent:19
-create-component.js:renderRecyclableComponentTemplate:172 -> render-component-template.js:renderRecyclableComponentTemplate:23
-create-component.js:isDef:189 -> util.js:isDef:41
-create-component.js:Ctor:193 -> 
-create-component.js:isDef:210 -> util.js:isDef:41
-create-component.js:concat:211 -> Native
+INPUT (from create-component.js.o):
+
+componentVNodeHooks.init();
+
+// inline hooks to be invoked on component VNodes during patch
+var componentVNodeHooks = {
+  init: function init(vnode, hydrating, parentElm, refElm) {
+    if (vnode.componentInstance && !vnode.componentInstance._isDestroyed && vnode.data.keepAlive) {
+      // kept-alive components, treat as a patch
+      var mountedNode = vnode; // work around flow
+      componentVNodeHooks.prepatch(mountedNode, mountedNode);
+    } else {
+      ...
+
+OUTPUT:
+create-component.js.o:undefined:29 -> create-component.js.o:init:33
+create-component.js.o:init:37 -> create-component.js.o:prepatch:43
+create-component.js.o:init:39 -> create-component.js.o:createComponentIntanceForVnode:178
+
+
+If you are unsure where the function being call is defined, you can add and arrow without
+a right side like so:
+create-component.js.o:init:40 ->
+
+These will be filtered along with native functions in the final calculation
