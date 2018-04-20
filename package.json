@@ -6,7 +6,9 @@
   "dependencies": {
     "amdefine": "^1.0.1",
     "argparse": "^1.0.10",
+    "body-parser": "^1.18.2",
     "esprima": "^4.0.0",
+    "express": "^4.16.3",
     "npm": "^5.7.1",
     "sloc": "^0.2.0"
   },
