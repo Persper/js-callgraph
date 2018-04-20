@@ -1,0 +1,273 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Options lifecycle hooks', function () {
+  var spy = void 0;
+  beforeEach(function () {
+    spy = jasmine.createSpy('hook');
+  });
+
+  describe('beforeCreate', function () {
+    it('should allow modifying options', function () {
+      var vm = new _vue2.default({
+        data: {
+          a: 1
+        },
+        beforeCreate: function beforeCreate() {
+          spy();
+          expect(this.a).toBeUndefined();
+          this.$options.computed = {
+            b: function b() {
+              return this.a + 1;
+            }
+          };
+        }
+      });
+      expect(spy).toHaveBeenCalled();
+      expect(vm.b).toBe(2);
+    });
+  });
+
+  describe('created', function () {
+    it('should have completed observation', function () {
+      new _vue2.default({
+        data: {
+          a: 1
+        },
+        created: function created() {
+          expect(this.a).toBe(1);
+          spy();
+        }
+      });
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  describe('beforeMount', function () {
+    it('should not have mounted', function () {
+      var vm = new _vue2.default({
+        render: function render() {},
+        beforeMount: function beforeMount() {
+          spy();
+          expect(this._isMounted).toBe(false);
+          expect(this.$el).toBeUndefined(); // due to empty mount
+          expect(this._vnode).toBeNull();
+          expect(this._watcher).toBeNull();
+        }
+      });
+      expect(spy).not.toHaveBeenCalled();
+      vm.$mount();
+      expect(spy).toHaveBeenCalled();
+    });
+  });
+
+  describe('mounted', function () {
+    it('should have mounted', function () {
+      var vm = new _vue2.default({
+        template: '<div></div>',
+        mounted: function mounted() {
+          spy();
+          expect(this._isMounted).toBe(true);
+          expect(this.$el.tagName).toBe('DIV');
+          expect(this._vnode.tag).toBe('div');
+        }
+      });
+      expect(spy).not.toHaveBeenCalled();
+      vm.$mount();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    // #3898
+    it('should call for manually mounted instance with parent', function () {
+      var parent = new _vue2.default();
+      expect(spy).not.toHaveBeenCalled();
+      new _vue2.default({
+        parent: parent,
+        template: '<div></div>',
+        mounted: function mounted() {
+          spy();
+        }
+      }).$mount();
+      expect(spy).toHaveBeenCalled();
+    });
+
+    it('should mount child parent in correct order', function () {
+      var calls = [];
+      new _vue2.default({
+        template: '<div><test></test></div>',
+        mounted: function mounted() {
+          calls.push('parent');
+        },
+
+        components: {
+          test: {
+            template: '<nested></nested>',
+            mounted: function mounted() {
+              expect(this.$el.parentNode).toBeTruthy();
+              calls.push('child');
+            },
+
+            components: {
+              nested: {
+                template: '<div></div>',
+                mounted: function mounted() {
+                  expect(this.$el.parentNode).toBeTruthy();
+                  calls.push('nested');
+                }
+              }
+            }
+          }
+        }
+      }).$mount();
+      expect(calls).toEqual(['nested', 'child', 'parent']);
+    });
+  });
+
+  describe('beforeUpdate', function () {
+    it('should be called before update', function (done) {
+      var vm = new _vue2.default({
+        template: '<div>{{ msg }}</div>',
+        data: { msg: 'foo' },
+        beforeUpdate: function beforeUpdate() {
+          spy();
+          expect(this.$el.textContent).toBe('foo');
+        }
+      }).$mount();
+      expect(spy).not.toHaveBeenCalled();
+      vm.msg = 'bar';
+      expect(spy).not.toHaveBeenCalled(); // should be async
+      waitForUpdate(function () {
+        expect(spy).toHaveBeenCalled();
+      }).then(done);
+    });
+
+    it('should be called before render and allow mutating state', function (done) {
+      var vm = new _vue2.default({
+        template: '<div>{{ msg }}</div>',
+        data: { msg: 'foo' },
+        beforeUpdate: function beforeUpdate() {
+          this.msg += '!';
+        }
+      }).$mount();
+      expect(vm.$el.textContent).toBe('foo');
+      vm.msg = 'bar';
+      waitForUpdate(function () {
+        expect(vm.$el.textContent).toBe('bar!');
+      }).then(done);
+    });
+  });
+
+  describe('updated', function () {
+    it('should be called after update', function (done) {
+      var vm = new _vue2.default({
+        template: '<div>{{ msg }}</div>',
+        data: { msg: 'foo' },
+        updated: function updated() {
+          spy();
+          expect(this.$el.textContent).toBe('bar');
+        }
+      }).$mount();
+      expect(spy).not.toHaveBeenCalled();
+      vm.msg = 'bar';
+      expect(spy).not.toHaveBeenCalled(); // should be async
+      waitForUpdate(function () {
+        expect(spy).toHaveBeenCalled();
+      }).then(done);
+    });
+
+    it('should be called after children are updated', function (done) {
+      var calls = [];
+      var vm = new _vue2.default({
+        template: '<div><test ref="child">{{ msg }}</test></div>',
+        data: { msg: 'foo' },
+        components: {
+          test: {
+            template: '<div><slot></slot></div>',
+            updated: function updated() {
+              expect(this.$el.textContent).toBe('bar');
+              calls.push('child');
+            }
+          }
+        },
+        updated: function updated() {
+          expect(this.$el.textContent).toBe('bar');
+          calls.push('parent');
+        }
+      }).$mount();
+
+      expect(calls).toEqual([]);
+      vm.msg = 'bar';
+      expect(calls).toEqual([]);
+      waitForUpdate(function () {
+        expect(calls).toEqual(['child', 'parent']);
+      }).then(done);
+    });
+  });
+
+  describe('beforeDestroy', function () {
+    it('should be called before destroy', function () {
+      var vm = new _vue2.default({
+        render: function render() {},
+        beforeDestroy: function beforeDestroy() {
+          spy();
+          expect(this._isBeingDestroyed).toBe(false);
+          expect(this._isDestroyed).toBe(false);
+        }
+      }).$mount();
+      expect(spy).not.toHaveBeenCalled();
+      vm.$destroy();
+      vm.$destroy();
+      expect(spy).toHaveBeenCalled();
+      expect(spy.calls.count()).toBe(1);
+    });
+  });
+
+  describe('destroyed', function () {
+    it('should be called after destroy', function () {
+      var vm = new _vue2.default({
+        render: function render() {},
+        destroyed: function destroyed() {
+          spy();
+          expect(this._isBeingDestroyed).toBe(true);
+          expect(this._isDestroyed).toBe(true);
+        }
+      }).$mount();
+      expect(spy).not.toHaveBeenCalled();
+      vm.$destroy();
+      vm.$destroy();
+      expect(spy).toHaveBeenCalled();
+      expect(spy.calls.count()).toBe(1);
+    });
+  });
+
+  it('should emit hook events', function () {
+    var created = jasmine.createSpy();
+    var mounted = jasmine.createSpy();
+    var destroyed = jasmine.createSpy();
+    var vm = new _vue2.default({
+      render: function render() {},
+      beforeCreate: function beforeCreate() {
+        this.$on('hook:created', created);
+        this.$on('hook:mounted', mounted);
+        this.$on('hook:destroyed', destroyed);
+      }
+    });
+
+    expect(created).toHaveBeenCalled();
+    expect(mounted).not.toHaveBeenCalled();
+    expect(destroyed).not.toHaveBeenCalled();
+
+    vm.$mount();
+    expect(mounted).toHaveBeenCalled();
+    expect(destroyed).not.toHaveBeenCalled();
+
+    vm.$destroy();
+    expect(destroyed).toHaveBeenCalled();
+  });
+});
+

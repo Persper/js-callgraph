@@ -1,0 +1,123 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Delimiters', function () {
+  it('default delimiters should work', function () {
+    var vm = new _vue2.default({
+      data: {
+        a: 1
+      },
+      template: '<div>{{ a }}</div>'
+    }).$mount();
+    expect(vm.$el.textContent).toEqual('1');
+  });
+
+  it('custom delimiters should work', function () {
+    var vm = new _vue2.default({
+      delimiters: ['[[', ']]'],
+      template: '<div>[[ a ]]</div>',
+      data: {
+        a: 1
+      }
+    }).$mount();
+
+    expect(vm.$el.textContent).toEqual('1');
+  });
+
+  it('default delimiters should be ignored when custom delimiters defined', function () {
+    var vm = new _vue2.default({
+      delimiters: ['[[', ']]'],
+      template: '<div>{{ a }}</div>',
+      data: {
+        a: 1
+      }
+    }).$mount();
+
+    expect(vm.$el.textContent).toEqual('{{ a }}');
+  });
+
+  it('delimiters should only affect vm', function () {
+    var Component = _vue2.default.extend({
+      data: function data() {
+        return {
+          b: 2
+        };
+      },
+      template: '<span>[[ b ]]</span>'
+    });
+
+    var vm = new _vue2.default({
+      delimiters: ['[[', ']]'],
+      template: '<div>[[ a ]] - <test-component></test-component></div>',
+      data: {
+        a: 2
+      },
+      components: {
+        'test-component': Component
+      }
+    }).$mount();
+
+    expect(vm.$el.textContent).toEqual('2 - [[ b ]]');
+  });
+
+  it('delimiters defined globally should work on all vms', function () {
+    _vue2.default.options.delimiters = ['[[', ']]'];
+
+    var Component = _vue2.default.extend({
+      template: '<span>[[ a ]]</span>',
+      data: function data() {
+        return {
+          a: 2
+        };
+      }
+    });
+
+    var vm = new _vue2.default({
+      data: {
+        b: 1
+      },
+      template: '<div>[[ b ]] - <test-component></test-component></div>',
+      components: {
+        'test-component': Component
+      }
+    }).$mount();
+
+    expect(vm.$el.textContent).toEqual('1 - 2');
+    // restore default options
+    delete _vue2.default.options.delimiters;
+  });
+
+  it('component specific delimiters should override global delimiters', function () {
+    _vue2.default.options.delimiters = ['[[', ']]'];
+
+    var Component = _vue2.default.extend({
+      delimiters: ['@{{', '}}'],
+      template: '<span>@{{ a }}</span>',
+      data: function data() {
+        return {
+          a: 2
+        };
+      }
+    });
+
+    var vm = new _vue2.default({
+      data: {
+        b: 1
+      },
+      template: '<div>[[ b ]] - <test-component></test-component></div>',
+      components: {
+        'test-component': Component
+      }
+    }).$mount();
+
+    expect(vm.$el.textContent).toEqual('1 - 2');
+    // restore default options
+    delete _vue2.default.options.delimiters;
+  });
+});
+

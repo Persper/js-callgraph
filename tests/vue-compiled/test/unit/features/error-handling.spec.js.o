@@ -1,0 +1,291 @@
+'use strict';
+
+var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var components = createErrorTestComponents();
+
+describe('Error handling', function () {
+  // hooks that prevents the component from rendering, but should not
+  // break parent component
+  ;[['data', 'data()'], ['render', 'render'], ['beforeCreate', 'beforeCreate hook'], ['created', 'created hook'], ['beforeMount', 'beforeMount hook'], ['directive bind', 'directive foo bind hook'], ['event', 'event handler for "e"']].forEach(function (_ref) {
+    var _ref2 = _slicedToArray(_ref, 2),
+        type = _ref2[0],
+        description = _ref2[1];
+
+    it('should recover from errors in ' + type, function (done) {
+      var vm = createTestInstance(components[type]);
+      expect('Error in ' + description).toHaveBeenWarned();
+      expect('Error: ' + type).toHaveBeenWarned();
+      assertRootInstanceActive(vm).then(done);
+    });
+  });
+
+  // error in mounted hook should affect neither child nor parent
+  it('should recover from errors in mounted hook', function (done) {
+    var vm = createTestInstance(components.mounted);
+    expect('Error in mounted hook').toHaveBeenWarned();
+    expect('Error: mounted').toHaveBeenWarned();
+    assertBothInstancesActive(vm).then(done);
+  })
+
+  // error in beforeUpdate/updated should affect neither child nor parent
+  ;[['beforeUpdate', 'beforeUpdate hook'], ['updated', 'updated hook'], ['directive update', 'directive foo update hook']].forEach(function (_ref3) {
+    var _ref4 = _slicedToArray(_ref3, 2),
+        type = _ref4[0],
+        description = _ref4[1];
+
+    it('should recover from errors in ' + type + ' hook', function (done) {
+      var vm = createTestInstance(components[type]);
+      assertBothInstancesActive(vm).then(function () {
+        expect('Error in ' + description).toHaveBeenWarned();
+        expect('Error: ' + type).toHaveBeenWarned();
+      }).then(done);
+    });
+  });[['beforeDestroy', 'beforeDestroy hook'], ['destroyed', 'destroyed hook'], ['directive unbind', 'directive foo unbind hook']].forEach(function (_ref5) {
+    var _ref6 = _slicedToArray(_ref5, 2),
+        type = _ref6[0],
+        description = _ref6[1];
+
+    it('should recover from errors in ' + type + ' hook', function (done) {
+      var vm = createTestInstance(components[type]);
+      vm.ok = false;
+      waitForUpdate(function () {
+        expect('Error in ' + description).toHaveBeenWarned();
+        expect('Error: ' + type).toHaveBeenWarned();
+      }).thenWaitFor(function (next) {
+        assertRootInstanceActive(vm).end(next);
+      }).then(done);
+    });
+  });
+
+  it('should recover from errors in user watcher getter', function (done) {
+    var vm = createTestInstance(components.userWatcherGetter);
+    vm.n++;
+    waitForUpdate(function () {
+      expect('Error in getter for watcher').toHaveBeenWarned();
+      function getErrorMsg() {
+        try {
+          this.a.b.c;
+        } catch (e) {
+          return e.toString();
+        }
+      }
+      var msg = getErrorMsg.call(vm);
+      expect(msg).toHaveBeenWarned();
+    }).thenWaitFor(function (next) {
+      assertBothInstancesActive(vm).end(next);
+    }).then(done);
+  });
+
+  it('should recover from errors in user watcher callback', function (done) {
+    var vm = createTestInstance(components.userWatcherCallback);
+    vm.n++;
+    waitForUpdate(function () {
+      expect('Error in callback for watcher "n"').toHaveBeenWarned();
+      expect('Error: userWatcherCallback').toHaveBeenWarned();
+    }).thenWaitFor(function (next) {
+      assertBothInstancesActive(vm).end(next);
+    }).then(done);
+  });
+
+  it('config.errorHandler should capture render errors', function (done) {
+    var spy = _vue2.default.config.errorHandler = jasmine.createSpy('errorHandler');
+    var vm = createTestInstance(components.render);
+
+    var args = spy.calls.argsFor(0);
+    expect(args[0].toString()).toContain('Error: render'); // error
+    expect(args[1]).toBe(vm.$refs.child); // vm
+    expect(args[2]).toContain('render'); // description
+
+    assertRootInstanceActive(vm).then(function () {
+      _vue2.default.config.errorHandler = null;
+    }).then(done);
+  });
+
+  it('should capture and recover from nextTick errors', function (done) {
+    var err1 = new Error('nextTick');
+    var err2 = new Error('nextTick2');
+    var spy = _vue2.default.config.errorHandler = jasmine.createSpy('errorHandler');
+    _vue2.default.nextTick(function () {
+      throw err1;
+    });
+    _vue2.default.nextTick(function () {
+      expect(spy).toHaveBeenCalledWith(err1, undefined, 'nextTick');
+
+      var vm = new _vue2.default();
+      vm.$nextTick(function () {
+        throw err2;
+      });
+      _vue2.default.nextTick(function () {
+        // should be called with correct instance info
+        expect(spy).toHaveBeenCalledWith(err2, vm, 'nextTick');
+        _vue2.default.config.errorHandler = null;
+        done();
+      });
+    });
+  });
+
+  it('should recover from errors thrown in errorHandler itself', function () {
+    _vue2.default.config.errorHandler = function () {
+      throw new Error('error in errorHandler ¯\\_(ツ)_/¯');
+    };
+    var vm = new _vue2.default({
+      render: function render(h) {
+        throw new Error('error in render');
+      },
+      renderError: function renderError(h, err) {
+        return h('div', err.toString());
+      }
+    }).$mount();
+    expect('error in errorHandler').toHaveBeenWarned();
+    expect('error in render').toHaveBeenWarned();
+    expect(vm.$el.textContent).toContain('error in render');
+    _vue2.default.config.errorHandler = null;
+  });
+});
+
+function createErrorTestComponents() {
+  var components = {};
+
+  // data
+  components.data = {
+    data: function data() {
+      throw new Error('data');
+    },
+    render: function render(h) {
+      return h('div');
+    }
+  };
+
+  // render error
+  components.render = {
+    render: function render(h) {
+      throw new Error('render');
+    }
+  }
+
+  // lifecycle errors
+  ;['create', 'mount', 'update', 'destroy'].forEach(function (hook) {
+    // before
+    var before = 'before' + hook.charAt(0).toUpperCase() + hook.slice(1);
+    var beforeComp = components[before] = {
+      props: ['n'],
+      render: function render(h) {
+        return h('div', this.n);
+      }
+    };
+    beforeComp[before] = function () {
+      throw new Error(before);
+    };
+
+    // after
+    var after = hook.replace(/e?$/, 'ed');
+    var afterComp = components[after] = {
+      props: ['n'],
+      render: function render(h) {
+        return h('div', this.n);
+      }
+    };
+    afterComp[after] = function () {
+      throw new Error(after);
+    };
+  })
+
+  // directive hooks errors
+  ;['bind', 'update', 'unbind'].forEach(function (hook) {
+    var key = 'directive ' + hook;
+    var dirComp = components[key] = {
+      props: ['n'],
+      template: '<div v-foo="n">{{ n }}</div>'
+    };
+    var dirFoo = {};
+    dirFoo[hook] = function () {
+      throw new Error(key);
+    };
+    dirComp.directives = {
+      foo: dirFoo
+    };
+  });
+
+  // user watcher
+  components.userWatcherGetter = {
+    props: ['n'],
+    created: function created() {
+      this.$watch(function () {
+        return this.n + this.a.b.c;
+      }, function (val) {
+        console.log('user watcher fired: ' + val);
+      });
+    },
+    render: function render(h) {
+      return h('div', this.n);
+    }
+  };
+
+  components.userWatcherCallback = {
+    props: ['n'],
+    watch: {
+      n: function n() {
+        throw new Error('userWatcherCallback error');
+      }
+    },
+    render: function render(h) {
+      return h('div', this.n);
+    }
+  };
+
+  // event errors
+  components.event = {
+    beforeCreate: function beforeCreate() {
+      this.$on('e', function () {
+        throw new Error('event');
+      });
+    },
+    mounted: function mounted() {
+      this.$emit('e');
+    },
+    render: function render(h) {
+      return h('div');
+    }
+  };
+
+  return components;
+}
+
+function createTestInstance(Comp) {
+  return new _vue2.default({
+    data: {
+      n: 0,
+      ok: true
+    },
+    render: function render(h) {
+      return h('div', ['n:' + this.n + '\n', this.ok ? h(Comp, { ref: 'child', props: { n: this.n } }) : null]);
+    }
+  }).$mount();
+}
+
+function assertRootInstanceActive(vm, chain) {
+  expect(vm.$el.innerHTML).toContain('n:0\n');
+  vm.n++;
+  return waitForUpdate(function () {
+    expect(vm.$el.innerHTML).toContain('n:1\n');
+  });
+}
+
+function assertBothInstancesActive(vm) {
+  vm.n = 0;
+  return waitForUpdate(function () {
+    expect(vm.$refs.child.$el.innerHTML).toContain('0');
+  }).thenWaitFor(function (next) {
+    assertRootInstanceActive(vm).then(function () {
+      expect(vm.$refs.child.$el.innerHTML).toContain('1');
+    }).end(next);
+  });
+}
+

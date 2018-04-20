@@ -1,0 +1,18 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = renderClass;
+
+var _util = require('../util');
+
+var _index = require('web/util/index');
+
+function renderClass(node) {
+  var classList = (0, _index.genClassForVnode)(node);
+  if (classList !== '') {
+    return ' class="' + (0, _util.escape)(classList) + '"';
+  }
+}
+

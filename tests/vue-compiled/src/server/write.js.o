@@ -1,0 +1,48 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createWriteFunction = createWriteFunction;
+var MAX_STACK_DEPTH = 1000;
+var noop = function noop(_) {
+  return _;
+};
+
+var defer = typeof process !== 'undefined' && process.nextTick ? process.nextTick : typeof Promise !== 'undefined' ? function (fn) {
+  return Promise.resolve().then(fn);
+} : typeof setTimeout !== 'undefined' ? setTimeout : noop;
+
+if (defer === noop) {
+  throw new Error('Your JavaScript runtime does not support any asynchronous primitives ' + 'that are required by vue-server-renderer. Please use a polyfill for ' + 'either Promise or setTimeout.');
+}
+
+function createWriteFunction(write, onError) {
+  var stackDepth = 0;
+  var cachedWrite = function cachedWrite(text, next) {
+    if (text && cachedWrite.caching) {
+      cachedWrite.cacheBuffer[cachedWrite.cacheBuffer.length - 1] += text;
+    }
+    var waitForNext = write(text, next);
+    if (waitForNext !== true) {
+      if (stackDepth >= MAX_STACK_DEPTH) {
+        defer(function () {
+          try {
+            next();
+          } catch (e) {
+            onError(e);
+          }
+        });
+      } else {
+        stackDepth++;
+        next();
+        stackDepth--;
+      }
+    }
+  };
+  cachedWrite.caching = false;
+  cachedWrite.cacheBuffer = [];
+  cachedWrite.componentBuffer = [];
+  return cachedWrite;
+}
+

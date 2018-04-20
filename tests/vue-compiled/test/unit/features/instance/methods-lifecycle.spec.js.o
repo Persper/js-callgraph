@@ -1,0 +1,139 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Instance methods lifecycle', function () {
+  describe('$mount', function () {
+    it('empty mount', function () {
+      var vm = new _vue2.default({
+        data: { msg: 'hi' },
+        template: '<div>{{ msg }}</div>'
+      }).$mount();
+      expect(vm.$el.tagName).toBe('DIV');
+      expect(vm.$el.textContent).toBe('hi');
+    });
+
+    it('mount to existing element', function () {
+      var el = document.createElement('div');
+      el.innerHTML = '{{ msg }}';
+      var vm = new _vue2.default({
+        data: { msg: 'hi' }
+      }).$mount(el);
+      expect(vm.$el.tagName).toBe('DIV');
+      expect(vm.$el.textContent).toBe('hi');
+    });
+
+    it('mount to id', function () {
+      var el = document.createElement('div');
+      el.id = 'mount-test';
+      el.innerHTML = '{{ msg }}';
+      document.body.appendChild(el);
+      var vm = new _vue2.default({
+        data: { msg: 'hi' }
+      }).$mount('#mount-test');
+      expect(vm.$el.tagName).toBe('DIV');
+      expect(vm.$el.textContent).toBe('hi');
+    });
+  });
+
+  describe('$destroy', function () {
+    it('remove self from parent', function () {
+      var vm = new _vue2.default({
+        template: '<test></test>',
+        components: {
+          test: { template: '<div></div>' }
+        }
+      }).$mount();
+      vm.$children[0].$destroy();
+      expect(vm.$children.length).toBe(0);
+    });
+
+    it('teardown watchers', function () {
+      var vm = new _vue2.default({
+        data: { a: 123 },
+        template: '<div></div>'
+      }).$mount();
+      vm.$watch('a', function () {});
+      vm.$destroy();
+      expect(vm._watcher.active).toBe(false);
+      expect(vm._watchers.every(function (w) {
+        return !w.active;
+      })).toBe(true);
+    });
+
+    it('remove self from data observer', function () {
+      var vm = new _vue2.default({ data: { a: 1 } });
+      vm.$destroy();
+      expect(vm.$data.__ob__.vmCount).toBe(0);
+    });
+
+    it('avoid duplicate calls', function () {
+      var spy = jasmine.createSpy('destroy');
+      var vm = new _vue2.default({
+        beforeDestroy: spy
+      });
+      vm.$destroy();
+      vm.$destroy();
+      expect(spy.calls.count()).toBe(1);
+    });
+  });
+
+  describe('$forceUpdate', function () {
+    it('should force update', function (done) {
+      var vm = new _vue2.default({
+        data: {
+          a: {}
+        },
+        template: '<div>{{ a.b }}</div>'
+      }).$mount();
+      expect(vm.$el.textContent).toBe('');
+      vm.a.b = 'foo';
+      waitForUpdate(function () {
+        // should not work because adding new property
+        expect(vm.$el.textContent).toBe('');
+        vm.$forceUpdate();
+      }).then(function () {
+        expect(vm.$el.textContent).toBe('foo');
+      }).then(done);
+    });
+  });
+
+  describe('$nextTick', function () {
+    it('should be called after DOM update in correct context', function (done) {
+      var vm = new _vue2.default({
+        template: '<div>{{ msg }}</div>',
+        data: {
+          msg: 'foo'
+        }
+      }).$mount();
+      vm.msg = 'bar';
+      vm.$nextTick(function () {
+        expect(this).toBe(vm);
+        expect(vm.$el.textContent).toBe('bar');
+        done();
+      });
+    });
+
+    if (typeof Promise !== 'undefined') {
+      it('should be called after DOM update in correct context, when using Promise syntax', function (done) {
+        var vm = new _vue2.default({
+          template: '<div>{{ msg }}</div>',
+          data: {
+            msg: 'foo'
+          }
+        }).$mount();
+        vm.msg = 'bar';
+        vm.$nextTick().then(function (ctx) {
+          expect(ctx).toBe(vm);
+          expect(vm.$el.textContent).toBe('bar');
+          done();
+        });
+      });
+    }
+  });
+});
+

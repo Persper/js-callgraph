@@ -1,0 +1,43 @@
+'use strict';
+
+var _patch = require('web/runtime/patch');
+
+var _vnode = require('core/vdom/vnode');
+
+var _vnode2 = _interopRequireDefault(_vnode);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('vdom style module', function () {
+  it('should create an element with style', function () {
+    var vnode = new _vnode2.default('p', { style: { fontSize: '12px' } });
+    var elm = (0, _patch.patch)(null, vnode);
+    expect(elm.style.fontSize).toBe('12px');
+  });
+
+  it('should create an element with array style', function () {
+    var vnode = new _vnode2.default('p', { style: [{ fontSize: '12px' }, { color: 'red' }] });
+    var elm = (0, _patch.patch)(null, vnode);
+    expect(elm.style.fontSize).toBe('12px');
+    expect(elm.style.color).toBe('red');
+  });
+
+  it('should change elements style', function () {
+    var vnode1 = new _vnode2.default('p', { style: { fontSize: '12px' } });
+    var vnode2 = new _vnode2.default('p', { style: { fontSize: '10px', display: 'block' } });
+    (0, _patch.patch)(null, vnode1);
+    var elm = (0, _patch.patch)(vnode1, vnode2);
+    expect(elm.style.fontSize).toBe('10px');
+    expect(elm.style.display).toBe('block');
+  });
+
+  it('should remove elements attrs', function () {
+    var vnode1 = new _vnode2.default('p', { style: { fontSize: '12px' } });
+    var vnode2 = new _vnode2.default('p', { style: { display: 'block' } });
+    (0, _patch.patch)(null, vnode1);
+    var elm = (0, _patch.patch)(vnode1, vnode2);
+    expect(elm.style.fontSize).toBe('');
+    expect(elm.style.display).toBe('block');
+  });
+});
+

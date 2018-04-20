@@ -1,0 +1,66 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.preTransformVIf = preTransformVIf;
+
+var _index = require('compiler/parser/index');
+
+var _helpers = require('compiler/helpers');
+
+function hasConditionDirective(el) {
+  for (var attr in el.attrsMap) {
+    if (/^v\-if|v\-else|v\-else\-if$/.test(attr)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function getPreviousConditions(el) {
+  var conditions = [];
+  if (el.parent && el.parent.children) {
+    for (var c = 0, n = el.parent.children.length; c < n; ++c) {
+      // $flow-disable-line
+      var ifConditions = el.parent.children[c].ifConditions;
+      if (ifConditions) {
+        for (var i = 0, l = ifConditions.length; i < l; ++i) {
+          var condition = ifConditions[i];
+          if (condition && condition.exp) {
+            conditions.push(condition.exp);
+          }
+        }
+      }
+    }
+  }
+  return conditions;
+}
+
+function preTransformVIf(el, options) {
+  if (hasConditionDirective(el)) {
+    var exp = void 0;
+    var ifExp = (0, _helpers.getAndRemoveAttr)(el, 'v-if', true /* remove from attrsMap */);
+    var elseifExp = (0, _helpers.getAndRemoveAttr)(el, 'v-else-if', true);
+    // don't need the value, but remove it to avoid being generated as a
+    // custom directive
+    (0, _helpers.getAndRemoveAttr)(el, 'v-else', true);
+    if (ifExp) {
+      exp = ifExp;
+      (0, _index.addIfCondition)(el, { exp: ifExp, block: el });
+    } else {
+      elseifExp && (0, _index.addIfCondition)(el, { exp: elseifExp, block: el });
+      var prevConditions = getPreviousConditions(el);
+      if (prevConditions.length) {
+        var prevMatch = prevConditions.join(' || ');
+        exp = elseifExp ? '!(' + prevMatch + ') && (' + elseifExp + ')' // v-else-if
+        : '!(' + prevMatch + ')'; // v-else
+      } else if (process.env.NODE_ENV !== 'production' && options.warn) {
+        options.warn('v-' + (elseifExp ? 'else-if="' + elseifExp + '"' : 'else') + ' ' + ('used on element <' + el.tag + '> without corresponding v-if.'));
+        return;
+      }
+    }
+    (0, _helpers.addRawAttr)(el, '[[match]]', exp);
+  }
+}
+

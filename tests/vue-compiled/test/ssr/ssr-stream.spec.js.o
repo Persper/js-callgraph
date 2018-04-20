@@ -1,0 +1,103 @@
+'use strict';
+
+var _vueRuntimeCommon = require('../../dist/vue.runtime.common.js');
+
+var _vueRuntimeCommon2 = _interopRequireDefault(_vueRuntimeCommon);
+
+var _vueServerRenderer = require('../../packages/vue-server-renderer');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _createRenderer = (0, _vueServerRenderer.createRenderer)(),
+    renderToStream = _createRenderer.renderToStream;
+
+describe('SSR: renderToStream', function () {
+  it('should render to a stream', function (done) {
+    var stream = renderToStream(new _vueRuntimeCommon2.default({
+      template: '\n        <div>\n          <p class="hi">yoyo</p>\n          <div id="ho" :class="[testClass, { red: isRed }]"></div>\n          <span>{{ test }}</span>\n          <input :value="test">\n          <b-comp></b-comp>\n          <c-comp></c-comp>\n        </div>\n      ',
+      data: {
+        test: 'hi',
+        isRed: true,
+        testClass: 'a'
+      },
+      components: {
+        bComp: function bComp(resolve) {
+          return resolve({
+            render: function render(h) {
+              return h('test-async-2');
+            },
+
+            components: {
+              testAsync2: function testAsync2(resolve) {
+                return resolve({
+                  created: function created() {
+                    this.$parent.$parent.testClass = 'b';
+                  },
+                  render: function render(h) {
+                    return h('div', { class: [this.$parent.$parent.testClass] }, 'test');
+                  }
+                });
+              }
+            }
+          });
+        },
+
+        cComp: {
+          render: function render(h) {
+            return h('div', { class: [this.$parent.testClass] }, 'test');
+          }
+        }
+      }
+    }));
+    var res = '';
+    stream.on('data', function (chunk) {
+      res += chunk;
+    });
+    stream.on('end', function () {
+      expect(res).toContain('<div data-server-rendered="true">' + '<p class="hi">yoyo</p> ' + '<div id="ho" class="a red"></div> ' + '<span>hi</span> ' + '<input value="hi"> ' + '<div class="b">test</div> ' + '<div class="b">test</div>' + '</div>');
+      done();
+    });
+  });
+
+  it('should catch error', function (done) {
+    _vueRuntimeCommon2.default.config.silent = true;
+    var stream = renderToStream(new _vueRuntimeCommon2.default({
+      render: function render() {
+        throw new Error('oops');
+      }
+    }));
+    stream.on('error', function (err) {
+      expect(err.toString()).toMatch(/oops/);
+      _vueRuntimeCommon2.default.config.silent = false;
+      done();
+    });
+    stream.on('data', function (_) {
+      return _;
+    });
+  });
+
+  it('should not mingle two components', function (done) {
+    var padding = new Array(20000).join('x');
+    var component1 = new _vueRuntimeCommon2.default({
+      template: '<div>' + padding + '<div></div></div>',
+      _scopeId: '_component1'
+    });
+    var component2 = new _vueRuntimeCommon2.default({
+      template: '<div></div>',
+      _scopeId: '_component2'
+    });
+    var stream1 = renderToStream(component1);
+    var stream2 = renderToStream(component2);
+    var res = '';
+    stream1.on('data', function (text) {
+      res += text.toString('utf-8').replace(/x/g, '');
+    });
+    stream1.on('end', function () {
+      expect(res).not.toContain('_component2');
+      done();
+    });
+    stream1.read(1);
+    stream2.read(1);
+  });
+});
+

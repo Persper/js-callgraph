@@ -1,0 +1,40 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.preTransformVFor = preTransformVFor;
+
+var _index = require('compiler/parser/index');
+
+var _helpers = require('compiler/helpers');
+
+function preTransformVFor(el, options) {
+  var exp = (0, _helpers.getAndRemoveAttr)(el, 'v-for');
+  if (!exp) {
+    return;
+  }
+
+  var res = (0, _index.parseFor)(exp);
+  if (!res) {
+    if (process.env.NODE_ENV !== 'production' && options.warn) {
+      options.warn('Invalid v-for expression: ' + exp);
+    }
+    return;
+  }
+
+  var desc = {
+    '@expression': res.for,
+    '@alias': res.alias
+  };
+  if (res.iterator2) {
+    desc['@key'] = res.iterator1;
+    desc['@index'] = res.iterator2;
+  } else {
+    desc['@index'] = res.iterator1;
+  }
+
+  delete el.attrsMap['v-for'];
+  (0, _helpers.addRawAttr)(el, '[[repeat]]', desc);
+}
+

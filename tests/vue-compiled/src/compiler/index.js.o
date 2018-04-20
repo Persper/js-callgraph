@@ -1,0 +1,31 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createCompiler = undefined;
+
+var _index = require('./parser/index');
+
+var _optimizer = require('./optimizer');
+
+var _index2 = require('./codegen/index');
+
+var _createCompiler = require('./create-compiler');
+
+// `createCompilerCreator` allows creating compilers that use alternative
+// parser/optimizer/codegen, e.g the SSR optimizing compiler.
+// Here we just export a default compiler using the default parts.
+var createCompiler = exports.createCompiler = (0, _createCompiler.createCompilerCreator)(function baseCompile(template, options) {
+  var ast = (0, _index.parse)(template.trim(), options);
+  if (options.optimize !== false) {
+    (0, _optimizer.optimize)(ast, options);
+  }
+  var code = (0, _index2.generate)(ast, options);
+  return {
+    ast: ast,
+    render: code.render,
+    staticRenderFns: code.staticRenderFns
+  };
+});
+

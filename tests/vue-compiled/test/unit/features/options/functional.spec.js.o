@@ -1,0 +1,309 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _vnode = require('core/vdom/vnode');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Options functional', function () {
+  it('should work', function (done) {
+    var vm = new _vue2.default({
+      data: { test: 'foo' },
+      template: '<div><wrap :msg="test">bar</wrap></div>',
+      components: {
+        wrap: {
+          functional: true,
+          props: ['msg'],
+          render: function render(h, _ref) {
+            var props = _ref.props,
+                children = _ref.children;
+
+            return h('div', null, [props.msg, ' '].concat(children));
+          }
+        }
+      }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<div>foo bar</div>');
+    vm.test = 'qux';
+    waitForUpdate(function () {
+      expect(vm.$el.innerHTML).toBe('<div>qux bar</div>');
+    }).then(done);
+  });
+
+  it('should expose all props when not declared', function (done) {
+    var fn = {
+      functional: true,
+      render: function render(h, _ref2) {
+        var props = _ref2.props;
+
+        return h('div', props.msg + ' ' + props.kebabMsg);
+      }
+    };
+
+    var vm = new _vue2.default({
+      data: { test: 'foo' },
+      render: function render(h) {
+        return h('div', [h(fn, {
+          props: { msg: this.test },
+          attrs: { 'kebab-msg': 'bar' }
+        })]);
+      }
+    }).$mount();
+
+    expect(vm.$el.innerHTML).toBe('<div>foo bar</div>');
+    vm.test = 'qux';
+    waitForUpdate(function () {
+      expect(vm.$el.innerHTML).toBe('<div>qux bar</div>');
+    }).then(done);
+  });
+
+  it('should expose data.on as listeners', function () {
+    var foo = jasmine.createSpy('foo');
+    var bar = jasmine.createSpy('bar');
+    var vm = new _vue2.default({
+      template: '<div><wrap @click="foo" @test="bar"/></div>',
+      methods: { foo: foo, bar: bar },
+      components: {
+        wrap: {
+          functional: true,
+          render: function render(h, _ref3) {
+            var listeners = _ref3.listeners;
+
+            return h('div', {
+              on: {
+                click: [listeners.click, function () {
+                  return listeners.test('bar');
+                }]
+              }
+            });
+          }
+        }
+      }
+    }).$mount();
+
+    triggerEvent(vm.$el.children[0], 'click');
+    expect(foo).toHaveBeenCalled();
+    expect(foo.calls.argsFor(0)[0].type).toBe('click'); // should have click event
+    triggerEvent(vm.$el.children[0], 'mousedown');
+    expect(bar).toHaveBeenCalledWith('bar');
+  });
+
+  it('should support returning more than one root node', function () {
+    var vm = new _vue2.default({
+      template: '<div><test></test></div>',
+      components: {
+        test: {
+          functional: true,
+          render: function render(h) {
+            return [h('span', 'foo'), h('span', 'bar')];
+          }
+        }
+      }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<span>foo</span><span>bar</span>');
+  });
+
+  it('should support slots', function () {
+    var vm = new _vue2.default({
+      data: { test: 'foo' },
+      template: '<div><wrap><div slot="a">foo</div><div slot="b">bar</div></wrap></div>',
+      components: {
+        wrap: {
+          functional: true,
+          props: ['msg'],
+          render: function render(h, _ref4) {
+            var slots = _ref4.slots;
+
+            slots = slots();
+            return h('div', null, [slots.b, slots.a]);
+          }
+        }
+      }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<div><div>bar</div><div>foo</div></div>');
+  });
+
+  it('should let vnode raw data pass through', function (done) {
+    var onValid = jasmine.createSpy('valid');
+    var vm = new _vue2.default({
+      data: { msg: 'hello' },
+      template: '<div>\n        <validate field="field1" @valid="onValid">\n          <input type="text" v-model="msg">\n        </validate>\n      </div>',
+      components: {
+        validate: {
+          functional: true,
+          props: ['field'],
+          render: function render(h, _ref5) {
+            var props = _ref5.props,
+                children = _ref5.children,
+                on = _ref5.data.on;
+
+            props.child = children[0];
+            return h('validate-control', { props: props, on: on });
+          }
+        },
+        'validate-control': {
+          props: ['field', 'child'],
+          render: function render() {
+            return this.child;
+          },
+          mounted: function mounted() {
+            this.$el.addEventListener('input', this.onInput);
+          },
+          destroyed: function destroyed() {
+            this.$el.removeEventListener('input', this.onInput);
+          },
+
+          methods: {
+            onInput: function onInput(e) {
+              var value = e.target.value;
+              if (this.validate(value)) {
+                this.$emit('valid', this);
+              }
+            },
+
+            // something validation logic here
+            validate: function validate(val) {
+              return val.length > 0;
+            }
+          }
+        }
+      },
+      methods: { onValid: onValid }
+    }).$mount();
+    document.body.appendChild(vm.$el);
+    var input = vm.$el.querySelector('input');
+    expect(onValid).not.toHaveBeenCalled();
+    waitForUpdate(function () {
+      input.value = 'foo';
+      triggerEvent(input, 'input');
+    }).then(function () {
+      expect(onValid).toHaveBeenCalled();
+    }).then(function () {
+      document.body.removeChild(vm.$el);
+      vm.$destroy();
+    }).then(done);
+  });
+
+  it('create empty vnode when render return null', function () {
+    var child = {
+      functional: true,
+      render: function render() {
+        return null;
+      }
+    };
+    var vm = new _vue2.default({
+      components: {
+        child: child
+      }
+    });
+    var h = vm.$createElement;
+    var vnode = h('child');
+    expect(vnode).toEqual((0, _vnode.createEmptyVNode)());
+  });
+
+  // #7282
+  it('should normalize top-level arrays', function () {
+    var Foo = {
+      functional: true,
+      render: function render(h) {
+        return [h('span', 'hi'), null];
+      }
+    };
+    var vm = new _vue2.default({
+      template: '<div><foo/></div>',
+      components: { Foo: Foo }
+    }).$mount();
+    expect(vm.$el.innerHTML).toBe('<span>hi</span>');
+  });
+
+  it('should work when used as named slot and returning array', function () {
+    var Foo = {
+      template: '<div><slot name="test"/></div>'
+    };
+
+    var Bar = {
+      functional: true,
+      render: function render(h) {
+        return [h('div', 'one'), h('div', 'two'), h(Baz)];
+      }
+    };
+
+    var Baz = {
+      functional: true,
+      render: function render(h) {
+        return h('div', 'three');
+      }
+    };
+
+    var vm = new _vue2.default({
+      template: '<foo><bar slot="test"/></foo>',
+      components: { Foo: Foo, Bar: Bar }
+    }).$mount();
+
+    expect(vm.$el.innerHTML).toBe('<div>one</div><div>two</div><div>three</div>');
+  });
+
+  it('should apply namespace when returning arrays', function () {
+    var Child = {
+      functional: true,
+      render: function render(h) {
+        return [h('foo'), h('bar')];
+      }
+    };
+    var vm = new _vue2.default({
+      template: '<svg><child/></svg>',
+      components: { Child: Child }
+    }).$mount();
+
+    expect(vm.$el.childNodes[0].namespaceURI).toContain('svg');
+    expect(vm.$el.childNodes[1].namespaceURI).toContain('svg');
+  });
+
+  it('should work with render fns compiled from template', function (done) {
+    // code generated via vue-template-es2015-compiler
+    var render = function render(_h, _vm) {
+      var _c = _vm._c;
+      return _c('div', [_c('h2', { staticClass: 'red' }, [_vm._v(_vm._s(_vm.props.msg))]), _vm._t('default'), _vm._t('slot2'), _vm._t('scoped', null, { msg: _vm.props.msg }), _vm._m(0), _c('div', { staticClass: 'clickable', on: { click: _vm.parent.fn } }, [_vm._v('click me')])], 2);
+    };
+    var staticRenderFns = [function (_h, _vm) {
+      var _c = _vm._c;
+      return _c('div', [_vm._v('Some '), _c('span', [_vm._v('text')])]);
+    }];
+
+    var child = {
+      functional: true,
+      _compiled: true,
+      render: render,
+      staticRenderFns: staticRenderFns
+    };
+
+    var parent = new _vue2.default({
+      components: {
+        child: child
+      },
+      data: {
+        msg: 'hello'
+      },
+      template: '\n      <div>\n        <child :msg="msg">\n          <span>{{ msg }}</span>\n          <div slot="slot2">Second slot</div>\n          <template slot="scoped" slot-scope="scope">{{ scope.msg }}</template>\n        </child>\n      </div>\n      ',
+      methods: {
+        fn: function fn() {
+          this.msg = 'bye';
+        }
+      }
+    }).$mount();
+
+    function assertMarkup() {
+      expect(parent.$el.innerHTML).toBe('<div>' + ('<h2 class="red">' + parent.msg + '</h2>') + ('<span>' + parent.msg + '</span> ') + '<div>Second slot</div>' + parent.msg +
+      // static
+      '<div>Some <span>text</span></div>' + '<div class="clickable">click me</div>' + '</div>');
+    }
+
+    assertMarkup();
+    triggerEvent(parent.$el.querySelector('.clickable'), 'click');
+    waitForUpdate(assertMarkup).then(done);
+  });
+});
+

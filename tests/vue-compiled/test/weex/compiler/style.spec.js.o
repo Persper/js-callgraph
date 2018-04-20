@@ -1,0 +1,123 @@
+'use strict';
+
+var _weexTemplateCompiler = require('../../../packages/weex-template-compiler');
+
+var _index = require('../helpers/index');
+
+describe('compile style', function () {
+  it('should be compiled', function () {
+    var _compile = (0, _weexTemplateCompiler.compile)('<div style="a: x; b: y"></div>'),
+        render = _compile.render,
+        staticRenderFns = _compile.staticRenderFns,
+        errors = _compile.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).not.toBeUndefined();
+    expect(staticRenderFns.length).toEqual(0);
+    expect(render).toMatch((0, _index.strToRegExp)('staticStyle:{a:"x",b:"y"}'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile empty style value', function () {
+    var _compile2 = (0, _weexTemplateCompiler.compile)('<div style=""></div>'),
+        render = _compile2.render,
+        staticRenderFns = _compile2.staticRenderFns,
+        errors = _compile2.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).not.toBeUndefined();
+    expect(staticRenderFns.length).toEqual(0);
+    expect(render).toMatch(/[(^style|^staticStyle)]/);
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile style value with trailing semicolon', function () {
+    var _compile3 = (0, _weexTemplateCompiler.compile)('<div style="a: x; b: y;"></div>'),
+        render = _compile3.render,
+        staticRenderFns = _compile3.staticRenderFns,
+        errors = _compile3.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).not.toBeUndefined();
+    expect(staticRenderFns.length).toEqual(0);
+    expect(render).toMatch((0, _index.strToRegExp)('staticStyle:{a:"x",b:"y"}'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile hyphenated style name & value', function () {
+    var _compile4 = (0, _weexTemplateCompiler.compile)('<div style="-abc-def: x-y; abc-def: x-y"></div>'),
+        render = _compile4.render,
+        staticRenderFns = _compile4.staticRenderFns,
+        errors = _compile4.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).not.toBeUndefined();
+    expect(staticRenderFns.length).toEqual(0);
+    expect(render).toMatch((0, _index.strToRegExp)('staticStyle:{AbcDef:"x-y",abcDef:"x-y"}'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile dynamic style', function () {
+    var _compile5 = (0, _weexTemplateCompiler.compile)('<div style="a: x; b: {{y}}"></div>'),
+        render = _compile5.render,
+        staticRenderFns = _compile5.staticRenderFns,
+        errors = _compile5.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('style:{a:"x",b:_s(y)}'));
+    expect(errors).not.toBeUndefined();
+    expect(errors.length).toEqual(1);
+    expect(errors[0]).toMatch((0, _index.strToRegExp)('b: {{y}}'));
+    expect(errors[0]).toMatch((0, _index.strToRegExp)('v-bind'));
+  });
+
+  it('should compile style binding of array', function () {
+    var _compile6 = (0, _weexTemplateCompiler.compile)('<div v-bind:style="[a, b, c]"></div>'),
+        render = _compile6.render,
+        staticRenderFns = _compile6.staticRenderFns,
+        errors = _compile6.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('style:[a, b, c]'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile style binding of map', function () {
+    var _compile7 = (0, _weexTemplateCompiler.compile)('<div v-bind:style="{ a: x, b: \'y\' + z }"></div>'),
+        render = _compile7.render,
+        staticRenderFns = _compile7.staticRenderFns,
+        errors = _compile7.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('style:{ a: x, b: \'y\' + z }'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile style binding of a variable', function () {
+    var _compile8 = (0, _weexTemplateCompiler.compile)('<div v-bind:style="x"></div>'),
+        render = _compile8.render,
+        staticRenderFns = _compile8.staticRenderFns,
+        errors = _compile8.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('style:x'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile style binding by shorthand', function () {
+    var _compile9 = (0, _weexTemplateCompiler.compile)('<div :style="[a, b, c]"></div>'),
+        render = _compile9.render,
+        staticRenderFns = _compile9.staticRenderFns,
+        errors = _compile9.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('style:[a, b, c]'));
+    expect(errors).toEqual([]);
+  });
+});
+

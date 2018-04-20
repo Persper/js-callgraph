@@ -1,0 +1,122 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.installSSRHelpers = installSSRHelpers;
+
+var _util = require('web/server/util');
+
+var _util2 = require('shared/util');
+
+var _attrs = require('web/server/modules/attrs');
+
+var _class = require('web/util/class');
+
+var _style = require('web/server/modules/style');
+
+var _style2 = require('web/util/style');
+
+var _normalizeChildren = require('core/vdom/helpers/normalize-children');
+
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+
+var ssrHelpers = {
+  _ssrEscape: _util.escape,
+  _ssrNode: renderStringNode,
+  _ssrList: renderStringList,
+  _ssrAttr: _attrs.renderAttr,
+  _ssrAttrs: renderAttrs,
+  _ssrDOMProps: renderDOMProps,
+  _ssrClass: renderSSRClass,
+  _ssrStyle: renderSSRStyle
+};
+
+function installSSRHelpers(vm) {
+  if (vm._ssrNode) {
+    return;
+  }
+  var Vue = vm.constructor;
+  while (Vue.super) {
+    Vue = Vue.super;
+  }
+  (0, _util2.extend)(Vue.prototype, ssrHelpers);
+  if (Vue.FunctionalRenderContext) {
+    (0, _util2.extend)(Vue.FunctionalRenderContext.prototype, ssrHelpers);
+  }
+}
+
+var StringNode = function StringNode(open, close, children, normalizationType) {
+  _classCallCheck(this, StringNode);
+
+  this.isString = true;
+  this.open = open;
+  this.close = close;
+  if (children) {
+    this.children = normalizationType === 1 ? (0, _normalizeChildren.simpleNormalizeChildren)(children) : normalizationType === 2 ? (0, _normalizeChildren.normalizeChildren)(children) : children;
+  } else {
+    this.children = void 0;
+  }
+};
+
+function renderStringNode(open, close, children, normalizationType) {
+  return new StringNode(open, close, children, normalizationType);
+}
+
+function renderStringList(val, render) {
+  var ret = '';
+  var i = void 0,
+      l = void 0,
+      keys = void 0,
+      key = void 0;
+  if (Array.isArray(val) || typeof val === 'string') {
+    for (i = 0, l = val.length; i < l; i++) {
+      ret += render(val[i], i);
+    }
+  } else if (typeof val === 'number') {
+    for (i = 0; i < val; i++) {
+      ret += render(i + 1, i);
+    }
+  } else if ((0, _util2.isObject)(val)) {
+    keys = Object.keys(val);
+    for (i = 0, l = keys.length; i < l; i++) {
+      key = keys[i];
+      ret += render(val[key], key, i);
+    }
+  }
+  return ret;
+}
+
+function renderAttrs(obj) {
+  var res = '';
+  for (var key in obj) {
+    res += (0, _attrs.renderAttr)(key, obj[key]);
+  }
+  return res;
+}
+
+function renderDOMProps(obj) {
+  var res = '';
+  for (var key in obj) {
+    var attr = _util.propsToAttrMap[key] || key.toLowerCase();
+    if ((0, _util.isRenderableAttr)(attr)) {
+      res += (0, _attrs.renderAttr)(attr, obj[key]);
+    }
+  }
+  return res;
+}
+
+function renderSSRClass(staticClass, dynamic) {
+  var res = (0, _class.renderClass)(staticClass, dynamic);
+  return res === '' ? res : ' class="' + (0, _util.escape)(res) + '"';
+}
+
+function renderSSRStyle(staticStyle, dynamic, extra) {
+  var style = {};
+  if (staticStyle) (0, _util2.extend)(style, staticStyle);
+  if (dynamic) (0, _util2.extend)(style, (0, _style2.normalizeStyleBinding)(dynamic));
+  if (extra) (0, _util2.extend)(style, extra);
+  var res = (0, _style.genStyle)(style);
+  return res === '' ? res : ' style=' + JSON.stringify((0, _util.escape)(res));
+}
+

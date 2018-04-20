@@ -1,0 +1,46 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _index = require('core/index');
+
+var _index2 = _interopRequireDefault(_index);
+
+var _patch = require('weex/runtime/patch');
+
+var _lifecycle = require('core/instance/lifecycle');
+
+var _index3 = require('weex/runtime/directives/index');
+
+var _index4 = _interopRequireDefault(_index3);
+
+var _index5 = require('weex/runtime/components/index');
+
+var _index6 = _interopRequireDefault(_index5);
+
+var _element = require('weex/util/element');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// install platform specific utils
+_index2.default.config.mustUseProp = _element.mustUseProp;
+_index2.default.config.isReservedTag = _element.isReservedTag;
+_index2.default.config.isRuntimeComponent = _element.isRuntimeComponent;
+_index2.default.config.isUnknownElement = _element.isUnknownElement;
+
+// install platform runtime directives and components
+_index2.default.options.directives = _index4.default;
+_index2.default.options.components = _index6.default;
+
+// install platform patch function
+_index2.default.prototype.__patch__ = _patch.patch;
+
+// wrap mount
+_index2.default.prototype.$mount = function (el, hydrating) {
+  return (0, _lifecycle.mountComponent)(this, el && (0, _element.query)(el, this.$document), hydrating);
+};
+
+exports.default = _index2.default;
+

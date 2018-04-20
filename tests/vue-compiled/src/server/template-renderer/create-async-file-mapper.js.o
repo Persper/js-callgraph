@@ -1,0 +1,54 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createMapper = createMapper;
+
+
+/**
+ * Creates a mapper that maps components used during a server-side render
+ * to async chunk files in the client-side build, so that we can inline them
+ * directly in the rendered HTML to avoid waterfall requests.
+ */
+
+function createMapper(clientManifest) {
+  var map = createMap(clientManifest);
+  // map server-side moduleIds to client-side files
+  return function mapper(moduleIds) {
+    var res = new Set();
+    for (var i = 0; i < moduleIds.length; i++) {
+      var mapped = map.get(moduleIds[i]);
+      if (mapped) {
+        for (var j = 0; j < mapped.length; j++) {
+          res.add(mapped[j]);
+        }
+      }
+    }
+    return Array.from(res);
+  };
+}
+
+function createMap(clientManifest) {
+  var map = new Map();
+  Object.keys(clientManifest.modules).forEach(function (id) {
+    map.set(id, mapIdToFile(id, clientManifest));
+  });
+  return map;
+}
+
+function mapIdToFile(id, clientManifest) {
+  var files = [];
+  var fileIndices = clientManifest.modules[id];
+  if (fileIndices) {
+    fileIndices.forEach(function (index) {
+      var file = clientManifest.all[index];
+      // only include async files or non-js assets
+      if (clientManifest.async.indexOf(file) > -1 || !/\.js($|\?)/.test(file)) {
+        files.push(file);
+      }
+    });
+  }
+  return files;
+}
+

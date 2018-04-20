@@ -1,0 +1,90 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _mergeHook = require('./merge-hook');
+
+Object.keys(_mergeHook).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _mergeHook[key];
+    }
+  });
+});
+
+var _extractProps = require('./extract-props');
+
+Object.keys(_extractProps).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _extractProps[key];
+    }
+  });
+});
+
+var _updateListeners = require('./update-listeners');
+
+Object.keys(_updateListeners).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _updateListeners[key];
+    }
+  });
+});
+
+var _normalizeChildren = require('./normalize-children');
+
+Object.keys(_normalizeChildren).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _normalizeChildren[key];
+    }
+  });
+});
+
+var _resolveAsyncComponent = require('./resolve-async-component');
+
+Object.keys(_resolveAsyncComponent).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _resolveAsyncComponent[key];
+    }
+  });
+});
+
+var _getFirstComponentChild = require('./get-first-component-child');
+
+Object.keys(_getFirstComponentChild).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _getFirstComponentChild[key];
+    }
+  });
+});
+
+var _isAsyncPlaceholder = require('./is-async-placeholder');
+
+Object.keys(_isAsyncPlaceholder).forEach(function (key) {
+  if (key === "default" || key === "__esModule") return;
+  Object.defineProperty(exports, key, {
+    enumerable: true,
+    get: function get() {
+      return _isAsyncPlaceholder[key];
+    }
+  });
+});
+

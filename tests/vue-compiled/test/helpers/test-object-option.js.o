@@ -1,0 +1,29 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = testObjectOption;
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function testObjectOption(name) {
+  it('Options ' + name + ': should warn non object value', function () {
+    var options = {};
+    options[name] = function () {};
+    new _vue2.default(options);
+    expect('Invalid value for option "' + name + '"').toHaveBeenWarned();
+  });
+
+  it('Options ' + name + ': should not warn valid object value', function () {
+    var options = {};
+    options[name] = {};
+    new _vue2.default(options);
+    expect('Invalid value for option "' + name + '"').not.toHaveBeenWarned();
+  });
+}
+

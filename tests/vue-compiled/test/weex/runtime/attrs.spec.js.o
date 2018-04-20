@@ -1,0 +1,62 @@
+'use strict';
+
+var _index = require('../helpers/index');
+
+describe('generate attribute', function () {
+  it('should be generated', function (done) {
+    (0, _index.compileAndExecute)('\n      <div>\n        <text value="Hello World" style="font-size: 100"></text>\n      </div>\n    ').then(function (instance) {
+      expect((0, _index.getRoot)(instance)).toEqual({
+        type: 'div',
+        children: [{
+          type: 'text',
+          style: { fontSize: '100' },
+          attr: { value: 'Hello World' }
+        }]
+      });
+      done();
+    }).catch(function (e) {
+      return done.fail(e);
+    });
+  });
+
+  it('should be updated', function (done) {
+    (0, _index.compileAndExecute)('\n      <div @click="foo">\n        <text :value="x"></text>\n      </div>\n    ', '\n      data: { x: \'Hello World\' },\n      methods: {\n        foo: function () {\n          this.x = \'Hello Vue\'\n        }\n      }\n    ').then(function (instance) {
+      expect((0, _index.getRoot)(instance)).toEqual({
+        type: 'div',
+        event: ['click'],
+        children: [{ type: 'text', attr: { value: 'Hello World' } }]
+      });
+      (0, _index.fireEvent)(instance, '_root', 'click');
+      return instance;
+    }).then(function (instance) {
+      expect((0, _index.getRoot)(instance)).toEqual({
+        type: 'div',
+        event: ['click'],
+        children: [{ type: 'text', attr: { value: 'Hello Vue' } }]
+      });
+      done();
+    }).catch(function (e) {
+      return done.fail(e);
+    });
+  });
+
+  it('should be cleared', function (done) {
+    (0, _index.compileAndExecute)('\n      <div @click="foo">\n        <text :value="x"></text>\n      </div>\n    ', '\n      data: { x: \'Hello World\' },\n      methods: {\n        foo: function () {\n          this.x = \'\'\n        }\n      }\n    ').then(function (instance) {
+      expect((0, _index.getRoot)(instance)).toEqual({
+        type: 'div',
+        event: ['click'],
+        children: [{ type: 'text', attr: { value: 'Hello World' } }]
+      });
+      (0, _index.fireEvent)(instance, '_root', 'click');
+      return instance;
+    }).then(function (instance) {
+      expect((0, _index.getRoot)(instance)).toEqual({
+        type: 'div',
+        event: ['click'],
+        children: [{ type: 'text', attr: { value: '' } }]
+      });
+      done();
+    });
+  });
+});
+

@@ -1,0 +1,17 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Directive v-cloak', function () {
+  it('should be removed after compile', function () {
+    var el = document.createElement('div');
+    el.setAttribute('v-cloak', '');
+    var vm = new _vue2.default({ el: el });
+    expect(vm.$el.hasAttribute('v-cloak')).toBe(false);
+  });
+});
+

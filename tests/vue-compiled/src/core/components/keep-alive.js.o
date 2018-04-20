@@ -1,0 +1,131 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _util = require('shared/util');
+
+var _index = require('core/vdom/helpers/index');
+
+function getComponentName(opts) {
+  return opts && (opts.Ctor.options.name || opts.tag);
+}
+
+function matches(pattern, name) {
+  if (Array.isArray(pattern)) {
+    return pattern.indexOf(name) > -1;
+  } else if (typeof pattern === 'string') {
+    return pattern.split(',').indexOf(name) > -1;
+  } else if ((0, _util.isRegExp)(pattern)) {
+    return pattern.test(name);
+  }
+  /* istanbul ignore next */
+  return false;
+}
+
+function pruneCache(keepAliveInstance, filter) {
+  var cache = keepAliveInstance.cache,
+      keys = keepAliveInstance.keys,
+      _vnode = keepAliveInstance._vnode;
+
+  for (var _key in cache) {
+    var cachedNode = cache[_key];
+    if (cachedNode) {
+      var name = getComponentName(cachedNode.componentOptions);
+      if (name && !filter(name)) {
+        pruneCacheEntry(cache, _key, keys, _vnode);
+      }
+    }
+  }
+}
+
+function pruneCacheEntry(cache, key, keys, current) {
+  var cached = cache[key];
+  if (cached && (!current || cached.tag !== current.tag)) {
+    cached.componentInstance.$destroy();
+  }
+  cache[key] = null;
+  (0, _util.remove)(keys, key);
+}
+
+var patternTypes = [String, RegExp, Array];
+
+exports.default = {
+  name: 'keep-alive',
+  abstract: true,
+
+  props: {
+    include: patternTypes,
+    exclude: patternTypes,
+    max: [String, Number]
+  },
+
+  created: function created() {
+    this.cache = Object.create(null);
+    this.keys = [];
+  },
+  destroyed: function destroyed() {
+    for (var _key2 in this.cache) {
+      pruneCacheEntry(this.cache, _key2, this.keys);
+    }
+  },
+  mounted: function mounted() {
+    var _this = this;
+
+    this.$watch('include', function (val) {
+      pruneCache(_this, function (name) {
+        return matches(val, name);
+      });
+    });
+    this.$watch('exclude', function (val) {
+      pruneCache(_this, function (name) {
+        return !matches(val, name);
+      });
+    });
+  },
+  render: function render() {
+    var slot = this.$slots.default;
+    var vnode = (0, _index.getFirstComponentChild)(slot);
+    var componentOptions = vnode && vnode.componentOptions;
+    if (componentOptions) {
+      // check pattern
+      var name = getComponentName(componentOptions);
+      var include = this.include,
+          exclude = this.exclude;
+
+      if (
+      // not included
+      include && (!name || !matches(include, name)) ||
+      // excluded
+      exclude && name && matches(exclude, name)) {
+        return vnode;
+      }
+
+      var cache = this.cache,
+          keys = this.keys;
+
+      var _key3 = vnode.key == null
+      // same constructor may get registered as different local components
+      // so cid alone is not enough (#3269)
+      ? componentOptions.Ctor.cid + (componentOptions.tag ? '::' + componentOptions.tag : '') : vnode.key;
+      if (cache[_key3]) {
+        vnode.componentInstance = cache[_key3].componentInstance;
+        // make current key freshest
+        (0, _util.remove)(keys, _key3);
+        keys.push(_key3);
+      } else {
+        cache[_key3] = vnode;
+        keys.push(_key3);
+        // prune oldest entry
+        if (this.max && keys.length > parseInt(this.max)) {
+          pruneCacheEntry(cache, keys[0], keys, this._vnode);
+        }
+      }
+
+      vnode.data.keepAlive = true;
+    }
+    return vnode || slot && slot[0];
+  }
+};
+

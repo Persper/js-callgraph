@@ -1,0 +1,38 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _util = require('shared/util');
+
+var _index = require('web/util/index');
+
+function updateClass(oldVnode, vnode) {
+  var el = vnode.elm;
+  var data = vnode.data;
+  var oldData = oldVnode.data;
+  if ((0, _util.isUndef)(data.staticClass) && (0, _util.isUndef)(data.class) && ((0, _util.isUndef)(oldData) || (0, _util.isUndef)(oldData.staticClass) && (0, _util.isUndef)(oldData.class))) {
+    return;
+  }
+
+  var cls = (0, _index.genClassForVnode)(vnode);
+
+  // handle transition classes
+  var transitionClass = el._transitionClasses;
+  if ((0, _util.isDef)(transitionClass)) {
+    cls = (0, _index.concat)(cls, (0, _index.stringifyClass)(transitionClass));
+  }
+
+  // set the class
+  if (cls !== el._prevClass) {
+    el.setAttribute('class', cls);
+    el._prevClass = cls;
+  }
+}
+
+exports.default = {
+  create: updateClass,
+  update: updateClass
+};
+

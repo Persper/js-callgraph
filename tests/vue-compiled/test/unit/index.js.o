@@ -1,0 +1,12 @@
+'use strict';
+
+require('es6-promise/auto');
+
+// import all helpers
+var helpersContext = require.context('../helpers', true);
+helpersContext.keys().forEach(helpersContext);
+
+// require all test files
+var testsContext = require.context('./', true, /\.spec$/);
+testsContext.keys().forEach(testsContext);
+

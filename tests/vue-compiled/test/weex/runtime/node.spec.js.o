@@ -1,0 +1,184 @@
+'use strict';
+
+var _index = require('../helpers/index');
+
+describe('node in render function', function () {
+  it('should be generated', function () {
+    var id = String(Date.now() * Math.random());
+    var instance = (0, _index.createInstance)(id, '\n      new Vue({\n        render: function (createElement) {\n          return createElement(\'div\', {}, [\n            createElement(\'text\', { attrs: { value: \'Hello\' }}, [])\n          ])\n        },\n        el: "body"\n      })\n    ');
+    expect((0, _index.getRoot)(instance)).toEqual({
+      type: 'div',
+      children: [{ type: 'text', attr: { value: 'Hello' } }]
+    });
+  });
+
+  it('should be generated with all types of text', function () {
+    var id = String(Date.now() * Math.random());
+    var instance = (0, _index.createInstance)(id, '\n      new Vue({\n        render: function (createElement) {\n          return createElement(\'div\', {}, [\n            createElement(\'text\', { attrs: { value: \'Hello\' }}, []),\n            \'World\',\n            createElement(\'text\', {}, [\'Weex\'])\n          ])\n        },\n        el: "body"\n      })\n    ');
+    expect((0, _index.getRoot)(instance)).toEqual({
+      type: 'div',
+      children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'World' } }, { type: 'text', attr: { value: 'Weex' } }]
+    });
+  });
+
+  it('should be generated with comments', function () {
+    // todo
+  });
+
+  it('should be generated with module diff', function (done) {
+    var id = String(Date.now() * Math.random());
+    var instance = (0, _index.createInstance)(id, '\n      new Vue({\n        data: {\n          counter: 0\n        },\n        methods: {\n          foo: function () {}\n        },\n        render: function (createElement) {\n          switch (this.counter) {\n            case 1:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', { attrs: { value: \'World\' }}, [])\n            ])\n\n            case 2:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', { attrs: { value: \'World\' }, style: { fontSize: 100 }}, [])\n            ])\n\n            case 3:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', {\n                attrs: { value: \'World\' },\n                style: { fontSize: 100 },\n                on: { click: this.foo }\n              }, [])\n            ])\n\n            case 4:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', {\n                attrs: { value: \'Weex\' },\n                style: { color: \'#ff0000\' }\n              }, [])\n            ])\n\n            default:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', { attrs: { value: \'Hello\' }}, [])\n            ])\n          }\n        },\n        el: "body"\n      })\n    ');
+    expect((0, _index.getRoot)(instance)).toEqual({
+      type: 'div',
+      children: [{ type: 'text', attr: { value: 'Hello' } }]
+    });
+
+    (0, _index.syncPromise)([(0, _index.checkRefresh)(instance, { counter: 1 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'World' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 2 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'World' }, style: { fontSize: 100 } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 3 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'World' }, style: { fontSize: 100 }, event: ['click'] }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 4 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Weex' }, style: { fontSize: '', color: '#ff0000' } }]
+      });
+      done();
+    })]);
+  });
+
+  it('should be generated with sub components', function () {
+    var id = String(Date.now() * Math.random());
+    var instance = (0, _index.createInstance)(id, '\n      new Vue({\n        render: function (createElement) {\n          return createElement(\'div\', {}, [\n            createElement(\'text\', { attrs: { value: \'Hello\' }}, []),\n            createElement(\'foo\', { props: { x: \'Weex\' }})\n          ])\n        },\n        components: {\n          foo: {\n            props: {\n              x: { default: \'World\' }\n            },\n            render: function (createElement) {\n              return createElement(\'text\', { attrs: { value: this.x }}, [])\n            }\n          }\n        },\n        el: "body"\n      })\n    ');
+    expect((0, _index.getRoot)(instance)).toEqual({
+      type: 'div',
+      children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'Weex' } }]
+    });
+  });
+
+  it('should be generated with if/for diff', function (done) {
+    var _compileAndStringify = (0, _index.compileAndStringify)('\n      <div>\n        <text v-for="item in list" v-if="item.x">{{item.v}}</text>\n      </div>\n    '),
+        render = _compileAndStringify.render,
+        staticRenderFns = _compileAndStringify.staticRenderFns;
+
+    var id = String(Date.now() * Math.random());
+    var instance = (0, _index.createInstance)(id, '\n      new Vue({\n        data: {\n          list: [\n            { v: \'Hello\', x: true },\n            { v: \'World\', x: false },\n            { v: \'Weex\', x: true }\n          ]\n        },\n        computed: {\n          x: {\n            get: function () { return 0 },\n            set: function (v) {\n              switch (v) {\n                case 1:\n                this.list[1].x = true\n                break\n                case 2:\n                this.list.push({ v: \'v-if\' })\n                break\n                case 3:\n                this.list.push({ v: \'v-for\', x: true })\n                break\n                case 4:\n                this.list.splice(1, 2)\n                break\n              }\n            }\n          }\n        },\n        render: ' + render + ',\n        staticRenderFns: ' + staticRenderFns + ',\n        el: "body"\n      })\n    ');
+    expect((0, _index.getRoot)(instance)).toEqual({
+      type: 'div',
+      children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'Weex' } }]
+    });
+
+    (0, _index.syncPromise)([(0, _index.checkRefresh)(instance, { x: 1 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'World' } }, { type: 'text', attr: { value: 'Weex' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { x: 2 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'World' } }, { type: 'text', attr: { value: 'Weex' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { x: 3 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'World' } }, { type: 'text', attr: { value: 'Weex' } }, { type: 'text', attr: { value: 'v-for' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { x: 4 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'v-for' } }]
+      });
+      done();
+    })]);
+  });
+
+  it('should be generated with node structure diff', function (done) {
+    var id = String(Date.now() * Math.random());
+    var instance = (0, _index.createInstance)(id, '\n      new Vue({\n        data: {\n          counter: 0\n        },\n        render: function (createElement) {\n          switch (this.counter) {\n            case 1:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', { attrs: { value: \'Hello\' }}, []),\n              createElement(\'text\', { attrs: { value: \'World\' }}, [])\n            ])\n\n            case 2:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', { attrs: { value: \'Hello\' }}, []),\n              createElement(\'text\', { attrs: { value: \'World\' }}, []),\n              createElement(\'text\', { attrs: { value: \'Weex\' }}, [])\n            ])\n\n            case 3:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', { attrs: { value: \'Hello\' }}, []),\n              createElement(\'text\', { attrs: { value: \'Weex\' }}, [])\n            ])\n\n            case 4:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', { attrs: { value: \'Weex\' }}, [])\n            ])\n\n            case 5:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', { attrs: { value: \'Hello\' }}, []),\n              createElement(\'text\', { attrs: { value: \'Weex\' }}, [])\n            ])\n\n            case 6:\n            return createElement(\'div\', {}, [\n              createElement(\'input\', { attrs: { value: \'Hello\' }}, []),\n              createElement(\'text\', { attrs: { value: \'Weex\' }}, [])\n            ])\n\n            default:\n            return createElement(\'div\', {}, [\n              createElement(\'text\', { attrs: { value: \'Hello\' }}, []),\n            ])\n          }\n        },\n        el: "body"\n      })\n    ');
+    expect((0, _index.getRoot)(instance)).toEqual({
+      type: 'div',
+      children: [{ type: 'text', attr: { value: 'Hello' } }]
+    });
+
+    (0, _index.syncPromise)([(0, _index.checkRefresh)(instance, { counter: 1 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'World' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 2 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'World' } }, { type: 'text', attr: { value: 'Weex' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 3 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'Weex' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 4 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Weex' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 5 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'Weex' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 6 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'input', attr: { value: 'Hello' } }, { type: 'text', attr: { value: 'Weex' } }]
+      });
+      done();
+    })]);
+  });
+
+  it('should be generated with component diff', function (done) {
+    var id = String(Date.now() * Math.random());
+    var instance = (0, _index.createInstance)(id, '\n      new Vue({\n        data: {\n          counter: 0\n        },\n        components: {\n          foo: {\n            props: { a: { default: \'1\' }, b: { default: \'2\' }},\n            render: function (createElement) {\n              return createElement(\'text\', { attrs: { value: this.a + \'-\' + this.b }}, [])\n            }\n          },\n          bar: {\n            render: function (createElement) {\n              return createElement(\'text\', { attrs: { value: \'Bar\' }, style: { fontSize: 100 }})\n            }\n          },\n          baz: {\n            render: function (createElement) {\n              return createElement(\'image\', { attrs: { src: \'http://example.com/favicon.ico\' }})\n            }\n          }\n        },\n        render: function (createElement) {\n          switch (this.counter) {\n            case 1:\n            return createElement(\'div\', {}, [\n              createElement(\'foo\', { props: { a: \'111\', b: \'222\' }}, [])\n            ])\n\n            case 2:\n            return createElement(\'div\', {}, [\n              createElement(\'foo\', {}, [])\n            ])\n\n            case 3:\n            return createElement(\'div\', {}, [\n              createElement(\'bar\', {}, [])\n            ])\n\n            case 4:\n            return createElement(\'div\', {}, [\n              createElement(\'baz\', {}, [])\n            ])\n\n            case 5:\n            return createElement(\'div\', {}, [\n              createElement(\'foo\', {}, []),\n              createElement(\'bar\', {}, []),\n              createElement(\'baz\', {}, [])\n            ])\n\n            default:\n            return createElement(\'div\', {}, [\n              createElement(\'foo\', { props: { a: \'111\' }}, [])\n            ])\n          }\n        },\n        el: "body"\n      })\n    ');
+    expect((0, _index.getRoot)(instance)).toEqual({
+      type: 'div',
+      children: [{ type: 'text', attr: { value: '111-2' } }]
+    });
+
+    (0, _index.syncPromise)([(0, _index.checkRefresh)(instance, { counter: 1 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: '111-222' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 2 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: '1-2' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 3 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: 'Bar' }, style: { fontSize: 100 } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 4 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'image', attr: { src: 'http://example.com/favicon.ico' } }]
+      });
+    }), (0, _index.checkRefresh)(instance, { counter: 5 }, function (result) {
+      expect(result).toEqual({
+        type: 'div',
+        children: [{ type: 'text', attr: { value: '1-2' } }, { type: 'text', attr: { value: 'Bar' }, style: { fontSize: 100 } }, { type: 'image', attr: { src: 'http://example.com/favicon.ico' } }]
+      });
+      done();
+    })]);
+  });
+});
+

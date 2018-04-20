@@ -1,0 +1,122 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _createComponent = require('core/vdom/create-component');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('create-component', function () {
+  var vm = void 0;
+  beforeEach(function (done) {
+    vm = new _vue2.default({
+      template: '<p>{{msg}}</p>',
+      data: function data() {
+        return { msg: 'hello, my children' };
+      }
+    }).$mount();
+    _vue2.default.nextTick(done);
+  });
+
+  it('create a component basically', function () {
+    var child = {
+      name: 'child',
+      props: ['msg'],
+      render: function render() {}
+    };
+    var data = {
+      props: { msg: 'hello world' },
+      attrs: { id: 1 },
+      staticAttrs: { class: 'foo' },
+      on: { notify: 'onNotify' }
+    };
+    var vnode = (0, _createComponent.createComponent)(child, data, vm, vm);
+    expect(vnode.tag).toMatch(/vue-component-[0-9]+-child/);
+    expect(vnode.data.attrs).toEqual({ id: 1 });
+    expect(vnode.data.staticAttrs).toEqual({ class: 'foo' });
+    expect(vnode.componentOptions.propsData).toEqual({ msg: 'hello world' });
+    expect(vnode.componentOptions.listeners).toEqual({ notify: 'onNotify' });
+    expect(vnode.children).toBeUndefined();
+    expect(vnode.text).toBeUndefined();
+    expect(vnode.elm).toBeUndefined();
+    expect(vnode.ns).toBeUndefined();
+    expect(vnode.context).toEqual(vm);
+  });
+
+  it('create a component when resolved with async loading', function (done) {
+    var vnode = null;
+    var data = {
+      props: {},
+      staticAttrs: { class: 'foo' }
+    };
+    spyOn(vm, '$forceUpdate');
+    function async(resolve, reject) {
+      setTimeout(function () {
+        resolve({
+          name: 'child',
+          props: ['msg']
+        });
+        _vue2.default.nextTick(loaded);
+      }, 0);
+    }
+    function go() {
+      vnode = (0, _createComponent.createComponent)(async, data, vm, vm);
+      expect(vnode.isComment).toBe(true); // not to be loaded yet.
+      expect(vnode.asyncFactory).toBe(async);
+    }
+    function loaded() {
+      vnode = (0, _createComponent.createComponent)(async, data, vm, vm);
+      expect(vnode.tag).toMatch(/vue-component-[0-9]+-child/);
+      expect(vnode.data.staticAttrs).toEqual({ class: 'foo' });
+      expect(vnode.children).toBeUndefined();
+      expect(vnode.text).toBeUndefined();
+      expect(vnode.elm).toBeUndefined();
+      expect(vnode.ns).toBeUndefined();
+      expect(vnode.context).toEqual(vm);
+      expect(vm.$forceUpdate).toHaveBeenCalled();
+      done();
+    }
+    go();
+  });
+
+  it('not create a component when rejected with async loading', function (done) {
+    var vnode = null;
+    var data = {
+      props: { msg: 'hello world' },
+      attrs: { id: 1 }
+    };
+    var reason = 'failed!!';
+    function async(resolve, reject) {
+      setTimeout(function () {
+        reject(reason);
+        _vue2.default.nextTick(failed);
+      }, 0);
+    }
+    function go() {
+      vnode = (0, _createComponent.createComponent)(async, data, vm, vm);
+      expect(vnode.isComment).toBe(true); // not to be loaded yet.
+    }
+    function failed() {
+      vnode = (0, _createComponent.createComponent)(async, data, vm, vm);
+      expect(vnode.isComment).toBe(true); // failed, still a comment node
+      expect('Failed to resolve async component: ' + async + '\nReason: ' + reason).toHaveBeenWarned();
+      done();
+    }
+    go();
+  });
+
+  it('not create a component when specified with falsy', function () {
+    var vnode = (0, _createComponent.createComponent)(null, {}, vm, vm);
+    expect(vnode).toBeUndefined();
+  });
+
+  it('warn component definition type', function () {
+    var Ctor = 'child';
+    var vnode = (0, _createComponent.createComponent)(Ctor, {}, vm, vm);
+    expect(vnode).toBeUndefined();
+    expect('Invalid Component definition: ' + Ctor).toHaveBeenWarned();
+  });
+});
+

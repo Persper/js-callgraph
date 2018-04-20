@@ -1,0 +1,150 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.resolveVirtualComponent = resolveVirtualComponent;
+
+var _index = require('core/util/index');
+
+var _watcher = require('core/observer/watcher');
+
+var _watcher2 = _interopRequireDefault(_watcher);
+
+var _proxy = require('core/instance/proxy');
+
+var _state = require('core/instance/state');
+
+var _render = require('core/instance/render');
+
+var _events = require('core/instance/events');
+
+var _inject = require('core/instance/inject');
+
+var _lifecycle = require('core/instance/lifecycle');
+
+var _init = require('core/instance/init');
+
+var _index2 = require('../../util/index');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// https://github.com/Hanks10100/weex-native-directive/tree/master/component
+
+var uid = 0;
+
+// override Vue.prototype._init
+function initVirtualComponent() {
+  var options = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+
+  var vm = this;
+  var componentId = options.componentId;
+
+  // virtual component uid
+  vm._uid = 'virtual-component-' + uid++;
+
+  // a flag to avoid this being observed
+  vm._isVue = true;
+  // merge options
+  if (options && options._isComponent) {
+    // optimize internal component instantiation
+    // since dynamic options merging is pretty slow, and none of the
+    // internal component options needs special treatment.
+    (0, _init.initInternalComponent)(vm, options);
+  } else {
+    vm.$options = (0, _index.mergeOptions)((0, _init.resolveConstructorOptions)(vm.constructor), options || {}, vm);
+  }
+
+  /* istanbul ignore else */
+  if (process.env.NODE_ENV !== 'production') {
+    (0, _proxy.initProxy)(vm);
+  } else {
+    vm._renderProxy = vm;
+  }
+
+  vm._self = vm;
+  (0, _lifecycle.initLifecycle)(vm);
+  (0, _events.initEvents)(vm);
+  (0, _render.initRender)(vm);
+  (0, _lifecycle.callHook)(vm, 'beforeCreate');
+  (0, _inject.initInjections)(vm); // resolve injections before data/props
+  (0, _state.initState)(vm);
+  (0, _inject.initProvide)(vm); // resolve provide after data/props
+  (0, _lifecycle.callHook)(vm, 'created');
+
+  // send initial data to native
+  var data = vm.$options.data;
+  var params = typeof data === 'function' ? (0, _state.getData)(data, vm) : data || {};
+  if ((0, _index.isPlainObject)(params)) {
+    (0, _index2.updateComponentData)(componentId, params);
+  }
+
+  (0, _index2.registerComponentHook)(componentId, 'lifecycle', 'attach', function () {
+    (0, _lifecycle.callHook)(vm, 'beforeMount');
+
+    var updateComponent = function updateComponent() {
+      vm._update(vm._vnode, false);
+    };
+    new _watcher2.default(vm, updateComponent, _index.noop, null, true);
+
+    vm._isMounted = true;
+    (0, _lifecycle.callHook)(vm, 'mounted');
+  });
+
+  (0, _index2.registerComponentHook)(componentId, 'lifecycle', 'detach', function () {
+    vm.$destroy();
+  });
+}
+
+// override Vue.prototype._update
+function updateVirtualComponent(vnode) {
+  var vm = this;
+  var componentId = vm.$options.componentId;
+  if (vm._isMounted) {
+    (0, _lifecycle.callHook)(vm, 'beforeUpdate');
+  }
+  vm._vnode = vnode;
+  if (vm._isMounted && componentId) {
+    // TODO: data should be filtered and without bindings
+    var data = Object.assign({}, vm._data);
+    (0, _index2.updateComponentData)(componentId, data, function () {
+      (0, _lifecycle.callHook)(vm, 'updated');
+    });
+  }
+}
+
+// listening on native callback
+function resolveVirtualComponent(vnode) {
+  var BaseCtor = vnode.componentOptions.Ctor;
+  var VirtualComponent = BaseCtor.extend({});
+  var cid = VirtualComponent.cid;
+  VirtualComponent.prototype._init = initVirtualComponent;
+  VirtualComponent.prototype._update = updateVirtualComponent;
+
+  vnode.componentOptions.Ctor = BaseCtor.extend({
+    beforeCreate: function beforeCreate() {
+      // const vm: Component = this
+
+      // TODO: listen on all events and dispatch them to the
+      // corresponding virtual components according to the componentId.
+      // vm._virtualComponents = {}
+      var createVirtualComponent = function createVirtualComponent(componentId, propsData) {
+        // create virtual component
+        // const subVm =
+        new VirtualComponent({
+          componentId: componentId,
+          propsData: propsData
+        });
+        // if (vm._virtualComponents) {
+        //   vm._virtualComponents[componentId] = subVm
+        // }
+      };
+
+      (0, _index2.registerComponentHook)(cid, 'lifecycle', 'create', createVirtualComponent);
+    },
+    beforeDestroy: function beforeDestroy() {
+      delete this._virtualComponents;
+    }
+  });
+}
+

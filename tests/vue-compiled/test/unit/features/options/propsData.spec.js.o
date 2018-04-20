@@ -1,0 +1,37 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Options propsData', function () {
+  it('should work', function (done) {
+    var A = _vue2.default.extend({
+      props: ['a'],
+      template: '<div>{{ a }}</div>'
+    });
+    var vm = new A({
+      propsData: {
+        a: 123
+      }
+    }).$mount();
+    expect(vm.a).toBe(123);
+    expect(vm.$el.textContent).toBe('123');
+    vm.a = 234;
+    waitForUpdate(function () {
+      expect(vm.$el.textContent).toBe('234');
+    }).then(done);
+  });
+
+  it('warn non instantiation usage', function () {
+    _vue2.default.extend({
+      propsData: {
+        a: 123
+      }
+    });
+    expect('option "propsData" can only be used during instance creation').toHaveBeenWarned();
+  });
+});
+

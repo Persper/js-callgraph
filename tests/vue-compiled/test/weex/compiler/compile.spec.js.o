@@ -1,0 +1,82 @@
+'use strict';
+
+var _weexTemplateCompiler = require('../../../packages/weex-template-compiler');
+
+var _index = require('../helpers/index');
+
+describe('compile basic', function () {
+  it('should be compiled', function () {
+    var _compile = (0, _weexTemplateCompiler.compile)('<div>{{hi}}</div>'),
+        render = _compile.render,
+        staticRenderFns = _compile.staticRenderFns,
+        errors = _compile.errors;
+
+    expect(render).toEqual('with(this){return _c(\'div\',[_v(_s(hi))])}');
+    expect(staticRenderFns.length).toBe(0);
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile data bindings', function () {
+    var _compile2 = (0, _weexTemplateCompiler.compile)('<div :a="b"></div>'),
+        render = _compile2.render,
+        staticRenderFns = _compile2.staticRenderFns,
+        errors = _compile2.errors;
+
+    expect(render).toEqual('with(this){return _c(\'div\',{attrs:{"a":b}})}');
+    expect(staticRenderFns).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile event bindings', function () {
+    var _compile3 = (0, _weexTemplateCompiler.compile)('<div @click="x"></div>'),
+        render = _compile3.render,
+        staticRenderFns = _compile3.staticRenderFns,
+        errors = _compile3.errors;
+
+    expect(render).toEqual('with(this){return _c(\'div\',{on:{"click":x}})}');
+    expect(staticRenderFns).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile data bindings with children', function () {
+    var _compile4 = (0, _weexTemplateCompiler.compile)('<foo :a="b"><text>Hello</text></foo>'),
+        render = _compile4.render,
+        staticRenderFns = _compile4.staticRenderFns,
+        errors = _compile4.errors;
+
+    expect(render).toEqual('with(this){return _c(\'foo\',{attrs:{"a":b}},[_c(\'text\',[_v("Hello")])])}');
+    expect(staticRenderFns).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile unary tag', function () {
+    var inputCase = (0, _weexTemplateCompiler.compile)('<div><input><text>abc</text></div>');
+    expect(inputCase.render).toMatch((0, _index.strToRegExp)('return _m(0)'));
+    expect(inputCase.staticRenderFns).toMatch((0, _index.strToRegExp)('_c(\'div\',[_c(\'input\'),_c(\'text\',[_v("abc")])])'));
+    expect(inputCase.errors).toEqual([]);
+
+    var imageCase = (0, _weexTemplateCompiler.compile)('<div><image src="path"><text>abc</text></div>');
+    expect(imageCase.render).toMatch((0, _index.strToRegExp)('return _m(0)'));
+    expect(imageCase.staticRenderFns).toMatch((0, _index.strToRegExp)('_c(\'div\',[_c(\'image\',{attrs:{"src":"path"}}),_c(\'text\',[_v("abc")])])'));
+    expect(imageCase.errors).toEqual([]);
+
+    var complexCase = (0, _weexTemplateCompiler.compile)('\n      <div>\n        <image src="path">\n        <image></image>\n        <div>\n          <embed>\n          <text>start</text>\n          <input type="text">\n          <input type="url" />\n          <text>end</text>\n        </div>\n      </div>\n    ');
+    expect(complexCase.render).toMatch((0, _index.strToRegExp)('return _m(0)'));
+    expect(complexCase.staticRenderFns).toMatch((0, _index.strToRegExp)('_c(\'image\',{attrs:{"src":"path"}}),_c(\'image\'),_c(\'div\''));
+    expect(complexCase.staticRenderFns).toMatch((0, _index.strToRegExp)('_c(\'div\',[_c(\'embed\'),_c(\'text\',[_v("start")]),_c(\'input\',{attrs:{"type":"text"}}),_c(\'input\',{attrs:{"type":"url"}}),_c(\'text\',[_v("end")])]'));
+    expect(complexCase.errors).toEqual([]);
+  });
+
+  it('should compile more complex situation', function () {
+    // from examples of https://github.com/alibaba/weex
+    var _compile5 = (0, _weexTemplateCompiler.compile)('\n      <refresh class="refresh" @refresh="handleRefresh" :display="displayRefresh"\n        style="flex-direction:row;">\n        <loading-indicator></loading-indicator>\n        <text style="margin-left:36px;color:#eee;">Load more...</text>\n      </refresh>\n    '),
+        render = _compile5.render,
+        staticRenderFns = _compile5.staticRenderFns,
+        errors = _compile5.errors;
+
+    expect(render).toEqual('with(this){return _c(\'refresh\',{staticClass:["refresh"],staticStyle:{flexDirection:"row"},attrs:{"display":displayRefresh},on:{"refresh":handleRefresh}},[_c(\'loading-indicator\'),_c(\'text\',{staticStyle:{marginLeft:"36px",color:"#eee"}},[_v("Load more...")])])}');
+    expect(staticRenderFns).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+});
+

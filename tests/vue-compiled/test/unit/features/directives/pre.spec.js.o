@@ -1,0 +1,35 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Directive v-pre', function () {
+  it('should not compile inner content', function () {
+    var vm = new _vue2.default({
+      template: '<div>\n        <div v-pre>{{ a }}</div>\n        <div>{{ a }}</div>\n        <div v-pre>\n          <component></component>\n        </div>\n      </div>',
+      data: {
+        a: 123
+      }
+    });
+    vm.$mount();
+    expect(vm.$el.firstChild.textContent).toBe('{{ a }}');
+    expect(vm.$el.children[1].textContent).toBe('123');
+    expect(vm.$el.lastChild.innerHTML).toBe('<component></component>');
+  });
+
+  it('should not compile on root node', function () {
+    var vm = new _vue2.default({
+      template: '<div v-pre>{{ a }}</div>',
+      replace: true,
+      data: {
+        a: 123
+      }
+    });
+    vm.$mount();
+    expect(vm.$el.firstChild.textContent).toBe('{{ a }}');
+  });
+});
+

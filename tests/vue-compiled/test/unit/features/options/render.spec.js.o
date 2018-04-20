@@ -1,0 +1,47 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Options render', function () {
+  it('basic usage', function () {
+    var vm = new _vue2.default({
+      render: function render(h) {
+        var children = [];
+        for (var i = 0; i < this.items.length; i++) {
+          children.push(h('li', { staticClass: 'task' }, [this.items[i].name]));
+        }
+        return h('ul', { staticClass: 'tasks' }, children);
+      },
+
+      data: {
+        items: [{ id: 1, name: 'task1' }, { id: 2, name: 'task2' }]
+      }
+    }).$mount();
+    expect(vm.$el.tagName).toBe('UL');
+    for (var i = 0; i < vm.$el.children.length; i++) {
+      var li = vm.$el.children[i];
+      expect(li.tagName).toBe('LI');
+      expect(li.textContent).toBe(vm.items[i].name);
+    }
+  });
+
+  it('allow null data', function () {
+    var vm = new _vue2.default({
+      render: function render(h) {
+        return h('div', null, 'hello' /* string as children*/);
+      }
+    }).$mount();
+    expect(vm.$el.tagName).toBe('DIV');
+    expect(vm.$el.textContent).toBe('hello');
+  });
+
+  it('should warn non `render` option and non `template` option', function () {
+    new _vue2.default().$mount();
+    expect('Failed to mount component: template or render function not defined.').toHaveBeenWarned();
+  });
+});
+

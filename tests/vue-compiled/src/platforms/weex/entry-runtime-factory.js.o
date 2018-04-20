@@ -1,0 +1,11 @@
+'use strict';
+
+var _index = require('./runtime/index');
+
+var _index2 = _interopRequireDefault(_index);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.Vue = _index2.default; // this entry is built and wrapped with a factory function
+// used to generate a fresh copy of Vue for every Weex instance.
+

@@ -1,0 +1,237 @@
+'use strict';
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+var _watcher = require('core/observer/watcher');
+
+var _watcher2 = _interopRequireDefault(_watcher);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Watcher', function () {
+  var vm = void 0,
+      spy = void 0;
+  beforeEach(function () {
+    vm = new _vue2.default({
+      template: '<div></div>',
+      data: {
+        a: 1,
+        b: {
+          c: 2,
+          d: 4
+        },
+        c: 'c',
+        msg: 'yo'
+      }
+    }).$mount();
+    spy = jasmine.createSpy('watcher');
+  });
+
+  it('path', function (done) {
+    var watcher = new _watcher2.default(vm, 'b.c', spy);
+    expect(watcher.value).toBe(2);
+    vm.b.c = 3;
+    waitForUpdate(function () {
+      expect(watcher.value).toBe(3);
+      expect(spy).toHaveBeenCalledWith(3, 2);
+      vm.b = { c: 4 // swapping the object
+      };
+    }).then(function () {
+      expect(watcher.value).toBe(4);
+      expect(spy).toHaveBeenCalledWith(4, 3);
+    }).then(done);
+  });
+
+  it('non-existent path, set later', function (done) {
+    var watcher1 = new _watcher2.default(vm, 'b.e', spy);
+    expect(watcher1.value).toBeUndefined();
+    // check $add should not affect isolated children
+    var child2 = new _vue2.default({ parent: vm });
+    var watcher2 = new _watcher2.default(child2, 'b.e', spy);
+    expect(watcher2.value).toBeUndefined();
+    _vue2.default.set(vm.b, 'e', 123);
+    waitForUpdate(function () {
+      expect(watcher1.value).toBe(123);
+      expect(watcher2.value).toBeUndefined();
+      expect(spy.calls.count()).toBe(1);
+      expect(spy).toHaveBeenCalledWith(123, undefined);
+    }).then(done);
+  });
+
+  it('delete', function (done) {
+    var watcher = new _watcher2.default(vm, 'b.c', spy);
+    expect(watcher.value).toBe(2);
+    _vue2.default.delete(vm.b, 'c');
+    waitForUpdate(function () {
+      expect(watcher.value).toBeUndefined();
+      expect(spy).toHaveBeenCalledWith(undefined, 2);
+    }).then(done);
+  });
+
+  it('path containing $data', function (done) {
+    var watcher = new _watcher2.default(vm, '$data.b.c', spy);
+    expect(watcher.value).toBe(2);
+    vm.b = { c: 3 };
+    waitForUpdate(function () {
+      expect(watcher.value).toBe(3);
+      expect(spy).toHaveBeenCalledWith(3, 2);
+      vm.$data.b.c = 4;
+    }).then(function () {
+      expect(watcher.value).toBe(4);
+      expect(spy).toHaveBeenCalledWith(4, 3);
+    }).then(done);
+  });
+
+  it('deep watch', function (done) {
+    var oldB = void 0;
+    new _watcher2.default(vm, 'b', spy, {
+      deep: true
+    });
+    vm.b.c = { d: 4 };
+    waitForUpdate(function () {
+      expect(spy).toHaveBeenCalledWith(vm.b, vm.b);
+      oldB = vm.b;
+      vm.b = { c: [{ a: 1 }] };
+    }).then(function () {
+      expect(spy).toHaveBeenCalledWith(vm.b, oldB);
+      expect(spy.calls.count()).toBe(2);
+      vm.b.c[0].a = 2;
+    }).then(function () {
+      expect(spy).toHaveBeenCalledWith(vm.b, vm.b);
+      expect(spy.calls.count()).toBe(3);
+    }).then(done);
+  });
+
+  it('deep watch $data', function (done) {
+    new _watcher2.default(vm, '$data', spy, {
+      deep: true
+    });
+    vm.b.c = 3;
+    waitForUpdate(function () {
+      expect(spy).toHaveBeenCalledWith(vm.$data, vm.$data);
+    }).then(done);
+  });
+
+  it('deep watch with circular references', function (done) {
+    new _watcher2.default(vm, 'b', spy, {
+      deep: true
+    });
+    _vue2.default.set(vm.b, '_', vm.b);
+    waitForUpdate(function () {
+      expect(spy).toHaveBeenCalledWith(vm.b, vm.b);
+      expect(spy.calls.count()).toBe(1);
+      vm.b._.c = 1;
+    }).then(function () {
+      expect(spy).toHaveBeenCalledWith(vm.b, vm.b);
+      expect(spy.calls.count()).toBe(2);
+    }).then(done);
+  });
+
+  it('fire change for prop addition/deletion in non-deep mode', function (done) {
+    new _watcher2.default(vm, 'b', spy);
+    _vue2.default.set(vm.b, 'e', 123);
+    waitForUpdate(function () {
+      expect(spy).toHaveBeenCalledWith(vm.b, vm.b);
+      expect(spy.calls.count()).toBe(1);
+      _vue2.default.delete(vm.b, 'e');
+    }).then(function () {
+      expect(spy.calls.count()).toBe(2);
+    }).then(done);
+  });
+
+  it('watch function', function (done) {
+    var watcher = new _watcher2.default(vm, function () {
+      return this.a + this.b.d;
+    }, spy);
+    expect(watcher.value).toBe(5);
+    vm.a = 2;
+    waitForUpdate(function () {
+      expect(spy).toHaveBeenCalledWith(6, 5);
+      vm.b = { d: 2 };
+    }).then(function () {
+      expect(spy).toHaveBeenCalledWith(4, 6);
+    }).then(done);
+  });
+
+  it('computed mode, lazy', function (done) {
+    var getterCallCount = 0;
+    var watcher = new _watcher2.default(vm, function () {
+      getterCallCount++;
+      return this.a + this.b.d;
+    }, null, { computed: true });
+
+    expect(getterCallCount).toBe(0);
+    expect(watcher.computed).toBe(true);
+    expect(watcher.value).toBeUndefined();
+    expect(watcher.dirty).toBe(true);
+    expect(watcher.dep).toBeTruthy();
+
+    var value = watcher.evaluate();
+    expect(getterCallCount).toBe(1);
+    expect(value).toBe(5);
+    expect(watcher.value).toBe(5);
+    expect(watcher.dirty).toBe(false);
+
+    // should not get again if not dirty
+    watcher.evaluate();
+    expect(getterCallCount).toBe(1);
+
+    vm.a = 2;
+    waitForUpdate(function () {
+      expect(getterCallCount).toBe(1);
+      expect(watcher.value).toBe(5);
+      expect(watcher.dirty).toBe(true);
+
+      var value = watcher.evaluate();
+      expect(getterCallCount).toBe(2);
+      expect(value).toBe(6);
+      expect(watcher.value).toBe(6);
+      expect(watcher.dirty).toBe(false);
+    }).then(done);
+  });
+
+  it('computed mode, activated', function (done) {
+    var getterCallCount = 0;
+    var watcher = new _watcher2.default(vm, function () {
+      getterCallCount++;
+      return this.a + this.b.d;
+    }, null, { computed: true });
+
+    // activate by mocking a subscriber
+    var subMock = jasmine.createSpyObj('sub', ['update']);
+    watcher.dep.addSub(subMock);
+
+    var value = watcher.evaluate();
+    expect(getterCallCount).toBe(1);
+    expect(value).toBe(5);
+
+    vm.a = 2;
+    waitForUpdate(function () {
+      expect(getterCallCount).toBe(2);
+      expect(subMock.update).toHaveBeenCalled();
+
+      // since already computed, calling evaluate again should not trigger
+      // getter
+      watcher.evaluate();
+      expect(getterCallCount).toBe(2);
+    }).then(done);
+  });
+
+  it('teardown', function (done) {
+    var watcher = new _watcher2.default(vm, 'b.c', spy);
+    watcher.teardown();
+    vm.b.c = 3;
+    waitForUpdate(function () {
+      expect(watcher.active).toBe(false);
+      expect(spy).not.toHaveBeenCalled();
+    }).then(done);
+  });
+
+  it('warn not support path', function () {
+    new _watcher2.default(vm, 'd.e + c', spy);
+    expect('Failed watching path:').toHaveBeenWarned();
+  });
+});
+

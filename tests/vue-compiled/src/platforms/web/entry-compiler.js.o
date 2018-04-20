@@ -1,0 +1,45 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _parser = require('sfc/parser');
+
+Object.defineProperty(exports, 'parseComponent', {
+  enumerable: true,
+  get: function get() {
+    return _parser.parseComponent;
+  }
+});
+
+var _index = require('./compiler/index');
+
+Object.defineProperty(exports, 'compile', {
+  enumerable: true,
+  get: function get() {
+    return _index.compile;
+  }
+});
+Object.defineProperty(exports, 'compileToFunctions', {
+  enumerable: true,
+  get: function get() {
+    return _index.compileToFunctions;
+  }
+});
+
+var _compiler = require('./server/compiler');
+
+Object.defineProperty(exports, 'ssrCompile', {
+  enumerable: true,
+  get: function get() {
+    return _compiler.ssrCompile;
+  }
+});
+Object.defineProperty(exports, 'ssrCompileToFunctions', {
+  enumerable: true,
+  get: function get() {
+    return _compiler.ssrCompileToFunctions;
+  }
+});
+

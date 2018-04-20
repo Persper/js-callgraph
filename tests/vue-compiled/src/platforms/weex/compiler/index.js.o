@@ -1,0 +1,61 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.baseOptions = undefined;
+exports.compile = compile;
+
+var _util = require('shared/util');
+
+var _index = require('compiler/index');
+
+var _index2 = require('./modules/index');
+
+var _index3 = _interopRequireDefault(_index2);
+
+var _index4 = require('./directives/index');
+
+var _index5 = _interopRequireDefault(_index4);
+
+var _element = require('../util/element');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var baseOptions = exports.baseOptions = {
+  modules: _index3.default,
+  directives: _index5.default,
+  isUnaryTag: _element.isUnaryTag,
+  mustUseProp: _element.mustUseProp,
+  canBeLeftOpenTag: _element.canBeLeftOpenTag,
+  isReservedTag: _element.isReservedTag,
+  getTagNamespace: _element.getTagNamespace,
+  preserveWhitespace: false,
+  recyclable: false,
+  staticKeys: (0, _util.genStaticKeys)(_index3.default)
+};
+
+var compiler = (0, _index.createCompiler)(baseOptions);
+
+function compile(template, options) {
+  var generateAltRender = false;
+  if (options && options.recyclable === true) {
+    generateAltRender = true;
+    options.recyclable = false;
+  }
+  var result = compiler.compile(template, options);
+
+  // generate @render function for <recycle-list>
+  if (options && generateAltRender) {
+    options.recyclable = true;
+    // disable static optimizations
+    options.optimize = false;
+
+    var _compiler$compile = compiler.compile(template, options),
+        render = _compiler$compile.render;
+
+    result['@render'] = render;
+  }
+  return result;
+}
+

@@ -1,0 +1,22 @@
+'use strict';
+
+var _lodash = require('lodash');
+
+beforeEach(function () {
+  jasmine.addMatchers({
+    // override built-in toEqual because it behaves incorrectly
+    // on Vue-observed arrays in Safari
+    toEqual: function toEqual() {
+      return {
+        compare: function compare(a, b) {
+          var pass = (0, _lodash.isEqual)(a, b);
+          return {
+            pass: pass,
+            message: 'Expected ' + a + ' to equal ' + b
+          };
+        }
+      };
+    }
+  });
+});
+

@@ -1,0 +1,54 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.preTransformRecycleList = preTransformRecycleList;
+
+var _index = require('compiler/parser/index');
+
+var _helpers = require('compiler/helpers');
+
+/**
+ * Map the following syntax to corresponding attrs:
+ *
+ * <recycle-list for="(item, i) in longList" switch="cellType">
+ *   <cell-slot case="A"> ... </cell-slot>
+ *   <cell-slot case="B"> ... </cell-slot>
+ * </recycle-list>
+ */
+
+function preTransformRecycleList(el, options) {
+  var exp = (0, _helpers.getAndRemoveAttr)(el, 'for');
+  if (!exp) {
+    if (options.warn) {
+      options.warn('Invalid <recycle-list> syntax: missing "for" expression.');
+    }
+    return;
+  }
+
+  var res = (0, _index.parseFor)(exp);
+  if (!res) {
+    if (options.warn) {
+      options.warn('Invalid <recycle-list> syntax: ' + exp + '.');
+    }
+    return;
+  }
+
+  (0, _helpers.addRawAttr)(el, ':list-data', res.for);
+  (0, _helpers.addRawAttr)(el, 'binding-expression', res.for);
+  (0, _helpers.addRawAttr)(el, 'alias', res.alias);
+  if (res.iterator2) {
+    // (item, key, index) for object iteration
+    // is this even supported?
+    (0, _helpers.addRawAttr)(el, 'index', res.iterator2);
+  } else if (res.iterator1) {
+    (0, _helpers.addRawAttr)(el, 'index', res.iterator1);
+  }
+
+  var switchKey = (0, _helpers.getAndRemoveAttr)(el, 'switch');
+  if (switchKey) {
+    (0, _helpers.addRawAttr)(el, 'switch', switchKey);
+  }
+}
+

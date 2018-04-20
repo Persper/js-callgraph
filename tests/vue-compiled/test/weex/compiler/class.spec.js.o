@@ -1,0 +1,84 @@
+'use strict';
+
+var _weexTemplateCompiler = require('../../../packages/weex-template-compiler');
+
+var _index = require('../helpers/index');
+
+describe('compile class', function () {
+  it('should be compiled', function () {
+    var _compile = (0, _weexTemplateCompiler.compile)('<div class="a b c"></div>'),
+        render = _compile.render,
+        staticRenderFns = _compile.staticRenderFns,
+        errors = _compile.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).not.toBeUndefined();
+    expect(staticRenderFns.length).toEqual(0);
+    expect(render).toMatch((0, _index.strToRegExp)('staticClass:["a","b","c"]'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile dynamic class', function () {
+    var _compile2 = (0, _weexTemplateCompiler.compile)('<div class="a {{b}} c"></div>'),
+        render = _compile2.render,
+        staticRenderFns = _compile2.staticRenderFns,
+        errors = _compile2.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('class:["a",_s(b),"c"]'));
+    expect(errors).not.toBeUndefined();
+    expect(errors.length).toEqual(1);
+    expect(errors[0]).toMatch((0, _index.strToRegExp)('a {{b}} c'));
+    expect(errors[0]).toMatch((0, _index.strToRegExp)('v-bind'));
+  });
+
+  it('should compile class binding of array', function () {
+    var _compile3 = (0, _weexTemplateCompiler.compile)('<div v-bind:class="[\'a\', \'b\', c]"></div>'),
+        render = _compile3.render,
+        staticRenderFns = _compile3.staticRenderFns,
+        errors = _compile3.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('class:[\'a\', \'b\', c]'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile class binding of map', function () {
+    var _compile4 = (0, _weexTemplateCompiler.compile)('<div v-bind:class="{ a: true, b: x }"></div>'),
+        render = _compile4.render,
+        staticRenderFns = _compile4.staticRenderFns,
+        errors = _compile4.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('class:{ a: true, b: x }'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile class binding of a variable', function () {
+    var _compile5 = (0, _weexTemplateCompiler.compile)('<div v-bind:class="x"></div>'),
+        render = _compile5.render,
+        staticRenderFns = _compile5.staticRenderFns,
+        errors = _compile5.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('class:x'));
+    expect(errors).toEqual([]);
+  });
+
+  it('should compile class binding by shorthand', function () {
+    var _compile6 = (0, _weexTemplateCompiler.compile)('<div :class="[\'a\', \'b\', c]"></div>'),
+        render = _compile6.render,
+        staticRenderFns = _compile6.staticRenderFns,
+        errors = _compile6.errors;
+
+    expect(render).not.toBeUndefined();
+    expect(staticRenderFns).toEqual([]);
+    expect(render).toMatch((0, _index.strToRegExp)('class:[\'a\', \'b\', c]'));
+    expect(errors).toEqual([]);
+  });
+});
+

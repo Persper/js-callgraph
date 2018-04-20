@@ -1,0 +1,98 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.formatComponentName = exports.generateComponentTrace = exports.tip = exports.warn = undefined;
+
+var _config = require('../config');
+
+var _config2 = _interopRequireDefault(_config);
+
+var _util = require('shared/util');
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var warn = exports.warn = _util.noop;
+var tip = exports.tip = _util.noop;
+var generateComponentTrace = exports.generateComponentTrace = _util.noop; // work around flow check
+var formatComponentName = exports.formatComponentName = _util.noop;
+
+if (process.env.NODE_ENV !== 'production') {
+  var hasConsole = typeof console !== 'undefined';
+  var classifyRE = /(?:^|[-_])(\w)/g;
+  var classify = function classify(str) {
+    return str.replace(classifyRE, function (c) {
+      return c.toUpperCase();
+    }).replace(/[-_]/g, '');
+  };
+
+  exports.warn = warn = function warn(msg, vm) {
+    var trace = vm ? generateComponentTrace(vm) : '';
+
+    if (_config2.default.warnHandler) {
+      _config2.default.warnHandler.call(null, msg, vm, trace);
+    } else if (hasConsole && !_config2.default.silent) {
+      console.error('[Vue warn]: ' + msg + trace);
+    }
+  };
+
+  exports.tip = tip = function tip(msg, vm) {
+    if (hasConsole && !_config2.default.silent) {
+      console.warn('[Vue tip]: ' + msg + (vm ? generateComponentTrace(vm) : ''));
+    }
+  };
+
+  exports.formatComponentName = formatComponentName = function formatComponentName(vm, includeFile) {
+    if (vm.$root === vm) {
+      return '<Root>';
+    }
+    var options = typeof vm === 'function' && vm.cid != null ? vm.options : vm._isVue ? vm.$options || vm.constructor.options : vm || {};
+    var name = options.name || options._componentTag;
+    var file = options.__file;
+    if (!name && file) {
+      var match = file.match(/([^/\\]+)\.vue$/);
+      name = match && match[1];
+    }
+
+    return (name ? '<' + classify(name) + '>' : '<Anonymous>') + (file && includeFile !== false ? ' at ' + file : '');
+  };
+
+  var repeat = function repeat(str, n) {
+    var res = '';
+    while (n) {
+      if (n % 2 === 1) res += str;
+      if (n > 1) str += str;
+      n >>= 1;
+    }
+    return res;
+  };
+
+  exports.generateComponentTrace = generateComponentTrace = function generateComponentTrace(vm) {
+    if (vm._isVue && vm.$parent) {
+      var tree = [];
+      var currentRecursiveSequence = 0;
+      while (vm) {
+        if (tree.length > 0) {
+          var last = tree[tree.length - 1];
+          if (last.constructor === vm.constructor) {
+            currentRecursiveSequence++;
+            vm = vm.$parent;
+            continue;
+          } else if (currentRecursiveSequence > 0) {
+            tree[tree.length - 1] = [last, currentRecursiveSequence];
+            currentRecursiveSequence = 0;
+          }
+        }
+        tree.push(vm);
+        vm = vm.$parent;
+      }
+      return '\n\nfound in\n\n' + tree.map(function (vm, i) {
+        return '' + (i === 0 ? '---> ' : repeat(' ', 5 + i * 2)) + (Array.isArray(vm) ? formatComponentName(vm[0]) + '... (' + vm[1] + ' recursive calls)' : formatComponentName(vm));
+      }).join('\n');
+    } else {
+      return '\n\n(found in ' + formatComponentName(vm) + ')';
+    }
+  };
+}
+

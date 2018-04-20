@@ -1,0 +1,77 @@
+'use strict';
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+
+var _vue = require('vue');
+
+var _vue2 = _interopRequireDefault(_vue);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Global API: assets', function () {
+  var Test = _vue2.default.extend();
+
+  it('directive / filters', function () {
+    var assets = ['directive', 'filter'];
+    assets.forEach(function (type) {
+      var def = {};
+      Test[type]('test', def);
+      expect(Test.options[type + 's'].test).toBe(def);
+      expect(Test[type]('test')).toBe(def);
+      // extended registration should not pollute global
+      expect(_vue2.default.options[type + 's'].test).toBeUndefined();
+    });
+  });
+
+  describe('Vue.component', function () {
+    it('should register a component', function () {
+      _vue2.default.component('foo', {
+        template: '<span>foo</span>'
+      });
+      _vue2.default.component('bar', {
+        template: '<span>bar</span>'
+      });
+      var vm = new _vue2.default({
+        template: '<div><foo></foo><bar></bar></div>'
+      }).$mount();
+      expect(vm.$el.innerHTML).toBe('<span>foo</span><span>bar</span>');
+      // unregister them
+      delete _vue2.default.options.components.foo;
+      delete _vue2.default.options.components.bar;
+    });
+  });
+
+  it('component on extended constructor', function () {
+    var def = { a: 1 };
+    Test.component('test', def);
+    var component = Test.options.components.test;
+    expect(typeof component === 'undefined' ? 'undefined' : _typeof(component)).toBe('function');
+    expect(component.super).toBe(_vue2.default);
+    expect(component.options.a).toBe(1);
+    expect(component.options.name).toBe('test');
+    expect(Test.component('test')).toBe(component);
+    // already extended
+    Test.component('test2', component);
+    expect(Test.component('test2')).toBe(component);
+    // extended registration should not pollute global
+    expect(_vue2.default.options.components.test).toBeUndefined();
+  });
+
+  // #4434
+  it('local registration should take priority regardless of naming convention', function () {
+    _vue2.default.component('x-foo', {
+      template: '<span>global</span>'
+    });
+    var vm = new _vue2.default({
+      components: {
+        xFoo: {
+          template: '<span>local</span>'
+        }
+      },
+      template: '<div><x-foo></x-foo></div>'
+    }).$mount();
+    expect(vm.$el.textContent).toBe('local');
+    delete _vue2.default.options.components['x-foo'];
+  });
+});
+

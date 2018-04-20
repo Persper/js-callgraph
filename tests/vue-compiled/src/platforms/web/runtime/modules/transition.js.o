@@ -1,0 +1,301 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.enter = enter;
+exports.leave = leave;
+
+var _index = require('core/util/index');
+
+var _index2 = require('core/vdom/helpers/index');
+
+var _lifecycle = require('core/instance/lifecycle');
+
+var _util = require('shared/util');
+
+var _transitionUtil = require('../transition-util');
+
+function enter(vnode, toggleDisplay) {
+  var el = vnode.elm;
+
+  // call leave callback now
+  if ((0, _util.isDef)(el._leaveCb)) {
+    el._leaveCb.cancelled = true;
+    el._leaveCb();
+  }
+
+  var data = (0, _transitionUtil.resolveTransition)(vnode.data.transition);
+  if ((0, _util.isUndef)(data)) {
+    return;
+  }
+
+  /* istanbul ignore if */
+  if ((0, _util.isDef)(el._enterCb) || el.nodeType !== 1) {
+    return;
+  }
+
+  var css = data.css,
+      type = data.type,
+      enterClass = data.enterClass,
+      enterToClass = data.enterToClass,
+      enterActiveClass = data.enterActiveClass,
+      appearClass = data.appearClass,
+      appearToClass = data.appearToClass,
+      appearActiveClass = data.appearActiveClass,
+      beforeEnter = data.beforeEnter,
+      enter = data.enter,
+      afterEnter = data.afterEnter,
+      enterCancelled = data.enterCancelled,
+      beforeAppear = data.beforeAppear,
+      appear = data.appear,
+      afterAppear = data.afterAppear,
+      appearCancelled = data.appearCancelled,
+      duration = data.duration;
+
+  // activeInstance will always be the <transition> component managing this
+  // transition. One edge case to check is when the <transition> is placed
+  // as the root node of a child component. In that case we need to check
+  // <transition>'s parent for appear check.
+
+  var context = _lifecycle.activeInstance;
+  var transitionNode = _lifecycle.activeInstance.$vnode;
+  while (transitionNode && transitionNode.parent) {
+    transitionNode = transitionNode.parent;
+    context = transitionNode.context;
+  }
+
+  var isAppear = !context._isMounted || !vnode.isRootInsert;
+
+  if (isAppear && !appear && appear !== '') {
+    return;
+  }
+
+  var startClass = isAppear && appearClass ? appearClass : enterClass;
+  var activeClass = isAppear && appearActiveClass ? appearActiveClass : enterActiveClass;
+  var toClass = isAppear && appearToClass ? appearToClass : enterToClass;
+
+  var beforeEnterHook = isAppear ? beforeAppear || beforeEnter : beforeEnter;
+  var enterHook = isAppear ? typeof appear === 'function' ? appear : enter : enter;
+  var afterEnterHook = isAppear ? afterAppear || afterEnter : afterEnter;
+  var enterCancelledHook = isAppear ? appearCancelled || enterCancelled : enterCancelled;
+
+  var explicitEnterDuration = (0, _util.toNumber)((0, _util.isObject)(duration) ? duration.enter : duration);
+
+  if (process.env.NODE_ENV !== 'production' && explicitEnterDuration != null) {
+    checkDuration(explicitEnterDuration, 'enter', vnode);
+  }
+
+  var expectsCSS = css !== false && !_index.isIE9;
+  var userWantsControl = getHookArgumentsLength(enterHook);
+
+  var cb = el._enterCb = (0, _util.once)(function () {
+    if (expectsCSS) {
+      (0, _transitionUtil.removeTransitionClass)(el, toClass);
+      (0, _transitionUtil.removeTransitionClass)(el, activeClass);
+    }
+    if (cb.cancelled) {
+      if (expectsCSS) {
+        (0, _transitionUtil.removeTransitionClass)(el, startClass);
+      }
+      enterCancelledHook && enterCancelledHook(el);
+    } else {
+      afterEnterHook && afterEnterHook(el);
+    }
+    el._enterCb = null;
+  });
+
+  if (!vnode.data.show) {
+    // remove pending leave element on enter by injecting an insert hook
+    (0, _index2.mergeVNodeHook)(vnode, 'insert', function () {
+      var parent = el.parentNode;
+      var pendingNode = parent && parent._pending && parent._pending[vnode.key];
+      if (pendingNode && pendingNode.tag === vnode.tag && pendingNode.elm._leaveCb) {
+        pendingNode.elm._leaveCb();
+      }
+      enterHook && enterHook(el, cb);
+    });
+  }
+
+  // start enter transition
+  beforeEnterHook && beforeEnterHook(el);
+  if (expectsCSS) {
+    (0, _transitionUtil.addTransitionClass)(el, startClass);
+    (0, _transitionUtil.addTransitionClass)(el, activeClass);
+    (0, _transitionUtil.nextFrame)(function () {
+      (0, _transitionUtil.removeTransitionClass)(el, startClass);
+      if (!cb.cancelled) {
+        (0, _transitionUtil.addTransitionClass)(el, toClass);
+        if (!userWantsControl) {
+          if (isValidDuration(explicitEnterDuration)) {
+            setTimeout(cb, explicitEnterDuration);
+          } else {
+            (0, _transitionUtil.whenTransitionEnds)(el, type, cb);
+          }
+        }
+      }
+    });
+  }
+
+  if (vnode.data.show) {
+    toggleDisplay && toggleDisplay();
+    enterHook && enterHook(el, cb);
+  }
+
+  if (!expectsCSS && !userWantsControl) {
+    cb();
+  }
+}
+
+function leave(vnode, rm) {
+  var el = vnode.elm;
+
+  // call enter callback now
+  if ((0, _util.isDef)(el._enterCb)) {
+    el._enterCb.cancelled = true;
+    el._enterCb();
+  }
+
+  var data = (0, _transitionUtil.resolveTransition)(vnode.data.transition);
+  if ((0, _util.isUndef)(data) || el.nodeType !== 1) {
+    return rm();
+  }
+
+  /* istanbul ignore if */
+  if ((0, _util.isDef)(el._leaveCb)) {
+    return;
+  }
+
+  var css = data.css,
+      type = data.type,
+      leaveClass = data.leaveClass,
+      leaveToClass = data.leaveToClass,
+      leaveActiveClass = data.leaveActiveClass,
+      beforeLeave = data.beforeLeave,
+      leave = data.leave,
+      afterLeave = data.afterLeave,
+      leaveCancelled = data.leaveCancelled,
+      delayLeave = data.delayLeave,
+      duration = data.duration;
+
+
+  var expectsCSS = css !== false && !_index.isIE9;
+  var userWantsControl = getHookArgumentsLength(leave);
+
+  var explicitLeaveDuration = (0, _util.toNumber)((0, _util.isObject)(duration) ? duration.leave : duration);
+
+  if (process.env.NODE_ENV !== 'production' && (0, _util.isDef)(explicitLeaveDuration)) {
+    checkDuration(explicitLeaveDuration, 'leave', vnode);
+  }
+
+  var cb = el._leaveCb = (0, _util.once)(function () {
+    if (el.parentNode && el.parentNode._pending) {
+      el.parentNode._pending[vnode.key] = null;
+    }
+    if (expectsCSS) {
+      (0, _transitionUtil.removeTransitionClass)(el, leaveToClass);
+      (0, _transitionUtil.removeTransitionClass)(el, leaveActiveClass);
+    }
+    if (cb.cancelled) {
+      if (expectsCSS) {
+        (0, _transitionUtil.removeTransitionClass)(el, leaveClass);
+      }
+      leaveCancelled && leaveCancelled(el);
+    } else {
+      rm();
+      afterLeave && afterLeave(el);
+    }
+    el._leaveCb = null;
+  });
+
+  if (delayLeave) {
+    delayLeave(performLeave);
+  } else {
+    performLeave();
+  }
+
+  function performLeave() {
+    // the delayed leave may have already been cancelled
+    if (cb.cancelled) {
+      return;
+    }
+    // record leaving element
+    if (!vnode.data.show) {
+      (el.parentNode._pending || (el.parentNode._pending = {}))[vnode.key] = vnode;
+    }
+    beforeLeave && beforeLeave(el);
+    if (expectsCSS) {
+      (0, _transitionUtil.addTransitionClass)(el, leaveClass);
+      (0, _transitionUtil.addTransitionClass)(el, leaveActiveClass);
+      (0, _transitionUtil.nextFrame)(function () {
+        (0, _transitionUtil.removeTransitionClass)(el, leaveClass);
+        if (!cb.cancelled) {
+          (0, _transitionUtil.addTransitionClass)(el, leaveToClass);
+          if (!userWantsControl) {
+            if (isValidDuration(explicitLeaveDuration)) {
+              setTimeout(cb, explicitLeaveDuration);
+            } else {
+              (0, _transitionUtil.whenTransitionEnds)(el, type, cb);
+            }
+          }
+        }
+      });
+    }
+    leave && leave(el, cb);
+    if (!expectsCSS && !userWantsControl) {
+      cb();
+    }
+  }
+}
+
+// only used in dev mode
+function checkDuration(val, name, vnode) {
+  if (typeof val !== 'number') {
+    (0, _index.warn)('<transition> explicit ' + name + ' duration is not a valid number - ' + ('got ' + JSON.stringify(val) + '.'), vnode.context);
+  } else if (isNaN(val)) {
+    (0, _index.warn)('<transition> explicit ' + name + ' duration is NaN - ' + 'the duration expression might be incorrect.', vnode.context);
+  }
+}
+
+function isValidDuration(val) {
+  return typeof val === 'number' && !isNaN(val);
+}
+
+/**
+ * Normalize a transition hook's argument length. The hook may be:
+ * - a merged hook (invoker) with the original in .fns
+ * - a wrapped component method (check ._length)
+ * - a plain function (.length)
+ */
+function getHookArgumentsLength(fn) {
+  if ((0, _util.isUndef)(fn)) {
+    return false;
+  }
+  var invokerFns = fn.fns;
+  if ((0, _util.isDef)(invokerFns)) {
+    // invoker
+    return getHookArgumentsLength(Array.isArray(invokerFns) ? invokerFns[0] : invokerFns);
+  } else {
+    return (fn._length || fn.length) > 1;
+  }
+}
+
+function _enter(_, vnode) {
+  if (vnode.data.show !== true) {
+    enter(vnode);
+  }
+}
+
+exports.default = _index.inBrowser ? {
+  create: _enter,
+  activate: _enter,
+  remove: function remove(vnode, rm) {
+    /* istanbul ignore else */
+    if (vnode.data.show !== true) {
+      leave(vnode, rm);
+    } else {
+      rm();
+    }
+  }
+} : {};
+

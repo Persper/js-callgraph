@@ -1,0 +1,15 @@
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = text;
+
+var _helpers = require('compiler/helpers');
+
+function text(el, dir) {
+  if (dir.value) {
+    (0, _helpers.addProp)(el, 'textContent', '_s(' + dir.value + ')');
+  }
+}
+

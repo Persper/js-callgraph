@@ -1,0 +1,70 @@
+'use strict';
+
+var _dep = require('core/observer/dep');
+
+var _dep2 = _interopRequireDefault(_dep);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+describe('Dep', function () {
+  var dep = void 0;
+
+  beforeEach(function () {
+    dep = new _dep2.default();
+  });
+
+  describe('instance', function () {
+    it('should be created with correct properties', function () {
+      expect(dep.subs.length).toBe(0);
+      expect(new _dep2.default().id).toBe(dep.id + 1);
+    });
+  });
+
+  describe('addSub()', function () {
+    it('should add sub', function () {
+      dep.addSub(null);
+      expect(dep.subs.length).toBe(1);
+      expect(dep.subs[0]).toBe(null);
+    });
+  });
+
+  describe('removeSub()', function () {
+    it('should remove sub', function () {
+      dep.subs.push(null);
+      dep.removeSub(null);
+      expect(dep.subs.length).toBe(0);
+    });
+  });
+
+  describe('depend()', function () {
+    var _target = void 0;
+
+    beforeAll(function () {
+      _target = _dep2.default.target;
+    });
+
+    afterAll(function () {
+      _dep2.default.target = _target;
+    });
+
+    it('should do nothing if no target', function () {
+      _dep2.default.target = null;
+      dep.depend();
+    });
+
+    it('should add itself to target', function () {
+      _dep2.default.target = jasmine.createSpyObj('TARGET', ['addDep']);
+      dep.depend();
+      expect(_dep2.default.target.addDep).toHaveBeenCalledWith(dep);
+    });
+  });
+
+  describe('notify()', function () {
+    it('should notify subs', function () {
+      dep.subs.push(jasmine.createSpyObj('SUB', ['update']));
+      dep.notify();
+      expect(dep.subs[0].update).toHaveBeenCalled();
+    });
+  });
+});
+
