@@ -1,5 +1,19 @@
 #!/usr/bin/python3
 
+# Author: Alex Stennet
+# Description: Provides a testing framework for the call graph genereation
+#
+# An example of how to run:
+#       ./process.py core/vdom/create-component.js.o ground_truths/create-component.txt
+#
+# The current implementation requires that the filestructure be of the form:
+#    /javascript-call-graph/tests/process.py
+#    /vue-compiled/
+#
+# To make this work with a different filestructure, change root in resolve_path.py
+# If the different filestructure has a different means of resolving require paths
+# it may be required to change the resolve_path function too
+
 import sys
 from pathlib import Path
 import re
