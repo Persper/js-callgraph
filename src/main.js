@@ -106,11 +106,11 @@ if (args.reqJs)
 if (args.cg) {
     function pp(v) {
         if (v.type === 'CalleeVertex')
-            return astutil.ppPos(v.call);
+            return '\'' + astutil.funcname(v.call.attr.enclosingFunction) + '\' (' + astutil.ppPos(v.call) + ')';
         if (v.type === 'FuncVertex')
-            return astutil.ppPos(v.func);
+            return '\'' + astutil.funcname(v.func) + '\' (' + astutil.ppPos(v.func) + ')';
         if (v.type === 'NativeVertex')
-            return v.name;
+            return '\'' + v.name + '\' (Native)';
         throw new Error("strange vertex: " + v);
     }
 
