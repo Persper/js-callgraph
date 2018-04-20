@@ -94,6 +94,13 @@ define(function (require, exports) {
         return filename.substring(idx + 1);
     }
 
+    function funcname(func) {
+        if (func === undefined || func.id == null) {
+          return "undefined"
+        }
+        return func.id.name
+    }
+
     /* Pretty-print position. */
     function ppPos(nd) {
         return basename(nd.attr.enclosingFile) + "@" + nd.loc.start.line + ":" + nd.range[0] + "-" + nd.range[1];
@@ -129,6 +136,7 @@ define(function (require, exports) {
     exports.visit = visit;
     exports.init = init;
     exports.ppPos = ppPos;
+    exports.funcname = funcname;
     exports.buildAST = buildAST;
     return exports;
 });
