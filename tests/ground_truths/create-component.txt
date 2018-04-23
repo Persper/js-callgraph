@@ -10,7 +10,7 @@ create-component.js.o:undefined:23 -> Native
 create-component.js.o:undefined:25 -> Native
 create-component.js.o:undefined:29 -> create-component.js.o:init:33
 create-component.js.o:init:37 -> create-component.js.o:prepatch:43
-create-component.js.o:init:39 -> create-component.js.o:createComponentIntanceForVnode:178
+create-component.js.o:init:39 -> create-component.js.o:createComponentInstanceForVnode:178
 create-component.js.o:init:40 ->
 create-component.js.o:prepatch:46 -> lifecycle.js.o:updateChildComponent:218
 create-component.js.o:insert:58 -> lifecycle.js.o:callHook:319

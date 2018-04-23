@@ -1,0 +1,11 @@
+vnode.js.o:undefined:3 -> Native
+vnode.js.o:undefined:7 -> vnode.js.o:undefined:7
+vnode.js.o:defineProperties:7 -> Native
+vnode.js.o:undefined:7 -> vnode.js.o:defineProperties:7
+vnode.js.o:undefined:7 -> vnode.js.o:defineProperties:7
+vnode.js.o:undefined:14 -> vnode.js.o:undefined:14
+vnode.js.o:VNode:24 -> vnode.js.o:_classCallCheck:12
+vnode.js.o:undefined:63 -> vnode.js.o:undefined:7
+vnode.js.o:createEmptyVNode:77 -> vnode.js.o:VNode:23
+vnode.js.o:createTextVNode:84 -> vnode.js.o:VNode:23
+vnode.js.o:cloneVNode:92 -> vnode.js.o:VNode:23
