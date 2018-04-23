@@ -56,10 +56,10 @@ if len(sys.argv) >= 3:
 
     output_no_natives = [l for l in fo if 'Native' not in l and
                                    '_interopRequireDefault' not in l and
-                                   l[-2:-1] != '->']
+                                   l[-1] != '>']
     expected_no_natives = [l for l in lines if 'Native' not in l and
                                       '_interopRequireDefault' not in l and
-                                      l[-2:-1] != '->']
+                                      l[-1] != '>']
 
     output_set_wo_natives = set(output_no_natives)
     expected_set_wo_natives = set(expected_no_natives)
