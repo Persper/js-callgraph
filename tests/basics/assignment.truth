@@ -1,2 +1,3 @@
-assignment.js:undefined:5 -> Native
-assignment.js:undefined:8 -> assignment.js:funcB:4
+assignment.js:funcB:5 -> Native
+assignment.js:main:8 -> assignment.js:funcB:4
+assignment.js:global:11 -> assignment.js:main:2
