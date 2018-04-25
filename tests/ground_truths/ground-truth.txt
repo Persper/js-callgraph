@@ -1,5 +1,5 @@
 Template:
-<filename>:<function_name | undefined>:<line_number> -> <filename>:<function_name | undefined>:<line_number>
+<filename>:<enclosing_function_name | undefined | global>:<line_number> -> <filename>:<called_function_name | undefined>:<line_number>
 
 The general format of a line follows the above syntax.
 An example input and output might be:
