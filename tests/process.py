@@ -26,7 +26,7 @@ assert len(sys.argv) > 1, "Incorrect number of arguments: process.py FILENAME <T
 
 # Recursively descend through require's to find all files that
 # must be included to fill the callgraph
-required_files = collect_requires(sys.argv[1])
+required_files = collect_requires(Path(sys.argv[1]).resolve())
 strd_files = [str(rf) for rf in required_files]
 
 # Run the javascript call graph program and capture the output
