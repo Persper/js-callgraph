@@ -22,30 +22,28 @@ from resolve_path import resolve_path, root
 from callgraph import callgraph
 from format_callgraph import format_output
 
-assert len(sys.argv) > 1, "Incorrect number of arguments: process.py FILENAME <TEST_FILE>"
+def precision_recall(test_file, expected_output, display=False):
+    # Recursively descend through require's to find all files that
+    # must be included to fill the callgraph
+    required_files = collect_requires(Path(test_file).resolve())
+    strd_files = [str(rf) for rf in required_files]
 
-# Recursively descend through require's to find all files that
-# must be included to fill the callgraph
-required_files = collect_requires(Path(sys.argv[1]).resolve())
-strd_files = [str(rf) for rf in required_files]
+    # Run the javascript call graph program and capture the output
+    output = callgraph(strd_files)
+    lines = str(output)[2:].split('\\n')
 
-# Run the javascript call graph program and capture the output
-output = callgraph(strd_files)
-lines = str(output)[2:].split('\\n')
+    # The output will contain lines for all files that were required
+    # This will filter out so only one's relevant to the file selected are shown
+    reg_input_file_name = re.compile(r'.*\(' + required_files[0].name + r'@[0-9]*:[0-9]*-[0-9]*\) ->.*')
+    filtered_out = [line for line in lines if reg_input_file_name.match(line)]
 
-# The output will contain lines for all files that were required
-# This will filter out so only one's relevant to the file selected are shown
-reg_input_file_name = re.compile(r'.*\(' + required_files[0].name + r'@[0-9]*:[0-9]*-[0-9]*\) ->.*')
-filtered_out = [line for line in lines if reg_input_file_name.match(line)]
+    # Format output to align with the expected output
+    fo = []
+    for f in filtered_out:
+        fo.append(format_output(f))
 
-# Format output to align with the expected output
-fo = []
-for f in filtered_out:
-    fo.append(format_output(f))
-
-# Reading in expected output file and comparing with output
-if len(sys.argv) >= 3:
-    f = open(sys.argv[2])
+    # Reading in expected output file and comparing with output
+    f = open(expected_output)
 
     lines = [line[:-1] for line in f]
 
@@ -66,20 +64,33 @@ if len(sys.argv) >= 3:
 
     interesection_wo_natives = output_set_wo_natives & expected_set_wo_natives
 
-    print('Actual Output (w/o natives)')
-    for f in output_no_natives:
-        print(f)
-    print()
-    print('Expected Output (w/o natives)')
-    for f in expected_no_natives:
-        print(f)
-    print()
-    print('INCLUDING NATIVES')
-    print('Precision:', 100*len(intersection) // len(output_lines), '% (', len(intersection), '/', len(output_lines), ')')
-    print('Recall: ', 100*len(intersection) // len(expected_lines), '% (', len(intersection), '/', len(expected_lines), ')')
-    print()
-    print('EXCLUDING NATIVES')
-    print('Precision:', 100*len(interesection_wo_natives) // len(output_set_wo_natives),
-          '% (', len(interesection_wo_natives), '/', len(output_set_wo_natives), ')')
-    print('Recall: ', 100*len(interesection_wo_natives) // len(expected_set_wo_natives),
-          '% (', len(interesection_wo_natives), '/', len(expected_set_wo_natives), ')')
+    if display:
+        print('Actual Output (w/o natives)')
+        for f in output_no_natives:
+            print(f)
+        print()
+        print('Expected Output (w/o natives)')
+        for f in expected_no_natives:
+            print(f)
+        print()
+        print('INCLUDING NATIVES')
+        print('Precision:', 100*len(intersection) // len(output_lines), '% (', len(intersection), '/', len(output_lines), ')')
+        print('Recall: ', 100*len(intersection) // len(expected_lines), '% (', len(intersection), '/', len(expected_lines), ')')
+        print()
+        print('EXCLUDING NATIVES')
+        print('Precision:', 100*len(interesection_wo_natives) // len(output_set_wo_natives),
+              '% (', len(interesection_wo_natives), '/', len(output_set_wo_natives), ')')
+        print('Recall: ', 100*len(interesection_wo_natives) // len(expected_set_wo_natives),
+              '% (', len(interesection_wo_natives), '/', len(expected_set_wo_natives), ')')
+
+    w_natives_precision = 100*len(intersection) // len(output_lines)
+    w_natives_recall = 100*len(intersection) // len(expected_lines)
+
+    wo_natives_precision = 100*len(interesection_wo_natives) // len(output_set_wo_natives)
+    wo_natives_recall = 100*len(interesection_wo_natives) // len(expected_set_wo_natives)
+
+    return (w_natives_precision, w_natives_recall), (wo_natives_precision, wo_natives_recall)
+
+if __name__ == "__main__":
+    assert len(sys.argv) == 3, "Incorrect number of arguments: process.py FILENAME TEST_FILE"
+    recall_precision(sys.argv[1], sys.argv[2], display=True)
