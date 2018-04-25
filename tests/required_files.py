@@ -9,7 +9,7 @@ def get_requires(path):
         text = f.read()
         f.close()
         matches = reg.findall(text)
-        return [m + '.js.o' for m in matches]
+        return [m + ('.js.o' if 'vue' in m else '.js') for m in matches]
     except:
         return []
 
