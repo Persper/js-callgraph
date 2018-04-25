@@ -15,7 +15,7 @@ def get_requires(path):
 
 def collect_requires(path):
     read_files = []
-    unread_files = [resolve_path(path, root)]
+    unread_files = [resolve_path(path, path.parent)]
 
     while unread_files:
         uf = unread_files.pop(0)
