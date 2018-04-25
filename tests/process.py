@@ -85,11 +85,21 @@ def precision_recall(test_file, expected_output, display=False):
 
     w_natives_precision = 100*len(intersection) // len(output_lines)
     w_natives_recall = 100*len(intersection) // len(expected_lines)
+    w_natives_intersection = len(intersection)
+    w_natives_output = len(output_lines)
+    w_natives_expected = len(expected_lines)
+
+    w_natives = (w_natives_precision, w_natives_recall, w_natives_intersection, w_natives_output, w_natives_expected)
 
     wo_natives_precision = 100*len(interesection_wo_natives) // len(output_set_wo_natives)
     wo_natives_recall = 100*len(interesection_wo_natives) // len(expected_set_wo_natives)
+    wo_natives_intersection = len(interesection_wo_natives)
+    wo_natives_output = len(output_set_wo_natives)
+    wo_natives_expected = len(expected_set_wo_natives)
 
-    return (w_natives_precision, w_natives_recall), (wo_natives_precision, wo_natives_recall)
+    wo_natives = (wo_natives_precision, wo_natives_recall, wo_natives_intersection, wo_natives_output, wo_natives_expected)
+
+    return w_natives, wo_natives
 
 if __name__ == "__main__":
     assert len(sys.argv) == 3, "Incorrect number of arguments: process.py FILENAME TEST_FILE"
