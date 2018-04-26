@@ -35,7 +35,7 @@ for d in test_directories:
             w_natives, wo_natives = precision_recall(d + '/' + tf + '.js', d + '/' + tf + '.truth')
             print(bcolors.OKGREEN + tf + '.js' + bcolors.ENDC)
             print('\twith natives:', str(w_natives[0]) + '% precision,', str(w_natives[1]) + '% recall')
-            print('\twith natives:', str(wo_natives[0]) + '% precision,', str(wo_natives[1]) + '% recall')
+            print('\twithout natives:', str(wo_natives[0]) + '% precision,', str(wo_natives[1]) + '% recall')
 
             dir_w_natives_intersection += w_natives[2]
             dir_w_natives_output += w_natives[3]
