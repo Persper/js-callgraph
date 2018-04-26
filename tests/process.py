@@ -103,4 +103,4 @@ def precision_recall(test_file, expected_output, display=False):
 
 if __name__ == "__main__":
     assert len(sys.argv) == 3, "Incorrect number of arguments: process.py FILENAME TEST_FILE"
-    recall_precision(sys.argv[1], sys.argv[2], display=True)
+    precision_recall(sys.argv[1], sys.argv[2], display=True)
