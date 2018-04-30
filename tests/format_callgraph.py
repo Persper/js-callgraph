@@ -1,7 +1,7 @@
 import re
 
 # Regex for representing the call graph itself
-call_func = r'\'(.*)\' \(([^1-9]*)@([0-9]*):[0-9]*-[0-9]*\)'
+call_func = r'\'(.*)\' \(([^@]*)@([0-9]*):[0-9]*-[0-9]*\)'
 native = r'\'(.*)\' \(Native\)'
 
 reg_func = re.compile(call_func + ' -> ' + call_func)
