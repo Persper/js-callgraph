@@ -22,7 +22,7 @@ from resolve_path import resolve_path, root
 from callgraph import callgraph
 from format_callgraph import format_output
 
-def precision_recall(test_file, expected_output, display=False):
+def get_output(test_file):
     # Recursively descend through require's to find all files that
     # must be included to fill the callgraph
     required_files = collect_requires(Path(test_file).resolve())
@@ -41,6 +41,14 @@ def precision_recall(test_file, expected_output, display=False):
     fo = []
     for f in filtered_out:
         fo.append(format_output(f))
+
+    return fo
+
+def precision_recall(test_file, expected_output=None, display=False):
+    fo = get_output(test_file)
+
+    if expected_output == None:
+        return fo
 
     # Reading in expected output file and comparing with output
     f = open(expected_output)
@@ -83,16 +91,16 @@ def precision_recall(test_file, expected_output, display=False):
         print('Recall: ', 100*len(interesection_wo_natives) // len(expected_set_wo_natives),
               '% (', len(interesection_wo_natives), '/', len(expected_set_wo_natives), ')')
 
-    w_natives_precision = 100*len(intersection) // len(output_lines)
-    w_natives_recall = 100*len(intersection) // len(expected_lines)
+    w_natives_precision = 100*len(intersection) // (len(output_lines) if len(output_lines) > 0 else -1)
+    w_natives_recall = 100*len(intersection) // (len(expected_lines) if len(expected_lines) > 0 else -1)
     w_natives_intersection = len(intersection)
     w_natives_output = len(output_lines)
     w_natives_expected = len(expected_lines)
 
     w_natives = (w_natives_precision, w_natives_recall, w_natives_intersection, w_natives_output, w_natives_expected)
 
-    wo_natives_precision = 100*len(interesection_wo_natives) // len(output_set_wo_natives)
-    wo_natives_recall = 100*len(interesection_wo_natives) // len(expected_set_wo_natives)
+    wo_natives_precision = 100*len(interesection_wo_natives) // (len(output_set_wo_natives) if len(output_set_wo_natives) > 0 else -1)
+    wo_natives_recall = 100*len(interesection_wo_natives) // (len(expected_set_wo_natives) if len(expected_set_wo_natives) > 0 else -1)
     wo_natives_intersection = len(interesection_wo_natives)
     wo_natives_output = len(output_set_wo_natives)
     wo_natives_expected = len(expected_set_wo_natives)

@@ -9,7 +9,8 @@ def get_requires(path):
         text = f.read()
         f.close()
         matches = reg.findall(text)
-        return [m + ('.js.o' if 'vue' in m else '.js') for m in matches]
+        lst = [m + ('.js.o' if 'vue' in str(path) else '.js') for m in matches]
+        return lst
     except:
         return []
 
@@ -24,12 +25,11 @@ def collect_requires(path):
             continue
 
         read_files.append(uf.resolve())
-
         required_files = get_requires(uf)
 
         for rf in required_files:
             rp = resolve_path(rf, uf.parent)
-            if rp:
+            if rp and rp.exists():
                 unread_files.append(rp.resolve())
 
     return read_files
