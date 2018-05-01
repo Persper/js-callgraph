@@ -33,7 +33,7 @@ def format_native(out):
 
 def format_output(out):
     # print(out)
-    if 'Native' in out:
+    if reg_native.match(out):
         return format_native(out)
     else:
         return format_func(out)
