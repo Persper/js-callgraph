@@ -121,6 +121,12 @@ define(function (require, exports) {
         return false;
     }
 
+    Graph.prototype.iterNodes = function (cb) {
+        for (let i = 0; i < this.id2node.length; ++i) {
+            if (this.id2node[i])
+                cb(this.id2node[i]);
+        }
+    }
 
     exports.Graph = Graph;
     return exports;
