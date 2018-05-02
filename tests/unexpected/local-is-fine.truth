@@ -1,0 +1,3 @@
+local-is-fine.js:global:2 -> local-is-fine.js:undefined:2
+local-is-fine.js:undefined:5 -> local-is-fine.js:undefined:3
+local-is-fine.js:undefined:6 -> local-is-fine.js:undefined:4
