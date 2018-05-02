@@ -58,5 +58,21 @@ console.assert(G.removeNode(nodes['B']));
 console.assert(G.id2node.length === names.length + 2);
 console.assert(!G.hasNode(nodes['B']));
 
+addEdge(G, 'A', 'B');
+addEdge(G, 'B', 'F');
+addEdge(G, 'B', 'G');
+addEdge(G, 'E', 'B');
+
+G.iterNodes(function (nd) {
+	G.removeNode(nd);
+});
+
+printEdges(G);
+
+for (let i = 1; i < G.id2node.length; ++i) {
+	console.assert(G.id2node[i] === null);
+}
+
+
 
 
