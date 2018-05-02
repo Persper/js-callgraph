@@ -1,0 +1,5 @@
+history.js:func1:5 -> Native
+history.js:func1:7 -> Native
+history.js:main:9 -> history.js:func2:7
+history.js:main:10 -> history.js:func2:7
+history.js:global:13 -> history.js:main:4
