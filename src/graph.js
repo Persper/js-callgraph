@@ -19,6 +19,7 @@ define(function (require, exports) {
 
     function Graph() {
         this.succ = [];
+        this.pred = [];
     }
 
     var id2node = Graph.prototype.id2node = [];
@@ -35,6 +36,7 @@ define(function (require, exports) {
         if (fromId === toId)
             return;
         this.succ[fromId] = numset.add(this.succ[fromId], toId);
+        this.pred[toId] = numset.add(this.pred[toId], fromId);
     };
 
     Graph.prototype.addEdges = function (from, tos) {
@@ -53,10 +55,78 @@ define(function (require, exports) {
         }
     };
 
+    /* BAD DESIGN: if from or to is not in the graph, this query will add them to the graph */
     Graph.prototype.hasEdge = function (from, to) {
         var fromId = nodeId(from), toId = nodeId(to);
         return numset.contains(this.succ[fromId], toId);
     };
+
+    /* Only call this function if nd already in the graph */
+    function getId (nd) {
+        return nd.attr.node_id;
+    }
+
+    Graph.prototype.hasNode = function (nd) {
+        return nd.attr.hasOwnProperty('node_id');
+    }
+
+    /* Remove (from , to), return false if edge doesn't exist */
+    Graph.prototype.removeEdge = function (from, to) {
+        if (this.hasNode(from) && this.hasNode(to) && this.hasEdge(from, to)){
+            const fromId = getId(from), toId = getId(to);
+            numset.remove(this.succ[fromId], toId);
+            numset.remove(this.pred[toId], fromId);
+            return true;
+        }
+        return false;
+    };
+
+    /* Remove all outward edges of a node */
+    Graph.prototype.removeOutEdges = function (nd) {
+        if (this.hasNode(nd)){
+            const nid = getId(nd);
+            // Remove itself from other nodes' pred sets
+            let cb = function (succ) { numset.remove(this.pred[succ], nid); };
+            numset.iter(this.succ[nid], cb.bind(this));
+            // Empty its own succ set
+            this.succ[nid] = undefined;
+            return true;
+        }
+        return false;
+    }
+
+    /* Remove all inward edges of a node */
+    Graph.prototype.removeInEdges = function (nd) {
+        if (this.hasNode(nd)){
+            const nid = getId(nd);
+            // Remove itself from other nodes' succ sets
+            let cb = function (pred) { numset.remove(this.succ[pred], nid); };
+            numset.iter(this.pred[nid], cb.bind(this));
+            // Empty its own pred set
+            this.pred[nid] = undefined;
+            return true;
+        }
+        return false;
+    }
+
+    /* Remove a node and all associated edges from graph */
+    Graph.prototype.removeNode = function (nd) {
+        if (this.hasNode(nd)) {
+            this.removeInEdges(nd);
+            this.removeOutEdges(nd);
+            this.id2node[getId(nd)] = null;
+            delete nd.attr.node_id;
+            return true;
+        }
+        return false;
+    }
+
+    Graph.prototype.iterNodes = function (cb) {
+        for (let i = 0; i < this.id2node.length; ++i) {
+            if (this.id2node[i])
+                cb(this.id2node[i]);
+        }
+    }
 
     exports.Graph = Graph;
     return exports;
