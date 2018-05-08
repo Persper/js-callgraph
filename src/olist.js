@@ -126,6 +126,7 @@ define(function (require, exports) {
         }
     }
 
+    /* Pitfall: this remove is inplace for array, not inplace for number */
     function remove(a, x) {
         if (typeof a === 'undefined')
             return a;
