@@ -39,9 +39,18 @@ define(function (require, exports) {
             });
         }
 
+        /*
         ast.attr.functions.forEach(function (fn) {
             processFuncVertex(flowgraph.funcVertex(fn));
         });
+        */
+
+        flow_graph.iterNodes(function (nd) {
+            if (nd.type === 'FuncVertex'){
+                processFuncVertex(flowgraph.funcVertex(nd.func));
+            }
+        });
+
         flowgraph.getNativeVertices().forEach(processFuncVertex);
 
         var unknown_r = reach.getReachable(flowgraph.unknownVertex());
