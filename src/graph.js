@@ -86,7 +86,9 @@ define(function (require, exports) {
         if (this.hasNode(nd)){
             const nid = getId(nd);
             // Remove itself from other nodes' pred sets
-            let cb = function (succ) { numset.remove(this.pred[succ], nid); };
+            let cb = function (succ) {
+                this.pred[succ] = numset.remove(this.pred[succ], nid);
+            };
             numset.iter(this.succ[nid], cb.bind(this));
             // Empty its own succ set
             this.succ[nid] = undefined;
@@ -100,7 +102,9 @@ define(function (require, exports) {
         if (this.hasNode(nd)){
             const nid = getId(nd);
             // Remove itself from other nodes' succ sets
-            let cb = function (pred) { numset.remove(this.succ[pred], nid); };
+            let cb = function (pred) {
+                this.succ[pred] = numset.remove(this.succ[pred], nid);
+            };
             numset.iter(this.pred[nid], cb.bind(this));
             // Empty its own pred set
             this.pred[nid] = undefined;
