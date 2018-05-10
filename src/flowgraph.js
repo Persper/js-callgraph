@@ -133,7 +133,7 @@ define(function (require, exports) {
         return nd.attr.var_vertex
             || (nd.attr.var_vertex = {
             type: 'VarVertex',
-            node: 'nd',
+            node: nd,
             attr: { pp: function () {
                 return 'Var(' + nd.name + ', ' + astutil.ppPos(nd) + ')';
             } }
