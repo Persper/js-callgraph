@@ -35,6 +35,10 @@ console.assert(G.id2node.length === names.length + 1);
 console.assert(G.id2node[2] === null);
 console.assert(!G.hasNode(nodes['B']), 'Graph still has node B!');
 
+console.assert(G.pred[4] === undefined);
+console.assert(G.pred[5].length === 1);
+console.assert(G.pred[5][0] === 7);
+
 printEdges(G);
 
 addEdge(G, 'A', 'B');
@@ -71,8 +75,6 @@ printEdges(G);
 
 for (let i = 1; i < G.id2node.length; ++i) {
 	console.assert(G.id2node[i] === null);
+	console.assert(G.succ[i] === undefined);
+	console.assert(G.pred[i] === undefined);
 }
-
-
-
-
