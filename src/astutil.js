@@ -142,11 +142,27 @@ define(function (require, exports) {
         return ast;
     }
 
+    function singleSrcAST (fname, src, preprocessor) {
+        if (preprocessor)
+            src = preprocessor(src);
+        const prog = esprima.parse(src, {loc: true, range: true, sourceType: 'module' });
+        prog.attr = {filename: fname, sloc: sloc(src, 'js').sloc };
+
+        const ast = {
+            type: 'ProgramCollection',
+            programs: [prog],
+            attr: {sloc: prog.attr.sloc}
+        }
+        init(ast);
+        return ast;
+    }
+
     exports.visit = visit;
     exports.init = init;
     exports.ppPos = ppPos;
     exports.funcname = funcname;
     exports.en_funcname = en_funcname;
     exports.buildAST = buildAST;
+    exports.singleSrcAST = singleSrcAST;
     return exports;
 });
