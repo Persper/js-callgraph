@@ -157,6 +157,23 @@ define(function (require, exports) {
         return ast;
     }
 
+    function getFunctions(root) {
+        const funcs = [];
+        const funcNodes = root.attr.functions;
+        for (let i = 0; i < funcNodes.length; ++i) {
+            const fn = funcNodes[i];
+            let funcName = null;
+            if (fn.id)
+                funcName = fn.id.name;
+            funcs.push({
+                'name': funcName,
+                'file': fn.attr.enclosingFile,
+                'range': [fn.loc.start['line'], fn.loc.end['line']]
+            });
+        }
+        return funcs;
+    }
+
     exports.visit = visit;
     exports.init = init;
     exports.ppPos = ppPos;
@@ -164,5 +181,6 @@ define(function (require, exports) {
     exports.en_funcname = en_funcname;
     exports.buildAST = buildAST;
     exports.singleSrcAST = singleSrcAST;
+    exports.getFunctions = getFunctions;
     return exports;
 });
