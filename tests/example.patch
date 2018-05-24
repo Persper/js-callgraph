@@ -1,0 +1,111 @@
+@@ -5,6 +5,37 @@
+  
+  using namespace std;
+  
+ +void MigrationController::FillNVMPageHeap() {
+ +  for (unordered_map<uint64_t, NVMPage>::iterator it = nvm_pages_.begin();
+ +      it != nvm_pages_.end(); ++it) {
+ +    double dr = it->second.blocks.size() / page_blocks_;
+ +    double wr = it->second.epoch_writes / page_blocks_;
+ +    nvm_heap_.push_back({it->first, dr, wr});
+ +
+ +    total_nvm_writes_ += it->second.epoch_writes;
+ +    dirty_nvm_blocks_ += it->second.blocks.size();
+ +  }
+ +  make_heap(nvm_heap_.begin(), nvm_heap_.end());
+ +  nvm_heap_filled_ = true;
+ +}
+ +
+ +void MigrationController::FillDRAMPageHeap() {
+ +  int dirts = 0;
+ +  for (unordered_map<uint64_t, PTTEntry>::iterator it = entries_.begin();
+ +       it != entries_.end(); ++it) {
+ +    double wr = it->second.epoch_writes / page_blocks_;
+ +    dram_heap_.push_back({it->first, it->second.state, wr});
+ +
+ +    total_dram_writes_ += it->second.epoch_writes;
+ +    dirts += (it->second.epoch_writes ? 1 : 0);
+ +  }
+ +  assert(dirts == dirty_entries_);
+ +  dirty_dram_pages_ += dirty_entries_;
+ +
+ +  make_heap(dram_heap_.begin(), dram_heap_.end());
+ +  dram_heap_filled_ = true;
+ +}
+ +
+  void MigrationController::InputBlocks(
+      const vector<ATTEntry>& blocks) {
+    assert(nvm_pages_.empty());
+ @@ -25,56 +56,37 @@ void MigrationController::InputBlocks(
+      }
+    }
+    dirty_nvm_pages_ += nvm_pages_.size();
+ +
+ +  FillNVMPageHeap();
+ +  FillDRAMPageHeap();
+  }
+  
+  bool MigrationController::ExtractNVMPage(NVMPageStats& stats,
+      Profiler& profiler) {
+ -  if (nvm_heap_.empty()) {
+ -    for (unordered_map<uint64_t, NVMPage>::iterator it = nvm_pages_.begin();
+ -        it != nvm_pages_.end(); ++it) {
+ -      double dr = it->second.blocks.size() / page_blocks_;
+ -      double wr = it->second.epoch_writes / page_blocks_;
+ -      nvm_heap_.push_back({it->first, dr, wr});
+ -
+ -      total_nvm_writes_ += it->second.epoch_writes;
+ -      dirty_nvm_blocks_ += it->second.blocks.size();
+ -    }
+ -    make_heap(nvm_heap_.begin(), nvm_heap_.end());
+ -  }
+ -  profiler.AddTableOp();
+ +  assert(nvm_heap_filled_);
+  
+    if (nvm_heap_.empty()) return false;
+  
+    stats = nvm_heap_.front();
+    pop_heap(nvm_heap_.begin(), nvm_heap_.end());
+    nvm_heap_.pop_back();
+ +
+ +  profiler.AddTableOp();
+    return true;
+  }
+  
+  bool MigrationController::ExtractDRAMPage(DRAMPageStats& stats,
+      Profiler& profiler) {
+ -  if (dram_heap_.empty()) {
+ -    int dirts = 0;
+ -    for (unordered_map<uint64_t, PTTEntry>::iterator it = entries_.begin();
+ -         it != entries_.end(); ++it) {
+ -      double wr = it->second.epoch_writes / page_blocks_;
+ -      dram_heap_.push_back({it->first, it->second.state, wr});
+ -
+ -      total_dram_writes_ += it->second.epoch_writes;
+ -      dirts += (it->second.epoch_writes ? 1 : 0);
+ -    }
+ -    assert(dirts == dirty_entries_);
+ -    dirty_dram_pages_ += dirty_entries_;
+ -
+ -    make_heap(dram_heap_.begin(), dram_heap_.end());
+ -  }
+ +  assert(dram_heap_filled_);
+    profiler.AddTableOp();
+  
+    if (dram_heap_.empty()) return false;
+  
+    stats = dram_heap_.front();
+    pop_heap(dram_heap_.begin(), dram_heap_.end());
+    dram_heap_.pop_back();
+ +
+ +  profiler.AddTableOp();
+    return true;
+  }
+  
+ @@ -97,4 +109,6 @@ void MigrationController::Clear(Profiler& profiler) {
+    nvm_pages_.clear();
+    dram_heap_.clear();
+    nvm_heap_.clear();
+ +  dram_heap_filled_ = false;
+ +  nvm_heap_filled_ = false;
+  }
