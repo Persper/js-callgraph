@@ -8,6 +8,7 @@ const graph = require('./graph');
 const flowgraph = require('./flowgraph');
 const callgraph = require('./callgraph');
 const Parser = require('./parsePatch').Parser;
+const detectChange = require('./detectChange').detectChange;
 
 const app = express();
 const jsonParser = bodyParser.json();
@@ -30,6 +31,7 @@ function pp(v) {
         return v.name + ' (Native)';
     throw new Error("strange vertex: " + v);
 }
+
 
 
 /* Convert call graph to node link format that networkx can read */
@@ -114,71 +116,22 @@ function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc, patch) {
     }
 }
 
-function getChangeStats (fg, oldFname, oldSrc, newFname, newSrc, patch) {
+function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
     let forwardStats = null, bckwardStats = null;
     if (oldFname) {
         const ast = astutil.singleSrcAST(oldFname, oldSrc, stripFlow);
-        forwardStats = detectChanges(parser.parse(patch), astutil.getFunctions(ast));
+        forwardStats = detectChange(parser.parse(patch), astutil.getFunctions(ast));
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
-        bckwardStats = detectChanges(parser.invParse(patch), astutil.getFunctions(ast));
+        bckwardStats = detectChange(parser.invParse(patch), astutil.getFunctions(ast));
     }
-    return Object.assign(forwardStats, bckwardStats);
-}
-
-function getIntersectedLength(a, b) {
-    let start, end;
-    if (a[0] >= b[0])
-        start = a[0];
+    // Override bckwardStats with forwardStats when they disagree
+    if (forwardStats && bckwardStats)
+        return Object.assign(bckwardStats, forwardStats);
     else
-        start = b[0];
-
-    if (a[1] <= b[1])
-        end = a[1];
-    else
-        end = b[1];
-
-    if (start > end)
-        return 0
-    else
-        return end - start + 1;
+        return forwardStats || bckwardStats;
 }
-
-function detectChanges (addDels, funcs) {
-    const adds = addDels['adds'], dels = addDels['dels'];
-    const res = {};
-
-    // changeType should one of 'adds' or 'dels'
-    function updateRes(funcName, numLines, changeType) {
-        if (res.hasOwnProperty(funcName)){
-            res[funcName][changeType] += numLines;
-        }
-        else {
-            res[funcName] = { 'adds': 0, 'dels': 0 };
-            res[funcName][changeType] = numLines;
-        }
-    }
-
-    for (let i = 0; i < funcs.length; i++) {
-        const fc = funcs[i];
-        for (let j = 0; j < adds.length; j++) {
-            if (fc['range'][0] <= adds[j][0] && adds[j][0] <= fc['range'][1]) {
-                updateRes(fc.name, adds[j][1], 'adds');
-                break;
-            } 
-        } 
-        for (let k = 0; k < dels.length; k++) {
-            const interLength = getIntersectedLength(fc['range'], dels[k]);
-            if (interLength > 0) {
-                updateRes(fc.name, interLength, 'dels');
-                break;
-            }
-        } 
-    }
-    return res;
-}
-
 
 /*
 app.get('/', function (req, res) {
