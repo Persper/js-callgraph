@@ -19,6 +19,7 @@ define(function (require, exports) {
     var esprima = require('esprima');
     var fs = require('fs');
     var sloc  = require('sloc');
+    var sourceMap = require('source-map');
 
     /* AST visitor */
     function visit(root, visitor) {
@@ -143,34 +144,62 @@ define(function (require, exports) {
     }
 
     function singleSrcAST (fname, src, preprocessor) {
-        if (preprocessor)
-            src = preprocessor(src);
+        let map = null;
+        if (preprocessor) {
+            const prepOut = preprocessor(src);
+            src = prepOut.code;
+            map = prepOut.map;
+        }
         const prog = esprima.parse(src, {loc: true, range: true, sourceType: 'module' });
         prog.attr = {filename: fname, sloc: sloc(src, 'js').sloc };
 
         const ast = {
-            type: 'ProgramCollection',
-            programs: [prog],
-            attr: {sloc: prog.attr.sloc}
+            'type': 'ProgramCollection',
+            'program': prog,
+            'map': map,
+            'attr': {sloc: prog.attr.sloc}
         }
         init(ast);
         return ast;
     }
 
-    function getFunctions(root) {
+    async function getFunctions(root) {
         const funcs = [];
         const funcNodes = root.attr.functions;
+        let consumer = null;
+        if (root.map) {
+            consumer = await new sourceMap.SourceMapConsumer(root.map);
+        }
         for (let i = 0; i < funcNodes.length; ++i) {
             const fn = funcNodes[i];
+
+            // funcName
             let funcName = null;
             if (fn.id)
                 funcName = fn.id.name;
+
+            // startLine && endLine
+            let startLine = fn.loc.start['line'];
+            let endLine = fn.loc.end['line'];
+            if (root.map) {
+                startLine = consumer.originalPositionFor({
+                    line: startLine,
+                    column: fn.loc.start['column']
+                }).line;
+                endLine = consumer.originalPositionFor({
+                    line: endLine,
+                    column: fn.loc.end['column']
+                }).line;
+            }
+
             funcs.push({
                 'name': funcName,
                 'file': fn.attr.enclosingFile,
-                'range': [fn.loc.start['line'], fn.loc.end['line']]
+                'range': [startLine, endLine]
             });
         }
+        if (root.map)
+            consumer.destroy();
         return funcs;
     }
 
