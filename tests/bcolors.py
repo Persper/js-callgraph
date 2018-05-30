@@ -1,3 +1,6 @@
+# Summary: Used for coloring the terminal output
+# Source: https://stackoverflow.com/a/287944
+
 HEADER = '\033[95m'
 OKBLUE = '\033[94m'
 OKGREEN = '\033[92m'
