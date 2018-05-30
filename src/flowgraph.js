@@ -97,6 +97,12 @@ define(function (require, exports) {
                     if (nd.init)
                         flow_graph.addEdge(vertexFor(nd.init), vertexFor(nd.id));
                     break;
+                case 'MethodDefinition':
+                    if (nd.value) {
+                      nd.value.id = nd.key;
+                      flow_graph.addEdge(funcVertex(nd.value), propVertex(nd.key))
+                    }
+                    break;
                 case 'WithStatement':
                     throw new Error("'with' statement not supported");
             }
