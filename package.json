@@ -10,7 +10,8 @@
     "esprima": "^4.0.0",
     "express": "^4.16.3",
     "npm": "^5.7.1",
-    "sloc": "^0.2.0"
+    "sloc": "^0.2.0",
+    "source-map": "^0.7.3"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
