@@ -31,6 +31,15 @@ define(function (require, exports) {
         return id;
     };
 
+    /* Adds the node to the graph if not already there */
+    Graph.prototype.addNode = function (nd) {
+      if (this.hasNode(nd))
+          return;
+
+      nd.attr.node_id = nextNodeId++;
+      id2node[nd.attr.node_id] = nd;
+    }
+
     Graph.prototype.addEdge = function (from, to) {
         var fromId = nodeId(from), toId = nodeId(to);
         if (fromId === toId)
