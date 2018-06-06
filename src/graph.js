@@ -64,8 +64,10 @@ define(function (require, exports) {
         }
     };
 
-    /* BAD DESIGN: if from or to is not in the graph, this query will add them to the graph */
     Graph.prototype.hasEdge = function (from, to) {
+        if (!this.hasNode(from) || !this.hasNode(to))
+          return false;
+
         var fromId = nodeId(from), toId = nodeId(to);
         return numset.contains(this.succ[fromId], toId);
     };
