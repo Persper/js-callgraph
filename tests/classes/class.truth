@@ -1,4 +1,4 @@
 class.js:area:8 -> class.js:calcArea:11
-class.js:global:16 -> class.js:Rectangle:1
+class.js:global:16 -> class.js:constructor:2
 class.js:global:18 -> Native
 class.js:global:18 -> class.js:calcArea:11
