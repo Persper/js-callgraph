@@ -129,7 +129,7 @@ define(function (require, exports) {
             attr: {}
         };
         sources.forEach(function (source) {
-            var prog = esprima.parse(source.program, { loc: true, range: true, sourceType: 'module' });
+            var prog = esprima.parseModule(source.program, { loc: true, range: true});
             prog.attr = { filename: source.filename, sloc : sloc(source.program, "js").sloc};
             ast.programs.push(prog);
         });
@@ -150,7 +150,7 @@ define(function (require, exports) {
             src = prepOut.code;
             map = prepOut.map;
         }
-        const prog = esprima.parse(src, {loc: true, range: true, sourceType: 'module' });
+        const prog = esprima.parseModule(src, {loc: true, range: true});
         prog.attr = {filename: fname, sloc: sloc(src, 'js').sloc };
 
         const ast = {
