@@ -85,8 +85,8 @@ define(function (require, exports) {
     Graph.prototype.removeEdge = function (from, to) {
         if (this.hasNode(from) && this.hasNode(to) && this.hasEdge(from, to)){
             const fromId = getId(from), toId = getId(to);
-            numset.remove(this.succ[fromId], toId);
-            numset.remove(this.pred[toId], fromId);
+            this.succ[fromId] = numset.remove(this.succ[fromId], toId);
+            this.pred[toId] = numset.remove(this.pred[toId], fromId);
             return true;
         }
         return false;
