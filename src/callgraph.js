@@ -16,6 +16,7 @@ if (typeof define !== 'function') {
 
 define(function (require, exports) {
     var graph = require('./graph'),
+        _ = require('./dftc.js'),
         flowgraph = require('./flowgraph');
 
     // extract a call graph from a flow graph by collecting all function vertices that are inversely reachable from a callee vertex
