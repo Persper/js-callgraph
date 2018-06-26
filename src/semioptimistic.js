@@ -124,6 +124,20 @@ define(function (require, exports) {
     }
 
     /* Arguments:
+         curr_filename - full path of the file calling require
+                    nd - ast node representing call to require
+
+       Return value: full path of file being required */
+    function getRequiredFile(curr_filename, nd) {
+      argument = nd.arguments[0].value;
+      required_file = argument.slice(2);
+      required_file = path.resolve(curr_filename, '..', required_file);
+      required_file = required_file + '.js';
+
+      return required_file
+    }
+
+    /* Arguments:
               ast - a ProgramCollection
                fg - a flowgraph
           exp_fns - a dictionary with filenames as keys
@@ -138,17 +152,11 @@ define(function (require, exports) {
         astutil.visit(ast.programs[i], function (nd) {
           if (nd.type === 'VariableDeclarator') {
             init = nd.init;
-            if (init.type === 'CallExpression') {
-              callee = init.callee;
-              arguments = init.arguments;
-              if (callee.type === 'Identifier' && callee.name === 'require') {
-                    required_file = arguments[0].value.slice(2);
-                    required_file = path.resolve(filename, '..', required_file);
-                    required_file = required_file + '.js';
-                    if (required_file in exp_fns)
-                       fg.addEdge(flowgraph.vertexFor(exp_fns[required_file][0]), flowgraph.vertexFor(nd.id));
 
-              }
+            if (isCallTo(init, 'require')) {
+              required_file = getRequiredFile(filename, init);
+              if (required_file in exp_fns)
+                 fg.addEdge(flowgraph.vertexFor(exp_fns[required_file][0]), flowgraph.vertexFor(nd.id));
             }
           }
         })
