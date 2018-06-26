@@ -21,7 +21,138 @@ define(function (require, exports) {
     var graph = require('./graph'),
         natives = require('./natives'),
         flowgraph = require('./flowgraph'),
-        callgraph = require('./callgraph');
+        callgraph = require('./callgraph'),
+        astutil = require('./astutil'),
+        path = require('path');
+
+        /* Arguments:
+                   nd - an ast node
+
+          Return value: true if nd represents an assignment to module.exports
+                        false otherwise */
+    function isModuleExports(nd) {
+        if (nd.type !== 'AssignmentExpression')
+            return false;
+
+        left = nd.left;
+
+        if (left.type !== 'MemberExpression')
+            return  false;
+
+        object = left.object;
+        property = left.property;
+
+        if (object.type !== 'Identifier' || property.type !== 'Identifier')
+            return false;
+
+        return object.name === 'module' && property.name === 'exports';
+    }
+
+    /* Arguments:
+               nd - an ast node
+
+      Return value: true if nd represents a call to define
+                    false otherwise */
+    function isDefine(nd) {
+      if (nd.type !== 'CallExpression')
+        return false;
+
+      callee = nd.callee;
+
+      if (callee.type !== 'Identifier')
+        return false;
+
+      return callee.name === 'define'
+    }
+
+    /* Arguments:
+               fn - an ast node representing a FunctionDeclaration
+
+       Return value: a list containing all of the ReturnStatement
+                     nodes' values in fn's body */
+    function getReturnValues(fn) {
+      fn_body = fn.body.body;
+      lst = [];
+
+      for (var i = 0; i < fn_body.length; i++)
+        if (fn_body[i].type === 'ReturnStatement')
+          lst.push(fn_body[i].argument);
+
+      return lst;
+    }
+
+    /* Arguments:
+          exp_fns - a dictionary with filenames as keys
+                    and a list of exported values as values
+         filename - a filename
+               nd - a node in an ast
+
+       Postcondition: nd has been paired with filename in exp_fns */
+    function addExport(exp_fns, filename, nd) {
+      if (filename in exp_fns)
+        exp_fns[filename] = exp_fns[filename] + [nd];
+      else
+        exp_fns[filename] = [nd];
+    }
+
+    /* Arguments: ast - a ProgramCollection
+       Return value: dictionary with filenames as keys
+                     and a list of exported values as values */
+    function collectExports(ast) {
+      exported_functions = {};
+
+      for (var i = 0; i < ast.programs.length; i++) {
+        filename = ast.programs[i].attr.filename;
+        filename = path.resolve(filename);
+
+        astutil.visit(ast.programs[i], function (nd) {
+          /* Handles: module.exports = fn */
+          if (isModuleExports(nd)) {
+            addExport(exported_functions, filename, nd.right);
+          }
+          /* Handles: define(function() {return fn;}) */
+          if (isDefine(nd)) {
+            ret_vals = getReturnValues(nd.arguments[0]);
+
+            for (var i = 0; i < ret_vals.length; i++)
+                addExport(exported_functions, filename, ret_vals[i]);
+          }
+        })
+      }
+      return exported_functions;
+    }
+
+    /* Arguments:
+              ast - a ProgramCollection
+               fg - a flowgraph
+          exp_fns - a dictionary with filenames as keys
+                    and a list of exported values as values
+
+       Postcondition: edges connecting imports to the corresponding
+                      exported value have been added to the flowgraph */
+    function connectImports(ast, fg, exp_fns) {
+      for (var i = 0; i < ast.programs.length; i++) {
+        filename = ast.programs[i].attr.filename;
+
+        astutil.visit(ast.programs[i], function (nd) {
+          if (nd.type === 'VariableDeclarator') {
+            init = nd.init;
+            if (init.type === 'CallExpression') {
+              callee = init.callee;
+              arguments = init.arguments;
+              if (callee.type === 'Identifier' && callee.name === 'require') {
+                    required_file = arguments[0].value.slice(2);
+                    required_file = path.resolve(filename, '..', required_file);
+                    required_file = required_file + '.js';
+                    if (required_file in exp_fns)
+                       fg.addEdge(flowgraph.vertexFor(exp_fns[required_file][0]), flowgraph.vertexFor(nd.id));
+
+              }
+            }
+          }
+        })
+      }
+    }
 
     function addInterproceduralFlowEdges(ast, fg) {
         fg = fg || new graph.Graph();
@@ -97,8 +228,19 @@ define(function (require, exports) {
     function buildCallGraph(ast) {
         var fg = new graph.Graph();
         natives.addNativeFlowEdges(fg);
+        // console.log(ast);
+        // console.log(ast.programs[0].attr.filename)
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
+
+        exported_functions = collectExports(ast);
+        connectImports(ast, fg, exported_functions);
+
+        // console.log('Exports');
+        // console.log(exported_functions);
+
         addInterproceduralFlowEdges(ast, fg);
+
+
 
         /*
         var changed;
