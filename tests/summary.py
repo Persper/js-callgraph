@@ -5,7 +5,7 @@ from os import listdir
 from os.path import isfile, join
 import bcolors
 
-test_directories = ['basics', 'limits', 'unexpected', 'classes']
+test_directories = ['basics', 'limits', 'unexpected', 'classes', 'import-export']
 
 total_w_natives_intersection = 0
 total_w_natives_output = 0
