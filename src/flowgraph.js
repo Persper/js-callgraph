@@ -325,5 +325,6 @@ define(function (require, exports) {
     exports.argVertex = argVertex;
     exports.retVertex = retVertex;
     exports.resVertex = resVertex;
+    exports.vertexFor = vertexFor;
     return exports;
 });
