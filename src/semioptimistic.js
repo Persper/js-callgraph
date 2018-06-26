@@ -50,10 +50,11 @@ define(function (require, exports) {
 
     /* Arguments:
                nd - an ast node
+          fn_name - a function name to compare to
 
-      Return value: true if nd represents a call to define
+      Return value: true if nd represents a call to fn_name
                     false otherwise */
-    function isDefine(nd) {
+    function isCallTo(nd, fn_name) {
       if (nd.type !== 'CallExpression')
         return false;
 
@@ -62,7 +63,7 @@ define(function (require, exports) {
       if (callee.type !== 'Identifier')
         return false;
 
-      return callee.name === 'define'
+      return callee.name === fn_name
     }
 
     /* Arguments:
@@ -111,7 +112,7 @@ define(function (require, exports) {
             addExport(exported_functions, filename, nd.right);
           }
           /* Handles: define(function() {return fn;}) */
-          if (isDefine(nd)) {
+          if (isCallTo(nd, 'define')) {
             ret_vals = getReturnValues(nd.arguments[0]);
 
             for (var i = 0; i < ret_vals.length; i++)
