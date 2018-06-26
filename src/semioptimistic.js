@@ -25,11 +25,11 @@ define(function (require, exports) {
         astutil = require('./astutil'),
         path = require('path');
 
-        /* Arguments:
-                   nd - an ast node
+    /* Arguments:
+               nd - an ast node
 
-          Return value: true if nd represents an assignment to module.exports
-                        false otherwise */
+       Return value: true if nd represents an assignment to module.exports
+                     false otherwise */
     function isModuleExports(nd) {
         if (nd.type !== 'AssignmentExpression')
             return false;
@@ -170,7 +170,6 @@ define(function (require, exports) {
                 if (!res.attr.interesting)
                     reach.iterReachable(res, function (nd) {
                         if (nd.type === 'CalleeVertex') {
-                            //console.log(res.attr.pp() + " is interesting");
                             res.attr.interesting = true;
                         }
                     });
@@ -228,86 +227,13 @@ define(function (require, exports) {
     function buildCallGraph(ast) {
         var fg = new graph.Graph();
         natives.addNativeFlowEdges(fg);
-        // console.log(ast);
-        // console.log(ast.programs[0].attr.filename)
+
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
 
         exported_functions = collectExports(ast);
         connectImports(ast, fg, exported_functions);
 
-        // console.log('Exports');
-        // console.log(exported_functions);
-
         addInterproceduralFlowEdges(ast, fg);
-
-
-
-        /*
-        var changed;
-        do {
-            changed = false;
-
-            var reach = fg.reachability(function (nd) {
-                return nd.type !== 'UnknownVertex';
-            });
-
-            ast.attr.calls.forEach(function (call) {
-                var res = flowgraph.resVertex(call);
-                if (!res.attr.interesting)
-                    reach.iterReachable(res, function (nd) {
-                        if (nd.type === 'CalleeVertex') {
-                            //console.log(res.attr.pp() + " is interesting");
-                            res.attr.interesting = true;
-                        }
-                    });
-            });
-
-            ast.attr.functions.forEach(function (fn) {
-                var interesting = false, nparams = fn.params.length;
-
-                for (var i = 0; i <= nparams; ++i) {
-                    var param = flowgraph.parmVertex(fn, i);
-                    if (!param.attr.interesting) {
-                        reach.iterReachable(param, function (nd) {
-                            if (nd.type === 'CalleeVertex') {
-                                param.attr.interesting = true;
-                            }
-                        });
-                    }
-                    interesting = interesting || param.attr.interesting;
-                }
-
-                reach.iterReachable(flowgraph.funcVertex(fn), function (nd) {
-                    if (nd.type === 'CalleeVertex') {
-                        var call = nd.call, res = flowgraph.resVertex(call);
-
-                        if (res.attr.interesting) {
-                            var ret = flowgraph.retVertex(fn);
-                            if (!fg.hasEdge(ret, res)) {
-                                changed = true;
-                                fg.addEdge(ret, res);
-                            }
-                        }
-
-                        if (interesting)
-                            for (var i = 0; i <= nparams; ++i) {
-                                if (i > call.arguments.length)
-                                    break;
-
-                                var param = flowgraph.parmVertex(fn, i);
-                                if (param.attr.interesting) {
-                                    var arg = flowgraph.argVertex(call, i);
-                                    if (!fg.hasEdge(arg, param)) {
-                                        changed = true;
-                                        fg.addEdge(arg, param);
-                                    }
-                                }
-                            }
-                    }
-                });
-            });
-        } while (changed); // until fixpoint
-        */
 
         return callgraph.extractCG(ast, fg);
     }
