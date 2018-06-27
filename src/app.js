@@ -19,20 +19,36 @@ let gcg = initializeCallGraph();
 const parser = new Parser();
 
 function initializeCallGraph () {
-    return { fg: new graph.Graph() };
+    return { 'fg': new graph.Graph() };
 }
 
 function pp(v) {
-    if (v.type === 'CalleeVertex')
-        return astutil.en_funcname(v.call.attr.enclosingFunction) + ' (' + astutil.ppPos(v.call) + ')';
-    if (v.type === 'FuncVertex')
-        return astutil.funcname(v.func) + ' (' + astutil.ppPos(v.func) + ')';
-    if (v.type === 'NativeVertex')
-        return v.name + ' (Native)';
-    throw new Error("strange vertex: " + v);
+    // v is a call graph vertex, which stores a reference to its AST node
+    if (v.type === 'CalleeVertex') {
+        if (v.call.attr.enclosingFunction)
+            return colonFormat(v.call.attr.enclosingFunction);
+        else
+            return v.call.attr.enclosingFile + ':global'
+    }
+    else if (v.type === 'FuncVertex') {
+        return colonFormat(v.func);
+    }
+    else if (v.type === 'NativeVertex') {
+        return 'Native:' + v.name;
+    }
+    else {
+        throw new Error("strange vertex: " + v);
+    }
 }
 
-
+function colonFormat(funcNd){
+    // funcNd is an AST node
+    // example output: a.js:funcA:1:5
+    return funcNd.attr.enclosingFile + ':' +
+        astutil.funcname(funcNd) + ':' +
+        funcNd.loc.start.line + ':' +
+        funcNd.loc.end.line;
+}
 
 /* Convert call graph to node link format that networkx can read */
 function NodeLinkFormat (G) {
@@ -138,18 +154,6 @@ async function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
     else
         return forwardStats || bckwardStats;
 }
-
-/*
-app.get('/', function (req, res) {
-    const cg = simpleCallGraph();
-    let count = 0;
-    cg.edges.iter(function (call, fn) {
-        count += 1;
-        console.log(pp(call) + ' -> ' + pp(fn));
-    });
-    res.send(count.toString());
-});
-*/
 
 app.get('/callgraph', function (req, res) {
     if (!gcg.edges) {
