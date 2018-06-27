@@ -112,7 +112,6 @@ function stripAndTranspile(src) {
     return babel.transform(src, {
         presets: ['es2015', 'flow'],
         retainLines: true,
-        // sourceMaps: true
     });
 }
 
@@ -120,7 +119,6 @@ function stripFlow(src) {
     return babel.transform(src, {
         presets: ['flow'],
         retainLines: true,
-        // sourceMaps: true
     });
 }
 
@@ -136,16 +134,16 @@ function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc, patch) {
     }
 }
 
-async function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
+function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
     let forwardStats = null, bckwardStats = null;
     if (oldFname) {
         const ast = astutil.singleSrcAST(oldFname, oldSrc, stripFlow);
-        const funcs = await astutil.getFunctions(ast);
+        const funcs = astutil.getFunctions(ast);
         forwardStats = detectChange(parser.parse(patch), funcs);
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
-        const funcs = await astutil.getFunctions(ast);
+        const funcs = astutil.getFunctions(ast);
         bckwardStats = detectChange(parser.invParse(patch), funcs);
     }
     // Override bckwardStats with forwardStats when they disagree
@@ -178,7 +176,7 @@ app.post('/update', jsonParser, function (req, res) {
     res.json(NodeLinkFormat(gcg.edges));
 });
 
-app.get('/stats', jsonParser, async function (req, res) {
+app.get('/stats', jsonParser, function (req, res) {
     if (!req.body)
         return res.sendStatus(400);
     // console.log(req.body);
@@ -187,7 +185,7 @@ app.get('/stats', jsonParser, async function (req, res) {
           newFname = req.body.newFname,
           newSrc = req.body.newSrc,
           patch = req.body.patch;
-    res.json(await getChangeStats(oldFname, oldSrc, newFname, newSrc, patch));
+    res.json(getChangeStats(oldFname, oldSrc, newFname, newSrc, patch));
 });
 
 app.post('/reset', function (req, res) {
