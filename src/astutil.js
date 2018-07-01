@@ -19,6 +19,7 @@ define(function (require, exports) {
     var esprima = require('esprima');
     var fs = require('fs');
     var sloc  = require('sloc');
+    var escodegen = require('escodegen');
 
     /* AST visitor */
     function visit(root, visitor) {
@@ -162,9 +163,22 @@ define(function (require, exports) {
         return ast;
     }
 
+    const cf = funcObj => {
+        return funcObj.file + ':' + funcObj.name + ':' +
+            funcObj.range[0] + ':' + funcObj.range[1];
+    };
+
+    const astToCode = astNode => {
+        return escodegen.generate(astNode, {
+            'compact': true,
+            'comment': false
+        });
+    }
+
     function getFunctions(root) {
         const funcs = [];
         const funcNodes = root.attr.functions;
+
         for (let i = 0; i < funcNodes.length; ++i) {
             const fn = funcNodes[i];
 
@@ -180,9 +194,13 @@ define(function (require, exports) {
             funcs.push({
                 'name': funcName,
                 'file': fn.attr.enclosingFile,
-                'range': [startLine, endLine]
+                'range': [startLine, endLine],
+                'code': astToCode(fn)
             });
         }
+        funcs.forEach(funcObj => {
+            funcObj['cf'] = cf(funcObj);
+        });
         return funcs;
     }
 
