@@ -15,7 +15,7 @@ function trackFunctions(forwardFuncs, bckwardFuncs, threshold=0.5) {
         }
 
         if (isHandled)
-            break;
+            continue;
 
         // heuristic 2: levenshtein distance
         for (let bfunc of bckwardFuncs) {
