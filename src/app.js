@@ -9,6 +9,7 @@ const flowgraph = require('./flowgraph');
 const callgraph = require('./callgraph');
 const Parser = require('./parsePatch').Parser;
 const detectChange = require('./detectChange').detectChange;
+const { trackFunctions } = require('./trackFunctions');
 
 const app = express();
 const jsonParser = bodyParser.json();
@@ -134,23 +135,39 @@ function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc, patch) {
     }
 }
 
+/*
+This function does two things:
+1. Extract function level edit info by parsing source files and their diff.
+2. Return a mapping between a function's old colon format ID to its new colon format ID.
+The mapping is empty if no function's colon format ID gets changed
+or either of oldFname and newFname is null.
+*/
 function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
+    let stats = { 'funcToLines': {}, 'idMap': {} };
     let forwardStats = null, bckwardStats = null;
+    let forwardFuncs = null, bckwardFuncs = null;
+
     if (oldFname) {
         const ast = astutil.singleSrcAST(oldFname, oldSrc, stripFlow);
-        const funcs = astutil.getFunctions(ast);
-        forwardStats = detectChange(parser.parse(patch), funcs);
+        forwardFuncs = astutil.getFunctions(ast);
+        forwardStats = detectChange(parser.parse(patch), forwardFuncs);
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
-        const funcs = astutil.getFunctions(ast);
-        bckwardStats = detectChange(parser.invParse(patch), funcs);
+        bckwardFuncs = astutil.getFunctions(ast);
+        bckwardStats = detectChange(parser.invParse(patch), bckwardFuncs);
+    }
+
+    if (oldFname && newFname) {
+        stats['idMap'] = trackFunctions(forwardFuncs, bckwardFuncs, forwardStats);
     }
     // Override bckwardStats with forwardStats when they disagree
     if (forwardStats && bckwardStats)
-        return Object.assign(bckwardStats, forwardStats);
+        stats['funcToLines'] = Object.assign(bckwardStats, forwardStats);
     else
-        return forwardStats || bckwardStats;
+        stats['funcToLines'] = forwardStats || bckwardStats;
+
+    return stats;
 }
 
 app.get('/callgraph', function (req, res) {
