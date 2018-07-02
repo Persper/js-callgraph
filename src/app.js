@@ -143,7 +143,7 @@ The mapping is empty if no function's colon format ID gets changed
 or either of oldFname and newFname is null.
 */
 function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
-    let stats = { 'funcToLines': {}, 'idMap': {} };
+    let stats = { 'idToLines': {}, 'idMap': {} };
     let forwardStats = null, bckwardStats = null;
     let forwardFuncs = null, bckwardFuncs = null;
 
@@ -159,13 +159,17 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
     }
 
     if (oldFname && newFname) {
-        stats['idMap'] = trackFunctions(forwardFuncs, bckwardFuncs, forwardStats);
+        stats['idMap'] = trackFunctions(forwardFuncs, bckwardFuncs);
+        // Merge forwardStats with bckwardStats
+        // Override forwardStats with bckwardStats when they disagree
+        // Then remove old colon format ids to avoid storing a function twice
+        stats['idToLines'] = Object.assign(forwardStats, bckwardStats);
+        for (let cf in stats['idMap'])
+            delete stats['idToLines'][cf];
     }
-    // Override bckwardStats with forwardStats when they disagree
-    if (forwardStats && bckwardStats)
-        stats['funcToLines'] = Object.assign(bckwardStats, forwardStats);
-    else
-        stats['funcToLines'] = forwardStats || bckwardStats;
+    else {
+        stats['idToLines'] = forwardStats || bckwardStats;
+    }
 
     return stats;
 }
