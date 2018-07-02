@@ -20,7 +20,10 @@ let gcg = initializeCallGraph();
 const parser = new Parser();
 
 function initializeCallGraph () {
-    return { 'fg': new graph.Graph() };
+    return {
+        'fg': new graph.Graph(),
+        'totalEdits': {}
+    };
 }
 
 function pp(v) {
@@ -161,11 +164,11 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
     if (oldFname && newFname) {
         stats['idMap'] = trackFunctions(forwardFuncs, bckwardFuncs);
         // Merge forwardStats with bckwardStats
-        // Override forwardStats with bckwardStats when they disagree
-        // Then remove old colon format ids to avoid storing a function twice
-        stats['idToLines'] = Object.assign(forwardStats, bckwardStats);
-        for (let cf in stats['idMap'])
-            delete stats['idToLines'][cf];
+        // Override bckwardStats with forwardStats when they disagree
+        // Then remove new colon format ids to avoid storing a function twice
+        stats['idToLines'] = Object.assign(bckwardStats, forwardStats);
+        for (let newCf of Object.values(stats['idMap']))
+            delete stats['idToLines'][newCf];
     }
     else {
         stats['idToLines'] = forwardStats || bckwardStats;
