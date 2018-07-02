@@ -22,7 +22,8 @@ const parser = new Parser();
 function initializeCallGraph () {
     return {
         'fg': new graph.Graph(),
-        'totalEdits': {}
+        'totalEdits': {},
+        'edges': null,
     };
 }
 
@@ -126,7 +127,7 @@ function stripFlow(src) {
     });
 }
 
-function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc, patch) {
+function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
     }
@@ -135,6 +136,26 @@ function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc, patch) {
         bindings.addBindings(ast);
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
         semioptimistic.addInterproceduralFlowEdges(ast, fg);
+    }
+}
+
+function updateTotalEdits (totalEdits, stats) {
+    for (let cf in stats['idToLines']) {
+        // if cf is changed
+        if (cf in stats['idMap']) {
+            let newCf = stats['idMap'][cf];
+            if (newCf in stats['idMap'])
+                console.log('WARNING: newCf already exists in totalEdits.');
+            // if cf in stats['idMap'], it should exist in totalEdits
+            totalEdits[newCf] = totalEdits[cf] + stats['idToLines'][cf];
+            delete totalEdits[cf];
+        }
+        else {
+            if (cf in totalEdits)
+                totalEdits[cf] += stats['idToLines'][cf];
+            else
+                totalEdits[cf] = stats['idToLines'][cf];
+        }
     }
 }
 
@@ -195,9 +216,12 @@ app.post('/update', jsonParser, function (req, res) {
           newSrc = req.body.newSrc,
           patch = req.body.patch;
 
-    updateFlowGraph(gcg.fg, oldFname, oldSrc, newFname, newSrc, patch);
-    gcg = callgraph.extractCG(null, gcg.fg);
-    res.json(NodeLinkFormat(gcg.edges));
+    const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch)
+    updateTotalEdits(gcg.totalEdits, stats);
+
+    updateFlowGraph(gcg.fg, oldFname, oldSrc, newFname, newSrc);
+    gcg.edges = callgraph.extractCG(null, gcg.fg).edges;
+    res.json(stats);
 });
 
 app.get('/stats', jsonParser, function (req, res) {
@@ -209,7 +233,8 @@ app.get('/stats', jsonParser, function (req, res) {
           newFname = req.body.newFname,
           newSrc = req.body.newSrc,
           patch = req.body.patch;
-    res.json(getChangeStats(oldFname, oldSrc, newFname, newSrc, patch));
+    const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch);
+    res.json(stats);
 });
 
 app.post('/reset', function (req, res) {
