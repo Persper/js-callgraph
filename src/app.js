@@ -56,7 +56,7 @@ function colonFormat(funcNd){
 }
 
 /* Convert call graph to node link format that networkx can read */
-function NodeLinkFormat (G) {
+function NodeLinkFormat (edges, totalEdits={}, defaultNumLines=1) {
     let nextId = 0;
     const node2id = {}
     const nlf = { 'directed': true, 'multigraph': false, 'links': [], 'nodes': [] };
@@ -65,19 +65,28 @@ function NodeLinkFormat (G) {
         'directed': True,
         'multigraph': False,
         'links': [{'source': 1, 'target': 0}],
-        'nodes': [{'id': 'B'}, {'id': 'A'}]
+        'nodes': [{'id': 'B', 'num_lines': 10}, {'id': 'A', 'num_lines': 2}]
     }
     */
 
     function nodeId (nodeName) {
+        /* There're 3 possibilities for nodeName
+        1. A proper colon format id
+        2. <filename>:global
+        3. Native:<funcname>
+        Only case 1. functions can and should be found in totalEdits
+        */
         if (!(nodeName in node2id)) {
             node2id[nodeName] = nextId++;
-            nlf.nodes.push({'id': nodeName});
+            if (nodeName in totalEdits)
+                nlf.nodes.push({'id': nodeName, 'num_lines': totalEdits[nodeName]});
+            else
+                nlf.nodes.push({'id': nodeName, 'num_lines': defaultNumLines});
         }
         return node2id[nodeName]
     }
 
-    G.iter(function (call, fn) {
+    edges.iter(function (call, fn) {
         const callerId = nodeId(pp(call));
         const calleeId = nodeId(pp(fn));
         nlf.links.push({'source':  callerId, 'target': calleeId});
@@ -199,10 +208,10 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
 }
 
 app.get('/callgraph', function (req, res) {
-    if (!gcg.edges) {
-        res.json(NodeLinkFormat(simpleCallGraph().edges));
+    if (gcg.edges) {
+        res.json(NodeLinkFormat(gcg.edges, gcg.totalEdits));
     } else {
-        res.json(NodeLinkFormat(gcg.edges));
+        res.json(NodeLinkFormat(simpleCallGraph().edges));
     }
 });
 
