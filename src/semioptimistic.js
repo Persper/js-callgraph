@@ -89,11 +89,15 @@ define(function (require, exports) {
                nd - a node in an ast
 
        Postcondition: nd has been paired with filename in exp_fns */
-    function addExport(exp_fns, filename, nd) {
-      if (filename in exp_fns)
-        exp_fns[filename] = exp_fns[filename] + [nd];
-      else
-        exp_fns[filename] = [nd];
+    function addDefaultExport(exp_fns, filename, nd) {
+      if (filename in exp_fns) {
+        exp_fns[filename]['default'].push(nd);
+      }
+      else {
+        exp_fns[filename] = {'default': [], 'named': {}, 'redirect': []};
+        exp_fns[filename]['default'] = [nd];
+      }
+    }
     }
 
     /* Arguments: ast - a ProgramCollection
@@ -109,14 +113,15 @@ define(function (require, exports) {
         astutil.visit(ast.programs[i], function (nd) {
           /* Handles: module.exports = fn */
           if (isModuleExports(nd)) {
-            addExport(exported_functions, filename, nd.right);
+            addDefaultExport(exported_functions, filename, nd.right);
           }
           /* Handles: define(function() {return fn;}) */
           if (isCallTo(nd, 'define')) {
             let ret_vals = getReturnValues(nd.arguments[0]);
 
             for (var i = 0; i < ret_vals.length; i++)
-                addExport(exported_functions, filename, ret_vals[i]);
+                addDefaultExport(exported_functions, filename, ret_vals[i]);
+          }
           }
         })
       }
