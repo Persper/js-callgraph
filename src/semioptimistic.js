@@ -34,13 +34,13 @@ define(function (require, exports) {
         if (nd.type !== 'AssignmentExpression')
             return false;
 
-        left = nd.left;
+        let left = nd.left;
 
         if (left.type !== 'MemberExpression')
             return  false;
 
-        object = left.object;
-        property = left.property;
+        let object = left.object;
+        let property = left.property;
 
         if (object.type !== 'Identifier' || property.type !== 'Identifier')
             return false;
@@ -58,7 +58,7 @@ define(function (require, exports) {
       if (nd.type !== 'CallExpression')
         return false;
 
-      callee = nd.callee;
+      let callee = nd.callee;
 
       if (callee.type !== 'Identifier')
         return false;
@@ -72,8 +72,8 @@ define(function (require, exports) {
        Return value: a list containing all of the ReturnStatement
                      nodes' values in fn's body */
     function getReturnValues(fn) {
-      fn_body = fn.body.body;
-      lst = [];
+      let fn_body = fn.body.body;
+      let lst = [];
 
       for (var i = 0; i < fn_body.length; i++)
         if (fn_body[i].type === 'ReturnStatement')
@@ -100,10 +100,10 @@ define(function (require, exports) {
        Return value: dictionary with filenames as keys
                      and a list of exported values as values */
     function collectExports(ast) {
-      exported_functions = {};
+      let exported_functions = {};
 
       for (var i = 0; i < ast.programs.length; i++) {
-        filename = ast.programs[i].attr.filename;
+        let filename = ast.programs[i].attr.filename;
         filename = path.resolve(filename);
 
         astutil.visit(ast.programs[i], function (nd) {
@@ -113,7 +113,7 @@ define(function (require, exports) {
           }
           /* Handles: define(function() {return fn;}) */
           if (isCallTo(nd, 'define')) {
-            ret_vals = getReturnValues(nd.arguments[0]);
+            let ret_vals = getReturnValues(nd.arguments[0]);
 
             for (var i = 0; i < ret_vals.length; i++)
                 addExport(exported_functions, filename, ret_vals[i]);
@@ -129,8 +129,8 @@ define(function (require, exports) {
 
        Return value: full path of file being required */
     function getRequiredFile(curr_filename, nd) {
-      argument = nd.arguments[0].value;
-      required_file = argument.slice(2);
+      let argument = nd.arguments[0].value;
+      let required_file = argument.slice(2);
       required_file = path.resolve(curr_filename, '..', required_file);
       required_file = required_file + '.js';
 
@@ -147,14 +147,14 @@ define(function (require, exports) {
                       exported value have been added to the flowgraph */
     function connectImports(ast, fg, exp_fns) {
       for (var i = 0; i < ast.programs.length; i++) {
-        filename = ast.programs[i].attr.filename;
+        let filename = ast.programs[i].attr.filename;
 
         astutil.visit(ast.programs[i], function (nd) {
           if (nd.type === 'VariableDeclarator') {
-            init = nd.init;
+            let init = nd.init;
 
             if (isCallTo(init, 'require')) {
-              required_file = getRequiredFile(filename, init);
+              let required_file = getRequiredFile(filename, init);
               if (required_file in exp_fns)
                  fg.addEdge(flowgraph.vertexFor(exp_fns[required_file][0]), flowgraph.vertexFor(nd.id));
             }
@@ -239,7 +239,7 @@ define(function (require, exports) {
 
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
 
-        exported_functions = collectExports(ast);
+        let exported_functions = collectExports(ast);
         connectImports(ast, fg, exported_functions);
 
         addInterproceduralFlowEdges(ast, fg);
