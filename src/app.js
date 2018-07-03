@@ -9,6 +9,7 @@ const flowgraph = require('./flowgraph');
 const callgraph = require('./callgraph');
 const Parser = require('./parsePatch').Parser;
 const detectChange = require('./detectChange').detectChange;
+const { trackFunctions } = require('./trackFunctions');
 
 const app = express();
 const jsonParser = bodyParser.json();
@@ -19,23 +20,43 @@ let gcg = initializeCallGraph();
 const parser = new Parser();
 
 function initializeCallGraph () {
-    return { fg: new graph.Graph() };
+    return {
+        'fg': new graph.Graph(),
+        'totalEdits': {},
+        'edges': null,
+    };
 }
 
 function pp(v) {
-    if (v.type === 'CalleeVertex')
-        return astutil.en_funcname(v.call.attr.enclosingFunction) + ' (' + astutil.ppPos(v.call) + ')';
-    if (v.type === 'FuncVertex')
-        return astutil.funcname(v.func) + ' (' + astutil.ppPos(v.func) + ')';
-    if (v.type === 'NativeVertex')
-        return v.name + ' (Native)';
-    throw new Error("strange vertex: " + v);
+    // v is a call graph vertex, which stores a reference to its AST node
+    if (v.type === 'CalleeVertex') {
+        if (v.call.attr.enclosingFunction)
+            return colonFormat(v.call.attr.enclosingFunction);
+        else
+            return v.call.attr.enclosingFile + ':global'
+    }
+    else if (v.type === 'FuncVertex') {
+        return colonFormat(v.func);
+    }
+    else if (v.type === 'NativeVertex') {
+        return 'Native:' + v.name;
+    }
+    else {
+        throw new Error("strange vertex: " + v);
+    }
 }
 
-
+function colonFormat(funcNd){
+    // funcNd is an AST node
+    // example output: a.js:funcA:1:5
+    return funcNd.attr.enclosingFile + ':' +
+        astutil.funcname(funcNd) + ':' +
+        funcNd.loc.start.line + ':' +
+        funcNd.loc.end.line;
+}
 
 /* Convert call graph to node link format that networkx can read */
-function NodeLinkFormat (G) {
+function NodeLinkFormat (edges, totalEdits={}, defaultNumLines=1) {
     let nextId = 0;
     const node2id = {}
     const nlf = { 'directed': true, 'multigraph': false, 'links': [], 'nodes': [] };
@@ -44,19 +65,28 @@ function NodeLinkFormat (G) {
         'directed': True,
         'multigraph': False,
         'links': [{'source': 1, 'target': 0}],
-        'nodes': [{'id': 'B'}, {'id': 'A'}]
+        'nodes': [{'id': 'B', 'num_lines': 10}, {'id': 'A', 'num_lines': 2}]
     }
     */
 
     function nodeId (nodeName) {
+        /* There're 3 possibilities for nodeName
+        1. A proper colon format id
+        2. <filename>:global
+        3. Native:<funcname>
+        Only case 1. functions can and should be found in totalEdits
+        */
         if (!(nodeName in node2id)) {
             node2id[nodeName] = nextId++;
-            nlf.nodes.push({'id': nodeName});
+            if (nodeName in totalEdits)
+                nlf.nodes.push({'id': nodeName, 'num_lines': totalEdits[nodeName]});
+            else
+                nlf.nodes.push({'id': nodeName, 'num_lines': defaultNumLines});
         }
         return node2id[nodeName]
     }
 
-    G.iter(function (call, fn) {
+    edges.iter(function (call, fn) {
         const callerId = nodeId(pp(call));
         const calleeId = nodeId(pp(fn));
         nlf.links.push({'source':  callerId, 'target': calleeId});
@@ -96,7 +126,6 @@ function stripAndTranspile(src) {
     return babel.transform(src, {
         presets: ['es2015', 'flow'],
         retainLines: true,
-        // sourceMaps: true
     });
 }
 
@@ -104,11 +133,10 @@ function stripFlow(src) {
     return babel.transform(src, {
         presets: ['flow'],
         retainLines: true,
-        // sourceMaps: true
     });
 }
 
-function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc, patch) {
+function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
     }
@@ -120,42 +148,70 @@ function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc, patch) {
     }
 }
 
-async function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
-    let forwardStats = null, bckwardStats = null;
-    if (oldFname) {
-        const ast = astutil.singleSrcAST(oldFname, oldSrc, stripFlow);
-        const funcs = await astutil.getFunctions(ast);
-        forwardStats = detectChange(parser.parse(patch), funcs);
+function updateTotalEdits (totalEdits, stats) {
+    for (let cf in stats['idToLines']) {
+        // if cf is changed
+        if (cf in stats['idMap']) {
+            let newCf = stats['idMap'][cf];
+            if (newCf in stats['idMap'])
+                console.log('WARNING: newCf already exists in totalEdits.');
+            // if cf in stats['idMap'], it should exist in totalEdits
+            totalEdits[newCf] = totalEdits[cf] + stats['idToLines'][cf];
+            delete totalEdits[cf];
+        }
+        else {
+            if (cf in totalEdits)
+                totalEdits[cf] += stats['idToLines'][cf];
+            else
+                totalEdits[cf] = stats['idToLines'][cf];
+        }
     }
-    if (newFname) {
-        const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
-        const funcs = await astutil.getFunctions(ast);
-        bckwardStats = detectChange(parser.invParse(patch), funcs);
-    }
-    // Override bckwardStats with forwardStats when they disagree
-    if (forwardStats && bckwardStats)
-        return Object.assign(bckwardStats, forwardStats);
-    else
-        return forwardStats || bckwardStats;
 }
 
 /*
-app.get('/', function (req, res) {
-    const cg = simpleCallGraph();
-    let count = 0;
-    cg.edges.iter(function (call, fn) {
-        count += 1;
-        console.log(pp(call) + ' -> ' + pp(fn));
-    });
-    res.send(count.toString());
-});
+This function does two things:
+1. Extract function level edit info by parsing source files and their diff.
+2. Return a mapping between a function's old colon format ID to its new colon format ID.
+The mapping is empty if no function's colon format ID gets changed
+or either of oldFname and newFname is null.
 */
+function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
+    let stats = { 'idToLines': {}, 'idMap': {} };
+    let forwardStats = null, bckwardStats = null;
+    let forwardFuncs = null, bckwardFuncs = null;
+
+    if (oldFname) {
+        const ast = astutil.singleSrcAST(oldFname, oldSrc, stripFlow);
+        forwardFuncs = astutil.getFunctions(ast);
+        forwardStats = detectChange(parser.parse(patch), forwardFuncs);
+    }
+    if (newFname) {
+        const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
+        bckwardFuncs = astutil.getFunctions(ast);
+        bckwardStats = detectChange(parser.invParse(patch), bckwardFuncs);
+    }
+
+    if (oldFname && newFname) {
+        stats['idMap'] = trackFunctions(forwardFuncs, bckwardFuncs);
+        // Merge forwardStats with bckwardStats
+        // Override bckwardStats with forwardStats when they disagree
+        // Then remove new colon format ids to avoid storing a function twice
+        stats['idToLines'] = Object.assign(bckwardStats, forwardStats);
+        for (let newCf of Object.values(stats['idMap']))
+            delete stats['idToLines'][newCf];
+    }
+    else {
+        stats['idToLines'] = forwardStats || bckwardStats;
+    }
+
+    return stats;
+}
 
 app.get('/callgraph', function (req, res) {
-    if (!gcg.edges) {
-        res.json(NodeLinkFormat(simpleCallGraph().edges));
+    if (gcg.edges) {
+        res.json(NodeLinkFormat(gcg.edges, gcg.totalEdits));
     } else {
-        res.json(NodeLinkFormat(gcg.edges));
+        res.json(NodeLinkFormat(simpleCallGraph().edges));
     }
 });
 
@@ -169,12 +225,15 @@ app.post('/update', jsonParser, function (req, res) {
           newSrc = req.body.newSrc,
           patch = req.body.patch;
 
-    updateFlowGraph(gcg.fg, oldFname, oldSrc, newFname, newSrc, patch);
-    gcg = callgraph.extractCG(null, gcg.fg);
-    res.json(NodeLinkFormat(gcg.edges));
+    const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch)
+    updateTotalEdits(gcg.totalEdits, stats);
+
+    updateFlowGraph(gcg.fg, oldFname, oldSrc, newFname, newSrc);
+    gcg.edges = callgraph.extractCG(null, gcg.fg).edges;
+    res.json(stats);
 });
 
-app.get('/stats', jsonParser, async function (req, res) {
+app.get('/stats', jsonParser, function (req, res) {
     if (!req.body)
         return res.sendStatus(400);
     // console.log(req.body);
@@ -183,7 +242,8 @@ app.get('/stats', jsonParser, async function (req, res) {
           newFname = req.body.newFname,
           newSrc = req.body.newSrc,
           patch = req.body.patch;
-    res.json(await getChangeStats(oldFname, oldSrc, newFname, newSrc, patch));
+    const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch);
+    res.json(stats);
 });
 
 app.post('/reset', function (req, res) {
