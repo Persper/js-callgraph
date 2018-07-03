@@ -1,0 +1,2 @@
+es6-import-mixed.js:global:3 -> es6-export-mixed.js:undefined:1
+es6-import-mixed.js:global:4 -> es6-export-mixed.js:each:4

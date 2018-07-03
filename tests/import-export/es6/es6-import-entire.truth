@@ -1,0 +1,4 @@
+es6-import-entire.js:global:2 -> Native
+es6-import-entire.js:global:2 -> es6-export-fns.js:square:2
+es6-import-entire.js:global:3 -> Native
+es6-import-entire.js:global:3 -> es6-export-fns.js:diag:5
