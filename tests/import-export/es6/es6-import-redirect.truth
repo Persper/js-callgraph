@@ -1,0 +1,5 @@
+es6-import-redirect.js:global:3 -> auth.js:login:1
+es6-import-redirect.js:global:4 -> auth.js:logout:5
+es6-import-redirect.js:global:5 -> project.js:update:5
+es6-import-redirect.js:global:6 -> project.js:addProject:1
+es6-import-redirect.js:global:7 -> search.js:executeSearch:1
