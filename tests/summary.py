@@ -4,8 +4,10 @@ from process import precision_recall
 from os import listdir
 from os.path import isfile, join
 import bcolors
+import sys
 
-test_directories = ['basics', 'limits', 'unexpected', 'classes', 'import-export']
+test_directories = ['basics', 'limits', 'unexpected', 'classes',
+                    'import-export/define', 'import-export/es6', 'import-export/module.exports']
 
 total_w_natives_intersection = 0
 total_w_natives_output = 0
@@ -14,6 +16,10 @@ total_w_natives_expected = 0
 total_wo_natives_intersection = 0
 total_wo_natives_output = 0
 total_wo_natives_expected = 0
+
+if len(sys.argv) > 1:
+    if sys.argv[1] == 'import-export':
+        test_directories = test_directories[-3:]
 
 for d in test_directories:
     print(bcolors.HEADER + bcolors.BOLD + '='*5, d, '='*5 + bcolors.ENDC)
@@ -31,6 +37,10 @@ for d in test_directories:
     dir_wo_natives_expected = 0
 
     for tf in test_files:
+        if tf not in output_files:
+            print(bcolors.FAIL + tf + '.js', 'missing output file' + bcolors.ENDC)
+
+    for tf in test_files:
         if tf in output_files:
             w_natives, wo_natives = precision_recall(d + '/' + tf + '.js', d + '/' + tf + '.truth')
             print(bcolors.OKGREEN + tf + '.js' + bcolors.ENDC)
@@ -44,8 +54,7 @@ for d in test_directories:
             dir_wo_natives_intersection += wo_natives[2]
             dir_wo_natives_output += wo_natives[3]
             dir_wo_natives_expected += wo_natives[4]
-        else:
-            print(bcolors.FAIL + tf + '.js', 'missing output file' + bcolors.ENDC)
+
 
     print()
 
