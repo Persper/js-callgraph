@@ -98,6 +98,30 @@ define(function (require, exports) {
         exp_fns[filename]['default'] = [nd];
       }
     }
+
+    function addNamedExport(exp_fns, filename, local, exported) {
+      if (filename in exp_fns) {
+        let named = exp_fns[filename]['named']
+
+        if (exported in named) {
+          named[exported] = named[exported].push(local);
+        } else {
+          named[exported] = [local];
+        }
+      } else {
+        exp_fns[filename] = {'default': [], 'named': {}, 'redirect': []};
+        exp_fns[filename]['named'][exported] = [local];
+      }
+    }
+
+    function addRedirectExport(exp_fns, filename, exp_filename) {
+      if (filename in exp_fns) {
+        exp_fns[filename]['redirect'].push(exp_filename);
+      }
+      else {
+        exp_fns[filename] = {'default': [], 'named': {}, 'redirect': []};
+        exp_fns[filename]['redirect'].push(exp_filename);
+      }
     }
 
     /* Arguments: ast - a ProgramCollection
@@ -122,6 +146,25 @@ define(function (require, exports) {
             for (var i = 0; i < ret_vals.length; i++)
                 addDefaultExport(exported_functions, filename, ret_vals[i]);
           }
+          /* Handles: export default ___  */
+          if (nd.type === 'ExportDefaultDeclaration') {
+            addDefaultExport(exported_functions, filename, nd.declaration);
+          }
+          if (nd.type === 'ExportNamedDeclaration') {
+            if (nd.source) {
+              let exported_file = getImportedFile(filename, nd.source);
+              addRedirectExport(exported_functions, filename, exported_file);
+            } else {
+              for (var i = 0; i < nd.specifiers.length; i++){
+                  let specifier = nd.specifiers[i]
+                  addNamedExport(exported_functions, filename,
+                                 specifier['local'], specifier['exported'].name);
+
+              }
+            }
+          }
+          if (nd.type === 'ExportAllDeclaration') {
+
           }
         })
       }
@@ -140,6 +183,57 @@ define(function (require, exports) {
       required_file = required_file + '.js';
 
       return required_file
+    }
+    function getImportedFile(curr_filename, nd) {
+      let argument = nd.value;
+      let required_file = path.resolve(curr_filename, '..', argument);
+      required_file = required_file + '.js';
+
+      return required_file
+    }
+
+    function addDefaultImport(exp_fns, fg, imported_file, ast) {
+      if (!(imported_file in exp_fns))
+          return;
+
+      let defaults = exp_fns[imported_file]['default'];
+
+      for (var i = 0; i < defaults.length; i++) {
+        let exp = defaults[i];
+
+        if (exp.type === 'FunctionDeclaration')
+            fg.addEdge(flowgraph.funcVertex(exp),
+                       flowgraph.vertexFor(ast));
+        else
+            fg.addEdge(flowgraph.vertexFor(exp),
+                       flowgraph.vertexFor(ast));
+      }
+    }
+
+    function addNamedImport(exp_fns, fg, imported_file, local, imported) {
+      if (!(imported_file in exp_fns))
+          return;
+
+      let redirect = exp_fns[imported_file]['redirect'];
+
+      for (let i = 0; i < redirect.length; i++) {
+           addNamedImport(exp_fns, fg, redirect[i], local, imported);
+      }
+      let named = exp_fns[imported_file]['named'];
+
+      if (!(imported in named))
+          return;
+
+      let imp = named[imported];
+
+      for (let i = 0; i < imp.length; i++) {
+        if (imp[i].type === 'FunctionDeclaration')
+            fg.addEdge(flowgraph.funcVertex(imp[i]),
+                       flowgraph.vertexFor(local));
+        else
+            fg.addEdge(flowgraph.vertexFor(imp[i]),
+                       flowgraph.vertexFor(local));
+      }
     }
 
     /* Arguments:
@@ -161,7 +255,25 @@ define(function (require, exports) {
             if (isCallTo(init, 'require')) {
               let required_file = getRequiredFile(filename, init);
               if (required_file in exp_fns)
-                 fg.addEdge(flowgraph.vertexFor(exp_fns[required_file][0]), flowgraph.vertexFor(nd.id));
+                 addDefaultImport(exp_fns, fg, required_file, nd.id);
+            }
+          }
+          if (nd.type === 'ImportDeclaration') {
+            let imported_file = getImportedFile(filename, nd.source);
+            for (var i = 0; i < nd.specifiers.length; i++) {
+              let specifier = nd.specifiers[i];
+              switch (specifier.type) {
+                case 'ImportSpecifier':
+                    addNamedImport(exp_fns, fg, imported_file,
+                                   specifier.local, specifier.imported.name);
+                    break;
+                case 'ImportDefaultSpecifier':
+                    addDefaultImport(exp_fns, fg, imported_file, specifier.local);
+                    break;
+                case 'ImportNamespaceSpecifier':
+                    break;
+              }
+
             }
           }
         })
