@@ -27,8 +27,14 @@ define(function (require, exports) {
             function enter(nd, visit) {
                 switch (nd.type) {
                     case 'FunctionDeclaration':
-                        decl_scope.set(nd.id.name, nd.id);
-                        visit(nd.id);
+                        /* This check is needed for:
+                                export function () { ... }
+                           as it will not have an id but will be
+                           a FunctionDeclaration in ES6 */
+                        if (nd.id) {
+                          decl_scope.set(nd.id.name, nd.id);
+                          visit(nd.id);
+                        }
                     // FALL THROUGH
                     case 'FunctionExpression':
                     case 'ArrowFunctionExpression':

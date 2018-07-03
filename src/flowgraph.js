@@ -65,7 +65,12 @@ define(function (require, exports) {
                           flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
                     break;
                 case 'FunctionDeclaration':
-                    flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id));
+                    /* This check is needed for:
+                            export function () { ... }
+                       as it will not have an id but will be
+                       a FunctionDeclaration in ES6 */
+                    if (nd.id)
+                      flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id));
                     break;
                 // R6
                 case 'FunctionExpression':
