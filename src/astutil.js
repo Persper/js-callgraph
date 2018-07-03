@@ -19,7 +19,7 @@ define(function (require, exports) {
     var esprima = require('esprima');
     var fs = require('fs');
     var sloc  = require('sloc');
-    var sourceMap = require('source-map');
+    var escodegen = require('escodegen');
 
     /* AST visitor */
     function visit(root, visitor) {
@@ -163,13 +163,22 @@ define(function (require, exports) {
         return ast;
     }
 
-    async function getFunctions(root) {
+    const cf = funcObj => {
+        return funcObj.file + ':' + funcObj.name + ':' +
+            funcObj.range[0] + ':' + funcObj.range[1];
+    };
+
+    const astToCode = astNode => {
+        return escodegen.generate(astNode, {
+            'compact': true,
+            'comment': false
+        });
+    }
+
+    function getFunctions(root) {
         const funcs = [];
         const funcNodes = root.attr.functions;
-        let consumer = null;
-        if (root.map) {
-            consumer = await new sourceMap.SourceMapConsumer(root.map);
-        }
+
         for (let i = 0; i < funcNodes.length; ++i) {
             const fn = funcNodes[i];
 
@@ -181,25 +190,17 @@ define(function (require, exports) {
             // startLine && endLine
             let startLine = fn.loc.start['line'];
             let endLine = fn.loc.end['line'];
-            if (root.map) {
-                startLine = consumer.originalPositionFor({
-                    line: startLine,
-                    column: fn.loc.start['column']
-                }).line;
-                endLine = consumer.originalPositionFor({
-                    line: endLine,
-                    column: fn.loc.end['column']
-                }).line;
-            }
 
             funcs.push({
                 'name': funcName,
                 'file': fn.attr.enclosingFile,
-                'range': [startLine, endLine]
+                'range': [startLine, endLine],
+                'code': astToCode(fn)
             });
         }
-        if (root.map)
-            consumer.destroy();
+        funcs.forEach(funcObj => {
+            funcObj['cf'] = cf(funcObj);
+        });
         return funcs;
     }
 

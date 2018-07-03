@@ -7,6 +7,7 @@
     "amdefine": "^1.0.1",
     "argparse": "^1.0.10",
     "body-parser": "^1.18.2",
+    "escodegen": "^1.10.0",
     "esprima": "^4.0.0",
     "express": "^4.16.3",
     "npm": "^5.10.0",
