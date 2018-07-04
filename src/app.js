@@ -12,7 +12,7 @@ const detectChange = require('./detectChange').detectChange;
 const { trackFunctions } = require('./trackFunctions');
 
 const app = express();
-const jsonParser = bodyParser.json();
+const jsonParser = bodyParser.json({limit: '1mb'});
 // const urlencodedParser = bodyParser.urlencoded({ extended: false});
 
 /* MAYBE A HACK: use global variable gcg to store call graph */
