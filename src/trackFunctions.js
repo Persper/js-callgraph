@@ -17,12 +17,16 @@ function trackFunctions(forwardFuncs, bckwardFuncs, threshold=0.5) {
         if (isHandled)
             continue;
 
-        // heuristic 2: levenshtein distance
+        // heuristic 2: enclosing function & levenshtein distance
         for (let bfunc of bckwardFuncs) {
-            let d = levenshtein(ffunc['code'], bfunc['code']);
-            if (d / ffunc['code'].length < threshold)
-                if (ffunc['cf'] !== bfunc['cf'])
-                    idMap[ffunc['cf']] = bfunc['cf'];
+            // enclosing function
+            if (ffunc['encFunc'] === bfunc['encFunc']) {
+                // levenshtein
+                let d = levenshtein(ffunc['code'], bfunc['code']);
+                if (d / ffunc['code'].length < threshold)
+                    if (ffunc['cf'] !== bfunc['cf'])
+                        idMap[ffunc['cf']] = bfunc['cf'];
+            }
         }
     }
     return idMap;

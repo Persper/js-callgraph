@@ -191,11 +191,17 @@ define(function (require, exports) {
             let startLine = fn.loc.start['line'];
             let endLine = fn.loc.end['line'];
 
+            // encFunc (enclosing function)
+            let encFunc = fn.attr.enclosingFunction || 'global'
+
+            // name, file and range are for colon format id
+            // code and encFunc are added for trackFunctions
             funcs.push({
                 'name': funcName,
                 'file': fn.attr.enclosingFile,
                 'range': [startLine, endLine],
-                'code': astToCode(fn)
+                'code': astToCode(fn),
+                'encFunc': encFunc
             });
         }
         funcs.forEach(funcObj => {
