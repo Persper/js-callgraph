@@ -15,7 +15,7 @@ var bindings = require('./bindings'),
     semioptimistic = require('./semioptimistic'),
     diagnostics = require('./diagnostics'),
     callbackCounter = require('./callbackCounter'),
-    requireJsGraph = require('./requireJsGraph');
+    requireJsGraph = require('./requireJsGraph'),
     ArgumentParser = require('argparse').ArgumentParser;
 
 var argParser = new ArgumentParser({
@@ -75,7 +75,6 @@ if (args.strategy === 'FULL') {
 }
 
 
-var times = [];
 if (args.time) console.time("parsing  ");
 var ast = astutil.buildAST(files);
 if (args.time) console.timeEnd("parsing  ");
@@ -103,17 +102,17 @@ if (args.reqJs)
         console.log(edge.toString());
     });
 
-if (args.cg) {
-    function pp(v) {
-        if (v.type === 'CalleeVertex')
-            return '\'' + astutil.en_funcname(v.call.attr.enclosingFunction) + '\' (' + astutil.ppPos(v.call) + ')';
-        if (v.type === 'FuncVertex')
-            return '\'' + astutil.funcname(v.func) + '\' (' + astutil.ppPos(v.func) + ')';
-        if (v.type === 'NativeVertex')
-            return '\'' + v.name + '\' (Native)';
-        throw new Error("strange vertex: " + v);
-    }
+function pp(v) {
+    if (v.type === 'CalleeVertex')
+        return '\'' + astutil.en_funcname(v.call.attr.enclosingFunction) + '\' (' + astutil.ppPos(v.call) + ')';
+    if (v.type === 'FuncVertex')
+        return '\'' + astutil.funcname(v.func) + '\' (' + astutil.ppPos(v.func) + ')';
+    if (v.type === 'NativeVertex')
+        return '\'' + v.name + '\' (Native)';
+    throw new Error("strange vertex: " + v);
+}
 
+if (args.cg) {
     cg.edges.iter(function (call, fn) {
         console.log(pp(call) + " -> " + pp(fn));
     });
