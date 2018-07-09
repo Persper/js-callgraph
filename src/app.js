@@ -19,11 +19,20 @@ const jsonParser = bodyParser.json({limit: '1mb'});
 let gcg = initializeCallGraph();
 const parser = new Parser();
 
+/*
+         fg - a graph.Graph object storing the flow graph
+ totalEdits - a dictionary with a function's latest colon format id as key
+            -  and that function's total number lines of edits as value
+exportFuncs - a dictionary with filenames as keys
+            -  and a list of exported values as values
+      edges - a graph.Graph object storing the call graph
+*/
 function initializeCallGraph () {
     return {
         'fg': new graph.Graph(),
         'totalEdits': {},
-        'edges': null,
+        'exportFuncs': {},
+        'edges': null
     };
 }
 
@@ -136,13 +145,16 @@ function stripFlow(src) {
     });
 }
 
-function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc) {
+function updateFlowGraph (fg, exportFuncs, oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
         bindings.addBindings(ast);
+        // @Alex
+        // semioptimistic.collectExports(ast, exportFuncs);
+        // semioptimistic.connectImports(ast, fg, exportFuncs);
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
         semioptimistic.addInterproceduralFlowEdges(ast, fg);
     }
@@ -240,7 +252,7 @@ app.post('/update', jsonParser, function (req, res) {
     // for debug
     // stats['totalEdits'] = gcg.totalEdits;
 
-    updateFlowGraph(gcg.fg, oldFname, oldSrc, newFname, newSrc);
+    updateFlowGraph(gcg.fg, gcg.exportFuncs, oldFname, oldSrc, newFname, newSrc);
     gcg.edges = callgraph.extractCG(null, gcg.fg).edges;
     res.json(stats);
 });
