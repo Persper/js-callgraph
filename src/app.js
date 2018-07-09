@@ -147,24 +147,34 @@ function updateFlowGraph (fg, oldFname, oldSrc, newFname, newSrc) {
         semioptimistic.addInterproceduralFlowEdges(ast, fg);
     }
 }
+/*
+Keys in totalEdits are colon format ids from the last commit
+Keys in stats['idMap'] are colon format ids from the last commit
+Keys in stats['idToLines'] are colon format ids from the latest commit
+*/
 
 function updateTotalEdits (totalEdits, stats) {
-    for (let cf in stats['idToLines']) {
-        // if cf is changed
-        if (cf in stats['idMap']) {
-            let newCf = stats['idMap'][cf];
-            if (newCf in stats['idMap'])
-                console.log('WARNING: newCf already exists in totalEdits.');
-            // if cf in stats['idMap'], it should exist in totalEdits
-            totalEdits[newCf] = totalEdits[cf] + stats['idToLines'][cf];
-            delete totalEdits[cf];
-        }
-        else {
-            if (cf in totalEdits)
-                totalEdits[cf] += stats['idToLines'][cf];
-            else
-                totalEdits[cf] = stats['idToLines'][cf];
-        }
+    // First, update keys in totalEdits using stats['idMap']
+    for (let oldCf in stats['idMap']) {
+        let newCf = stats['idMap'][oldCf];
+        // Sanity checks
+        if (!(oldCf in totalEdits))
+            // One possible cause is that we did not track the file from
+            // the very beginning.
+            console.log('WARNING: oldCf in idMap but not in totalEdits.');
+        if (newCf in totalEdits)
+            console.log('WARNING: newCf already exists in totalEdits.');
+        if (newCf in stats['idMap'])
+            console.log('WARNING: oldCf and newCf both are keys in idMap.');
+        totalEdits[newCf] = totalEdits[oldCf]
+        delete totalEdits[oldCf];
+    }
+
+    for (let newCf in stats['idToLines']) {
+        if (newCf in totalEdits)
+            totalEdits[newCf] += stats['idToLines'][newCf];
+        else
+            totalEdits[newCf] = stats['idToLines'][newCf];
     }
 }
 
@@ -194,11 +204,11 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
     if (oldFname && newFname) {
         stats['idMap'] = trackFunctions(forwardFuncs, bckwardFuncs);
         // Merge forwardStats with bckwardStats
-        // Override bckwardStats with forwardStats when they disagree
-        // Then remove new colon format ids to avoid storing a function twice
-        stats['idToLines'] = Object.assign(bckwardStats, forwardStats);
-        for (let newCf of Object.values(stats['idMap']))
-            delete stats['idToLines'][newCf];
+        // Override forwardStats with bckwardStats when they disagree
+        // Then remove old colon format ids to avoid storing a function twice
+        stats['idToLines'] = Object.assign(forwardStats, bckwardStats);
+        for (let oldCf in stats['idMap'])
+            delete stats['idToLines'][oldCf];
     }
     else {
         stats['idToLines'] = forwardStats || bckwardStats;
@@ -227,6 +237,8 @@ app.post('/update', jsonParser, function (req, res) {
 
     const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch)
     updateTotalEdits(gcg.totalEdits, stats);
+    // for debug
+    // stats['totalEdits'] = gcg.totalEdits;
 
     updateFlowGraph(gcg.fg, oldFname, oldSrc, newFname, newSrc);
     gcg.edges = callgraph.extractCG(null, gcg.fg).edges;
