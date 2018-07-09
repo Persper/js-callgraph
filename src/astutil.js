@@ -144,11 +144,9 @@ define(function (require, exports) {
     }
 
     function singleSrcAST (fname, src, preprocessor) {
-        let map = null;
         if (preprocessor) {
             const prepOut = preprocessor(src);
             src = prepOut.code;
-            map = prepOut.map;
         }
         const prog = esprima.parseModule(src, {loc: true, range: true});
         prog.attr = {filename: fname, sloc: sloc(src, 'js').sloc };
@@ -156,7 +154,6 @@ define(function (require, exports) {
         const ast = {
             'type': 'ProgramCollection',
             'program': prog,
-            'map': map,
             'attr': {sloc: prog.attr.sloc}
         }
         init(ast);
