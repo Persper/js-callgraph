@@ -127,8 +127,7 @@ define(function (require, exports) {
     /* Arguments: ast - a ProgramCollection
        Return value: dictionary with filenames as keys
                      and a list of exported values as values */
-    function collectExports(ast) {
-      let exported_functions = {};
+    function collectExports(ast, exported_functions) {
 
       for (var i = 0; i < ast.programs.length; i++) {
         let filename = ast.programs[i].attr.filename;
