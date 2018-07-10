@@ -369,5 +369,8 @@ define(function (require, exports) {
 
     exports.addInterproceduralFlowEdges = addInterproceduralFlowEdges;
     exports.buildCallGraph = buildCallGraph;
+    exports.removeExports = removeExports;
+    exports.collectExports = collectExports;
+    exports.connectImports = connectImports;
     return exports;
 });
