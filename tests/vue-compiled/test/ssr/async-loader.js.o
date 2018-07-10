@@ -1,9 +1,0 @@
-'use strict';
-
-var hash = require('hash-sum');
-
-module.exports = function (code) {
-  var id = hash(this.request); // simulating vue-loader module id injection
-  return code.replace('__MODULE_ID__', id);
-};
-
