@@ -153,18 +153,20 @@ define(function (require, exports) {
 
         const ast = {
             'type': 'ProgramCollection',
-            'program': prog,
+            'programs': [prog],
             'attr': {sloc: prog.attr.sloc}
         }
         init(ast);
         return ast;
     }
 
+    // cf is used by getFunctions
     const cf = funcObj => {
         return funcObj.file + ':' + funcObj.name + ':' +
             funcObj.range[0] + ':' + funcObj.range[1];
     };
 
+    // astToCode is used by getFunctions
     const astToCode = astNode => {
         return escodegen.generate(astNode, {
             'compact': true,
