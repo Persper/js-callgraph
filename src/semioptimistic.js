@@ -124,6 +124,10 @@ define(function (require, exports) {
       }
     }
 
+    function removeExports(filename, exportFuncs) {
+      delete exportFuncs[filename];
+    }
+
     /* Arguments: ast - a ProgramCollection
        Return value: dictionary with filenames as keys
                      and a list of exported values as values */

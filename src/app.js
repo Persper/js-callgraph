@@ -148,6 +148,7 @@ function stripFlow(src) {
 function updateFlowGraph (fg, exportFuncs, oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
+        semioptimistic.removeExports(oldFname);
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
