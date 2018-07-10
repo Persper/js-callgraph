@@ -356,7 +356,6 @@ define(function (require, exports) {
     function buildCallGraph(ast) {
         var fg = new graph.Graph();
         natives.addNativeFlowEdges(fg);
-
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
 
         let exported_functions = collectExports(ast);
@@ -369,5 +368,8 @@ define(function (require, exports) {
 
     exports.addInterproceduralFlowEdges = addInterproceduralFlowEdges;
     exports.buildCallGraph = buildCallGraph;
+    exports.collectExports = collectExports;
+    exports.connectImports = connectImports;
+    exports.removeExports = removeExports;
     return exports;
 });
