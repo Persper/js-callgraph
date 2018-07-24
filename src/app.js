@@ -150,14 +150,14 @@ function stripFlow(src) {
 function updateFlowGraph (fg, exportFuncs, oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
-        semioptimistic.removeExports(oldFname, exportFuncs);
+        // semioptimistic.removeExports(oldFname, exportFuncs);
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
         bindings.addBindings(ast);
         // @Alex
-        semioptimistic.collectExports(ast, exportFuncs);
-        semioptimistic.connectImports(ast, fg, exportFuncs);
+        // semioptimistic.collectExports(ast, exportFuncs);
+        // semioptimistic.connectImports(ast, fg, exportFuncs);
 
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
         semioptimistic.addInterproceduralFlowEdges(ast, fg);
@@ -194,6 +194,20 @@ function updateTotalEdits (totalEdits, stats) {
     }
 }
 
+// for debug
+function compareFIDs(funcs1, funcs2) {
+    let cnt = 0;
+    for (let f1 of funcs1) {
+        for (let f2 of funcs2){
+            if (f1['cf'] === f2['cf']) {
+                cnt += 1;
+                break;
+            }
+        }
+    }
+    return cnt / funcs1.length;
+}
+
 /*
 This function does two things:
 1. Extract function level edit info by parsing source files and their diff.
@@ -215,6 +229,16 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
         bckwardFuncs = astutil.getFunctions(ast);
         bckwardStats = detectChange(parser.invParse(patch), bckwardFuncs);
+
+        const debugAST = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
+        const debugFuncs = astutil.getFunctions(debugAST)
+        // console.log(newFname + ': ' + compareFIDs(debugFuncs, bckwardFuncs).toString())
+
+        if (newFname === 'src/compiler/html-parser.js') {
+            console.log(bckwardFuncs.map(func => { return func['cf']; }))
+            console.log('---------------------------')
+            console.log(debugFuncs.map(func => { return func['cf']; }))
+        }
     }
 
     if (oldFname && newFname) {
