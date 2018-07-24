@@ -260,7 +260,7 @@ define(function (require, exports) {
           if (nd.type === 'VariableDeclarator') {
             let init = nd.init;
 
-            if (isCallTo(init, 'require')) {
+            if (init && isCallTo(init, 'require')) {
               let required_file = getRequiredFile(filename, init);
               if (required_file in exp_fns)
                  addDefaultImport(exp_fns, fg, required_file, nd.id);
