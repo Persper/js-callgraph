@@ -135,6 +135,7 @@ function stripAndTranspile(src) {
     return babel.transform(src, {
         presets: ['es2015', 'flow'],
         retainLines: true,
+        parserOpts: {strictMode: false}
     });
 }
 
@@ -142,6 +143,7 @@ function stripFlow(src) {
     return babel.transform(src, {
         presets: ['flow'],
         retainLines: true,
+        parserOpts: {strictMode: false}
     });
 }
 
