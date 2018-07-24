@@ -144,7 +144,7 @@ define(function (require, exports) {
           }
           /* Handles: define(function() {return fn;}) */
           if (isCallTo(nd, 'define')) {
-            let ret_vals = getReturnValues(nd.arguments[0]);
+            let ret_vals = getReturnValues(nd.arguments[nd.arguments.length - 1]);
 
             for (var i = 0; i < ret_vals.length; i++)
                 addDefaultExport(exported_functions, filename, ret_vals[i]);
