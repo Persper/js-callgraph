@@ -148,14 +148,14 @@ function stripFlow(src) {
 function updateFlowGraph (fg, exportFuncs, oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
-        semioptimistic.removeExports(oldFname, exportFuncs);
+        // semioptimistic.removeExports(oldFname, exportFuncs);
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
         bindings.addBindings(ast);
         // @Alex
-        semioptimistic.collectExports(ast, exportFuncs);
-        semioptimistic.connectImports(ast, fg, exportFuncs);
+        // semioptimistic.collectExports(ast, exportFuncs);
+        // semioptimistic.connectImports(ast, fg, exportFuncs);
 
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
         semioptimistic.addInterproceduralFlowEdges(ast, fg);
