@@ -181,6 +181,11 @@ define(function (require, exports) {
        Return value: full path of file being required */
     function getRequiredFile(curr_filename, nd) {
       let argument = nd.arguments[0].value;
+
+      if (argument === undefined) {
+        return
+      }
+
       let required_file = argument.slice(2);
       required_file = path.resolve(curr_filename, '..', required_file);
       required_file = required_file + '.js';
