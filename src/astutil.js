@@ -144,11 +144,21 @@ define(function (require, exports) {
     }
 
     function singleSrcAST (fname, src, preprocessor) {
-        if (preprocessor) {
-            const prepOut = preprocessor(src);
-            src = prepOut.code;
+        try {
+          if (preprocessor) {
+              const prepOut = preprocessor(src);
+              src = prepOut.code;
+          }
+        } catch(err) {
+          console.log('Warning: Preprocessing errored')
         }
-        const prog = esprima.parseModule(src, {loc: true, range: true});
+        let prog;
+        try {
+          prog = esprima.parseModule(src, {loc: true, range: true, tolerant: true});
+        } catch(err) {
+          console.log('Warning: Esprima failed to parse');
+          return null;
+        }
         prog.attr = {filename: fname, sloc: sloc(src, 'js').sloc };
 
         const ast = {
