@@ -129,7 +129,7 @@ define(function (require, exports) {
             attr: {}
         };
         sources.forEach(function (source) {
-            var prog = esprima.parseModule(source.program, { loc: true, range: true});
+            var prog = esprima.parseModule(source.program, { loc: true, range: true, tolerant: true});
             prog.attr = { filename: source.filename, sloc : sloc(source.program, "js").sloc};
             ast.programs.push(prog);
         });
@@ -144,11 +144,21 @@ define(function (require, exports) {
     }
 
     function singleSrcAST (fname, src, preprocessor) {
-        if (preprocessor) {
-            const prepOut = preprocessor(src);
-            src = prepOut.code;
+        try {
+          if (preprocessor) {
+              const prepOut = preprocessor(src);
+              src = prepOut.code;
+          }
+        } catch(err) {
+          console.log('Warning: Preprocessing errored')
         }
-        const prog = esprima.parseModule(src, {loc: true, range: true});
+        let prog;
+        try {
+          prog = esprima.parseModule(src, {loc: true, range: true, tolerant: true});
+        } catch(err) {
+          console.log('Warning: Esprima failed to parse');
+          return null;
+        }
         prog.attr = {filename: fname, sloc: sloc(src, 'js').sloc };
 
         const ast = {
