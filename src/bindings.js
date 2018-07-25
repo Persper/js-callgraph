@@ -97,8 +97,21 @@ define(function (require, exports) {
                         return false;
 
                     case 'VariableDeclarator':
-                        if (!decl_scope.hasOwn(nd.id.name))
+                        if (nd.id.type === 'Identifier' && !decl_scope.hasOwn(nd.id.name))
                             decl_scope.set(nd.id.name, nd.id);
+
+                        if (nd.id.type === 'ObjectPattern') {
+                            obj = nd.id;
+                            for (var i = 0; i < obj.properties.length; i++) {
+                                prop = obj.properties[i];
+                                decl_scope.set(prop.value.name, prop.value)
+                                if (prop.value.type !== 'Identifier')
+                                    console.log('THIS IS BAD CHECK VariableDeclarator CASE IN bindings.js')
+                            }
+                        }
+                        if (nd.id.type === 'ArrayPattern') {
+                            /* Case also needs to be handled */
+                        }
                         break;
 
                     case 'Property':
