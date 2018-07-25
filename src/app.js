@@ -154,13 +154,15 @@ function updateFlowGraph (fg, exportFuncs, oldFname, oldSrc, newFname, newSrc) {
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
-        bindings.addBindings(ast);
-        // @Alex
-        // semioptimistic.collectExports(ast, exportFuncs);
-        // semioptimistic.connectImports(ast, fg, exportFuncs);
+        if (ast != null) {
+          bindings.addBindings(ast);
+          // @Alex
+          // semioptimistic.collectExports(ast, exportFuncs);
+          // semioptimistic.connectImports(ast, fg, exportFuncs);
 
-        flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
-        semioptimistic.addInterproceduralFlowEdges(ast, fg);
+          flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
+          semioptimistic.addInterproceduralFlowEdges(ast, fg);
+        }
     }
 }
 /*
