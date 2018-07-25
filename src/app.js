@@ -154,13 +154,15 @@ function updateFlowGraph (fg, exportFuncs, oldFname, oldSrc, newFname, newSrc) {
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
-        bindings.addBindings(ast);
-        // @Alex
-        // semioptimistic.collectExports(ast, exportFuncs);
-        // semioptimistic.connectImports(ast, fg, exportFuncs);
+        if (ast !== null) {
+          bindings.addBindings(ast);
+          // @Alex
+          // semioptimistic.collectExports(ast, exportFuncs);
+          // semioptimistic.connectImports(ast, fg, exportFuncs);
 
-        flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
-        semioptimistic.addInterproceduralFlowEdges(ast, fg);
+          flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
+          semioptimistic.addInterproceduralFlowEdges(ast, fg);
+        }
     }
 }
 /*
@@ -219,16 +221,21 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
     let stats = { 'idToLines': {}, 'idMap': {} };
     let forwardStats = null, bckwardStats = null;
     let forwardFuncs = null, bckwardFuncs = null;
+    let forwardAST = null, bckwardAST = null;
 
     if (oldFname) {
-        const ast = astutil.singleSrcAST(oldFname, oldSrc, stripFlow);
-        forwardFuncs = astutil.getFunctions(ast);
-        forwardStats = detectChange(parser.parse(patch), forwardFuncs);
+        forwardAST = astutil.singleSrcAST(oldFname, oldSrc, stripFlow);
+        if (forwardAST !== null) {
+          forwardFuncs = astutil.getFunctions(forwardAST);
+          forwardStats = detectChange(parser.parse(patch), forwardFuncs);
+        }
     }
     if (newFname) {
-        const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
-        bckwardFuncs = astutil.getFunctions(ast);
-        bckwardStats = detectChange(parser.invParse(patch), bckwardFuncs);
+        bckwardAST = astutil.singleSrcAST(newFname, newSrc, stripFlow);
+        if (bckwardAST !== null) {
+          bckwardFuncs = astutil.getFunctions(bckwardAST);
+          bckwardStats = detectChange(parser.invParse(patch), bckwardFuncs);
+        }
 
         const debugAST = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
         const debugFuncs = astutil.getFunctions(debugAST)
@@ -240,8 +247,7 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
             console.log(debugFuncs.map(func => { return func['cf']; }))
         }
     }
-
-    if (oldFname && newFname) {
+    if (forwardStats && bckwardStats) {
         stats['idMap'] = trackFunctions(forwardFuncs, bckwardFuncs);
         // Merge forwardStats with bckwardStats
         // Override forwardStats with bckwardStats when they disagree
@@ -250,7 +256,7 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
         for (let oldCf in stats['idMap'])
             delete stats['idToLines'][oldCf];
     }
-    else {
+    else if (forwardStats || bckwardStats){
         stats['idToLines'] = forwardStats || bckwardStats;
     }
 
