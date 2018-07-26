@@ -97,16 +97,15 @@ define(function (require, exports) {
                         return false;
 
                     case 'VariableDeclarator':
+                        // Re-declaration of a variable in the same scope is ignored in JS
                         if (nd.id.type === 'Identifier' && !decl_scope.hasOwn(nd.id.name))
                             decl_scope.set(nd.id.name, nd.id);
 
                         if (nd.id.type === 'ObjectPattern') {
-                            obj = nd.id;
-                            for (var i = 0; i < obj.properties.length; i++) {
-                                prop = obj.properties[i];
-                                decl_scope.set(prop.value.name, prop.value)
+                            for (let prop of nd.id.properties) {
+                                decl_scope.set(prop.value.name, prop.value);
                                 if (prop.value.type !== 'Identifier')
-                                    console.log('THIS IS BAD CHECK VariableDeclarator CASE IN bindings.js')
+                                    console.log('WARNING: check VariableDeclarator/ObjectPattern case in bindings.js.');
                             }
                         }
                         if (nd.id.type === 'ArrayPattern') {
