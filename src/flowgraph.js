@@ -105,8 +105,15 @@ define(function (require, exports) {
                     flow_graph.addEdge(vertexFor(nd.argument), unknownVertex());
                     break;
                 case 'VariableDeclarator':
-                    if (nd.init)
+                    // Only handle the case that nd.id is an Identifer
+                    // ObjectPattern and ArrayPattern are handled separately
+                    if (nd.id.type === 'Identifier' && nd.init)
                         flow_graph.addEdge(vertexFor(nd.init), vertexFor(nd.id));
+                    break;
+                // ES6 rule, similar to object expression
+                case 'ObjectPattern':
+                    for (let prop of nd.properties)
+                        flow_graph.addEdge(propVertex(prop.key), vertexFor(prop.value));
                     break;
                 case 'MethodDefinition':
                     if (nd.value) {
@@ -127,6 +134,8 @@ define(function (require, exports) {
             case 'Identifier':
                 // global variables use a property vertex, local variables a var vertex
                 var decl = nd.attr.scope.get(nd.name);
+                if (decl && decl.attr && (!decl.attr.scope))
+                    debugger;
                 return decl && !decl.attr.scope.global ? varVertex(decl) : propVertex(nd);
             case 'ThisExpression':
                 // 'this' is treated like a variable
