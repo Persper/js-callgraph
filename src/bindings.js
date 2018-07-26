@@ -48,6 +48,7 @@ define(function (require, exports) {
                             decl_scope.set(nd.id.name, nd.id);
                             visit(nd.id);
                         }
+                        // Put params into symbol table
                         decl_scope.set('this', { type: 'Identifier',
                             name: 'this',
                             loc: nd.loc,
@@ -55,7 +56,34 @@ define(function (require, exports) {
                             attr: { enclosingFile: nd.attr.enclosingFile,
                                 scope: decl_scope } });
                         for (var i = 0; i < nd.params.length; ++i) {
-                            decl_scope.set(nd.params[i].name, nd.params[i]);
+                            // Handle identifer as before
+                            if (nd.params[i].type === 'Identifier')
+                                decl_scope.set(nd.params[i].name, nd.params[i]);
+
+                            // ES6 Object Destructuring
+                            // Currently don't support rest and default params
+                            if (nd.params[i].type === 'ObjectPattern') {
+                                for (let prop of nd.params[i].properties) {
+                                    decl_scope.set(prop.value.name, prop.value);
+                                    if (prop.value.type !== 'Identifier')
+                                        console.log('WARNING: check FunctionParam/ObjectPattern case in bindings.js.');
+                                }
+                            }
+
+                            // ES6 Array Destructurin
+                            // Currently don't support rest and default params
+                            if (nd.params[i].type === 'ArrayPattern') {
+                                for (let elm of nd.params[i].elements) {
+                                    // Array destructuring can ignore some values, so check null first
+                                    if (elm) {
+                                        if (elm.type === 'Identifier')
+                                            decl_scope.set(elm.name, elm);
+                                        else
+                                            console.log('WARNING: check VariableDeclarator/ArrayPattern case in bindings.js.');
+                                    }
+                                }
+                            }
+
                             visit(nd.params[i]);
                         }
 
