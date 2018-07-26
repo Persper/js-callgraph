@@ -48,6 +48,8 @@ define(function (require, exports) {
     };
 
     Symtab.prototype.set = function (name, value) {
+        if (!name)
+            console.log('WARNING: name is falsy for Symtab, check bindings.js.');
         return this[mangle(name)] = value;
     };
 
