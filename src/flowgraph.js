@@ -111,9 +111,23 @@ define(function (require, exports) {
                         flow_graph.addEdge(vertexFor(nd.init), vertexFor(nd.id));
                     break;
                 // ES6 rule, similar to object expression
+                // Currently don't support rest and default params
                 case 'ObjectPattern':
                     for (let prop of nd.properties)
+                        // Assuming prop.key and prop.value are Identifers
                         flow_graph.addEdge(propVertex(prop.key), vertexFor(prop.value));
+                    break;
+                // ES6 rule, similar to array expression
+                // Currently don't support rest and default params
+                case 'ArrayPattern':
+                    for (let i = 0; i < nd.elements.length; i++) {
+                        // Array destructuring can ignore some values, so check null first
+                        if (nd.elements[i])
+                            flow_graph.addEdge(
+                                propVertex({ type: 'Literal', value: i }),
+                                vertexFor(nd.elements[i])
+                            );
+                    }
                     break;
                 case 'MethodDefinition':
                     if (nd.value) {
