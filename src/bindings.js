@@ -101,6 +101,8 @@ define(function (require, exports) {
                         if (nd.id.type === 'Identifier' && !decl_scope.hasOwn(nd.id.name))
                             decl_scope.set(nd.id.name, nd.id);
 
+                        // ES6 Object Destructuring
+                        // Currently don't support rest and default params
                         if (nd.id.type === 'ObjectPattern') {
                             for (let prop of nd.id.properties) {
                                 decl_scope.set(prop.value.name, prop.value);
@@ -108,8 +110,19 @@ define(function (require, exports) {
                                     console.log('WARNING: check VariableDeclarator/ObjectPattern case in bindings.js.');
                             }
                         }
+
+                        // ES6 Array Destructurin
+                        // Currently don't support rest and default params
                         if (nd.id.type === 'ArrayPattern') {
-                            /* Case also needs to be handled */
+                            for (let elm of nd.id.elements) {
+                                // Array destructuring can ignore some values, so check null first
+                                if (elm) {
+                                    if (elm.type === 'Identifier')
+                                        decl_scope.set(elm.name, elm);
+                                    else
+                                        console.log('WARNING: check VariableDeclarator/ArrayPattern case in bindings.js.');
+                                }
+                            }
                         }
                         break;
 
