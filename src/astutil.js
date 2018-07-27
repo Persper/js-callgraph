@@ -192,9 +192,7 @@ define(function (require, exports) {
             const fn = funcNodes[i];
 
             // funcName
-            let funcName = 'undefined';
-            if (fn.id)
-                funcName = fn.id.name;
+            let funcName = funcname(fn);
 
             // startLine && endLine
             let startLine = fn.loc.start['line'];
