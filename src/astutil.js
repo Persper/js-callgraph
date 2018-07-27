@@ -192,7 +192,7 @@ define(function (require, exports) {
             const fn = funcNodes[i];
 
             // funcName
-            let funcName = null;
+            let funcName = 'undefined';
             if (fn.id)
                 funcName = fn.id.name;
 
