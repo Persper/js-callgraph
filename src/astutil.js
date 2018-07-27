@@ -106,7 +106,7 @@ define(function (require, exports) {
 
     function funcname(func) {
         if (func === undefined || func.id == null) {
-          return "undefined"
+          return "anon"
         }
         return func.id.name
     }
