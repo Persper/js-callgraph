@@ -76,12 +76,18 @@ define(function (require, exports) {
 
                         // restore previous scope
                         if (!decl_scope.hasOwn('arguments'))
-                            decl_scope.set('arguments', { type: 'Identifier',
-                                name: 'arguments',
-                                loc: nd.loc,
-                                range: nd.range,
-                                attr: { enclosingFile: nd.attr.enclosingFile,
-                                    scope: decl_scope } });
+                            decl_scope.set('arguments',
+                                {
+                                    type: 'Identifier',
+                                    name: 'arguments',
+                                    loc: nd.loc,
+                                    range: nd.range,
+                                    attr: {
+                                        enclosingFile: nd.attr.enclosingFile,
+                                        scope: decl_scope
+                                    }
+                                }
+                            );
                         scope = scope.outer;
                         decl_scope = old_decl_scope;
 
@@ -128,6 +134,7 @@ define(function (require, exports) {
                         // Case 2: If nd.id is not an Identifer ('ObjectPattern' or 'ArrayPattern'),
                         //          visit it to set decl_scope
                         break;
+
                     case 'ObjectPattern':
                         // ES6 Object Destructuring
                         // { key: value }
@@ -145,6 +152,7 @@ define(function (require, exports) {
                             visit(prop.value);
                         }
                         return false;
+
                     case 'ArrayPattern':
                         // ES6 Array Destructuring
                         // Haven't tested with rest and default params
@@ -160,6 +168,7 @@ define(function (require, exports) {
                             }
                         }
                         return false;
+
                     case 'Property':
                         // don't visit nd.key
                         visit(nd.value);
