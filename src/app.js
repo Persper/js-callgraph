@@ -10,6 +10,7 @@ const callgraph = require('./callgraph');
 const Parser = require('./parsePatch').Parser;
 const detectChange = require('./detectChange').detectChange;
 const { trackFunctions } = require('./trackFunctions');
+const natives = require('./natives');
 
 const app = express();
 const jsonParser = bodyParser.json({limit: '1mb'});
@@ -28,8 +29,10 @@ exportFuncs - a dictionary with filenames as keys
       edges - a graph.Graph object storing the call graph
 */
 function initializeCallGraph () {
+    const fg = new graph.Graph();
+    natives.addNativeFlowEdges(fg);
     return {
-        'fg': new graph.Graph(),
+        'fg': fg,
         'totalEdits': {},
         'exportFuncs': {},
         'edges': null
@@ -131,6 +134,7 @@ function removeNodesInFile(fg, fname) {
     });
 }
 
+/* Deprecated
 function stripAndTranspile(src) {
     return babel.transform(src, {
         presets: ['es2015', 'flow'],
@@ -138,6 +142,7 @@ function stripAndTranspile(src) {
         parserOpts: {strictMode: false}
     });
 }
+*/
 
 function stripFlow(src) {
     return babel.transform(src, {
@@ -153,7 +158,7 @@ function updateFlowGraph (fg, exportFuncs, oldFname, oldSrc, newFname, newSrc) {
         // semioptimistic.removeExports(oldFname, exportFuncs);
     }
     if (newFname) {
-        const ast = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
+        const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
         if (ast !== null) {
           bindings.addBindings(ast);
           // @Alex
@@ -196,20 +201,6 @@ function updateTotalEdits (totalEdits, stats) {
     }
 }
 
-// for debug
-function compareFIDs(funcs1, funcs2) {
-    let cnt = 0;
-    for (let f1 of funcs1) {
-        for (let f2 of funcs2){
-            if (f1['cf'] === f2['cf']) {
-                cnt += 1;
-                break;
-            }
-        }
-    }
-    return cnt / funcs1.length;
-}
-
 /*
 This function does two things:
 1. Extract function level edit info by parsing source files and their diff.
@@ -235,16 +226,6 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
         if (bckwardAST !== null) {
           bckwardFuncs = astutil.getFunctions(bckwardAST);
           bckwardStats = detectChange(parser.invParse(patch), bckwardFuncs);
-        }
-
-        const debugAST = astutil.singleSrcAST(newFname, newSrc, stripAndTranspile);
-        const debugFuncs = astutil.getFunctions(debugAST)
-        // console.log(newFname + ': ' + compareFIDs(debugFuncs, bckwardFuncs).toString())
-
-        if (newFname === 'src/compiler/html-parser.js') {
-            console.log(bckwardFuncs.map(func => { return func['cf']; }))
-            console.log('---------------------------')
-            console.log(debugFuncs.map(func => { return func['cf']; }))
         }
     }
     if (forwardStats && bckwardStats) {
