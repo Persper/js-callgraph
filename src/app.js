@@ -181,19 +181,24 @@ function updateTotalEdits (totalEdits, stats) {
     for (let oldCf in stats['idMap']) {
         let newCf = stats['idMap'][oldCf];
         // Sanity checks
-        if (!(oldCf in totalEdits))
-            // One possible cause is that we did not track the file from
-            // the very beginning.
-            console.log('WARNING: oldCf in idMap but not in totalEdits.');
         if (newCf in totalEdits)
             console.log('WARNING: newCf already exists in totalEdits.');
         if (newCf in stats['idMap'])
             console.log('WARNING: oldCf and newCf both are keys in idMap.');
-        totalEdits[newCf] = totalEdits[oldCf]
-        delete totalEdits[oldCf];
+        if (oldCf in totalEdits) {
+            totalEdits[newCf] = totalEdits[oldCf];
+            delete totalEdits[oldCf];
+        }
+        else {
+            // One possible cause is that we did not track the file from
+            // the very beginning.
+            console.log('WARNING: oldCf in idMap but not in totalEdits.');
+        }
     }
 
     for (let newCf in stats['idToLines']) {
+        if (!(stats['idToLines'][newCf] > 0))
+            console.log('WARNING: idToLines contains invalid data.');
         if (newCf in totalEdits)
             totalEdits[newCf] += stats['idToLines'][newCf];
         else
@@ -235,6 +240,7 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
         // Then remove old colon format ids to avoid storing a function twice
         stats['idToLines'] = Object.assign(forwardStats, bckwardStats);
         for (let oldCf in stats['idMap'])
+            // A potential bug here
             delete stats['idToLines'][oldCf];
     }
     else if (forwardStats || bckwardStats){
@@ -264,8 +270,12 @@ app.post('/update', jsonParser, function (req, res) {
 
     const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch)
     updateTotalEdits(gcg.totalEdits, stats);
-    // for debug
-    // stats['totalEdits'] = gcg.totalEdits;
+    /* for debug
+    for (let cf in gcg.totalEdits) {
+        if (!(gcg.totalEdits[cf] > 0))
+            debugger;
+    }
+    */
 
     updateFlowGraph(gcg.fg, gcg.exportFuncs, oldFname, oldSrc, newFname, newSrc);
     gcg.edges = callgraph.extractCG(null, gcg.fg).edges;
