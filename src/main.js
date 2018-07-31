@@ -104,7 +104,7 @@ if (args.reqJs)
 
 function pp(v) {
     if (v.type === 'CalleeVertex')
-        return '\'' + astutil.en_funcname(v.call.attr.enclosingFunction) + '\' (' + astutil.ppPos(v.call) + ')';
+        return '\'' + astutil.encFuncName(v.call.attr.enclosingFunction) + '\' (' + astutil.ppPos(v.call) + ')';
     if (v.type === 'FuncVertex')
         return '\'' + astutil.funcname(v.func) + '\' (' + astutil.ppPos(v.func) + ')';
     if (v.type === 'NativeVertex')

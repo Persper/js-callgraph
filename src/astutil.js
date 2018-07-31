@@ -112,24 +112,28 @@ define(function (require, exports) {
         return filename.substring(idx + 1);
     }
 
-    function en_funcname(func) {
-        if (func === undefined) {
-          return "global"
-        } else if (func.id == null) {
-          return "undefined"
-        }
-        return func.id.name
-    }
-
     function isAnon(funcName) {
         return funcName === "anon";
     }
 
+    // func must be function node in ast
     function funcname(func) {
-        if (func === undefined || func.id == null) {
-          return "anon"
-        }
-        return func.id.name
+        if (func === undefined)
+            console.log('WARNING: func undefined in astutil/funcname.');
+        else if (func.id === null)
+            return "anon";
+        else
+            return func.id.name;
+    }
+
+    // encFunc can be undefined
+    function encFuncName(encFunc) {
+        if (encFunc === undefined)
+            return "global";
+        else if (encFunc.id === null)
+            return "anon";
+        else
+            return encFunc.id.name
     }
 
     /* Pretty-print position. */
@@ -219,17 +223,14 @@ define(function (require, exports) {
             let startLine = fn.loc.start['line'];
             let endLine = fn.loc.end['line'];
 
-            // encFunc (enclosing function)
-            let encFunc = fn.attr.enclosingFunction || 'global'
-
             // name, file and range are for colon format id
-            // code and encFunc are added for trackFunctions
+            // code and encFuncName are added for trackFunctions
             funcs.push({
                 'name': funcName,
                 'file': fn.attr.enclosingFile,
                 'range': [startLine, endLine],
                 'code': astToCode(fn),
-                'encFunc': encFunc
+                'encFuncName': encFuncName(fn.attr.enclosingFunction)
             });
         }
         funcs.forEach(funcObj => {
@@ -242,7 +243,7 @@ define(function (require, exports) {
     exports.init = init;
     exports.ppPos = ppPos;
     exports.funcname = funcname;
-    exports.en_funcname = en_funcname;
+    exports.encFuncName = encFuncName;
     exports.buildAST = buildAST;
     exports.singleSrcAST = singleSrcAST;
     exports.getFunctions = getFunctions;

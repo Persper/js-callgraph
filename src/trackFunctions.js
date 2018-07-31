@@ -1,7 +1,7 @@
 const { levenshtein } = require('./levenshtein');
 const { isAnon } = require('./astutil.js');
 
-function trackFunctions(forwardFuncs, bckwardFuncs, threshold=0.5) {
+function trackFunctions(forwardFuncs, bckwardFuncs, flag, threshold=0.5) {
     const idMap = {};
     for (let ffunc of forwardFuncs) {
         let isHandled = false;
@@ -19,24 +19,26 @@ function trackFunctions(forwardFuncs, bckwardFuncs, threshold=0.5) {
             continue;
 
         // If execution reaches here, then ffunc's cf is changed
-        // Heuristic 1: function name
-        for (let bfunc of bckwardFuncs) {
-            if ((!isAnon(ffunc['name'])) && ffunc['name'] === bfunc['name']) {
-                idMap[ffunc['cf']] = bfunc['cf'];
-                isHandled = true;
-                break;
+        // Heuristic 1: function name (only for named functions)
+        if (!isAnon(ffunc['name'])) {
+            for (let bfunc of bckwardFuncs) {
+                if (ffunc['name'] === bfunc['name']) {
+                    idMap[ffunc['cf']] = bfunc['cf'];
+                    isHandled = true;
+                    break;
+                }
             }
+            if (isHandled)
+                continue;
         }
-        if (isHandled)
-            continue;
 
-        // Heuristic 2: enclosing function & levenshtein distance
+        // Heuristic 2: enclosing function name & levenshtein distance
         // Set lowestRatio to 1000 should be sufficiently large
         let bestFitCf = null, lowestRatio = 1000;
         for (let bfunc of bckwardFuncs) {
             // enclosing function heuristic
-            // Stop considering bfunc if encFuncs are different
-            if (ffunc['encFunc'] !== bfunc['encFunc'])
+            // Stop considering bfunc if their encFuncNames are different
+            if (ffunc['encFuncName'] !== bfunc['encFuncName'])
                 continue
 
             // levenshtein heuristic
