@@ -33,15 +33,18 @@ define(function (require, exports) {
                             flow_graph.addEdge(vertexFor(nd.elements[i]), propVertex({ type: 'Literal',
                                 value: i }));
                     break;
+
                 // R1
                 case 'AssignmentExpression':
                     if (nd.operator === '=')
                         flow_graph.addEdges(vertexFor(nd.right), [vertexFor(nd.left), vertexFor(nd)]);
                     break;
+
                 // R9
                 case 'CallExpression':
                     if (nd.callee.type === 'MemberExpression')
                         flow_graph.addEdge(vertexFor(nd.callee.object), argVertex(nd, 0));
+
                 // R8 FALL THROUGH
                 case 'NewExpression':
                     flow_graph.addEdge(vertexFor(nd.callee), calleeVertex(nd));
@@ -49,14 +52,17 @@ define(function (require, exports) {
                         flow_graph.addEdge(vertexFor(nd.arguments[i]), argVertex(nd, i + 1));
                     flow_graph.addEdge(resVertex(nd), vertexFor(nd));
                     break;
+
                 case 'CatchClause':
                     flow_graph.addEdge(unknownVertex(), varVertex(nd.param));
                     break;
+
                 // R3
                 case 'ConditionalExpression':
                     flow_graph.addEdge(vertexFor(nd.consequent), vertexFor(nd));
                     flow_graph.addEdge(vertexFor(nd.alternate), vertexFor(nd));
                     break;
+
                 // R7
                 case 'ClassDeclaration':
                     var body = nd.body.body;
@@ -64,6 +70,7 @@ define(function (require, exports) {
                         if (body[i].kind === 'constructor')
                           flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
                     break;
+
                 case 'FunctionDeclaration':
                     /* This check is needed for:
                             export function () { ... }
@@ -72,6 +79,7 @@ define(function (require, exports) {
                     if (nd.id)
                       flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id));
                     break;
+
                 // R6
                 case 'FunctionExpression':
                 case 'ArrowFunctionExpression':
@@ -79,12 +87,14 @@ define(function (require, exports) {
                     if (nd.id)
                         flow_graph.addEdge(funcVertex(nd), varVertex(nd.id));
                     break;
+
                 // R2, R4
                 case 'LogicalExpression':
                     if (nd.operator === '||')
                         flow_graph.addEdge(vertexFor(nd.left), vertexFor(nd));
                     flow_graph.addEdge(vertexFor(nd.right), vertexFor(nd));
                     break;
+
                 // R5
                 case 'ObjectExpression':
                     nd.properties.forEach(function (prop) {
@@ -93,23 +103,28 @@ define(function (require, exports) {
                         }
                     });
                     break;
+
                 // R10
                 case 'ReturnStatement':
                     if (nd.argument)
                         flow_graph.addEdge(vertexFor(nd.argument), retVertex(nd.attr.enclosingFunction));
                     break;
+
                 case 'SequenceExpression':
                     flow_graph.addEdge(vertexFor(nd.expressions[nd.expressions.length - 1]), vertexFor(nd));
                     break;
+
                 case 'ThrowStatement':
                     flow_graph.addEdge(vertexFor(nd.argument), unknownVertex());
                     break;
+
                 case 'VariableDeclarator':
                     // Only handle the case that nd.id is an Identifer
                     // ObjectPattern and ArrayPattern are handled separately
                     if (nd.id.type === 'Identifier' && nd.init)
                         flow_graph.addEdge(vertexFor(nd.init), vertexFor(nd.id));
                     break;
+
                 // ES6 rule, similar to object expression
                 // Currently don't support rest and default params
                 case 'ObjectPattern':
@@ -117,6 +132,7 @@ define(function (require, exports) {
                         // Assuming prop.key and prop.value are Identifers
                         flow_graph.addEdge(propVertex(prop.key), vertexFor(prop.value));
                     break;
+
                 // ES6 rule, similar to array expression
                 // Currently don't support rest and default params
                 case 'ArrayPattern':
@@ -129,12 +145,11 @@ define(function (require, exports) {
                             );
                     }
                     break;
+
                 case 'MethodDefinition':
-                    if (nd.value) {
-                      nd.value.id = nd.key;
-                      flow_graph.addEdge(funcVertex(nd.value), propVertex(nd.key))
-                    }
+                    flow_graph.addEdge(funcVertex(nd.value), propVertex(nd.key))
                     break;
+
                 case 'WithStatement':
                     // throw new Error("'with' statement not supported");
             }

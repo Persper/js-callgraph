@@ -80,6 +80,23 @@ define(function (require, exports) {
                 return false;
             }
 
+            // Method Definition
+            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Method_definitions
+            //
+            // interface MethodDefinition {
+            //     type: 'MethodDefinition';
+            //     key: Expression | null;
+            //     computed: boolean;
+            //     value: FunctionExpression | null;
+            //     kind: 'method' | 'constructor';
+            //     static: boolean;
+            // }
+            if (nd.type === 'MethodDefinition')
+                if (!nd.computed)
+                    nd.value.id = nd.key;
+                else
+                    console.log("WARNING: Computed property for method definition, not yet supported.");
+
             if (nd.type === 'CallExpression' || nd.type === 'NewExpression')
                 root.attr.calls.push(nd);
         });
