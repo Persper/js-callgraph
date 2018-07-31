@@ -121,6 +121,10 @@ define(function (require, exports) {
         return func.id.name
     }
 
+    function isAnon(funcName) {
+        return funcName === "anon";
+    }
+
     function funcname(func) {
         if (func === undefined || func.id == null) {
           return "anon"
@@ -242,5 +246,6 @@ define(function (require, exports) {
     exports.buildAST = buildAST;
     exports.singleSrcAST = singleSrcAST;
     exports.getFunctions = getFunctions;
+    exports.isAnon = isAnon;
     return exports;
 });
