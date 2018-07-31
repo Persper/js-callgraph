@@ -1,4 +1,5 @@
 const { levenshtein } = require('./levenshtein');
+const { isAnon } = require('./astutil.js');
 
 function trackFunctions(forwardFuncs, bckwardFuncs, threshold=0.5) {
     const idMap = {};
@@ -20,7 +21,7 @@ function trackFunctions(forwardFuncs, bckwardFuncs, threshold=0.5) {
         // If execution reaches here, then ffunc's cf is changed
         // Heuristic 1: function name
         for (let bfunc of bckwardFuncs) {
-            if (ffunc['name'] && ffunc['name'] === bfunc['name']) {
+            if ((!isAnon(ffunc['name'])) && ffunc['name'] === bfunc['name']) {
                 idMap[ffunc['cf']] = bfunc['cf'];
                 isHandled = true;
                 break;
