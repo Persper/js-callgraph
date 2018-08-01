@@ -163,7 +163,7 @@ define(function (require, exports) {
             case 'Identifier':
                 // global variables use a property vertex, local variables a var vertex
                 var decl = nd.attr.scope.get(nd.name);
-                return decl && !decl.attr.scope.global ? varVertex(decl) : propVertex(nd);
+                return decl && typeof decl.attr.scope !== 'undefined' && !decl.attr.scope.global ? varVertex(decl) : propVertex(nd);
             case 'ThisExpression':
                 // 'this' is treated like a variable
                 var decl = nd.attr.scope.get('this');
