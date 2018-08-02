@@ -18,7 +18,7 @@ import sys
 from pathlib import Path
 import re
 from required_files import collect_requires
-from resolve_path import resolve_path, root
+from resolve_path import resolve_path
 from callgraph import callgraph
 from format_callgraph import format_output
 

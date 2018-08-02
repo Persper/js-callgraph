@@ -1,5 +1,5 @@
 import re
-from resolve_path import resolve_path, root
+from resolve_path import resolve_path
 
 reg1 = re.compile("require\(\'(.*)\'\)");
 reg2 = re.compile("import .* from \'(.*)\'");
@@ -16,10 +16,10 @@ def get_requires(path):
         matches3 = reg3.findall(text)
         matches4 = reg4.findall(text)
 
-        lst1 = [m + ('.js.o' if 'vue' in str(path) else '.js') for m in matches1]
-        lst2 = [m + ('.js.o' if 'vue' in str(path) else '.js') for m in matches2]
-        lst3 = [m + ('.js.o' if 'vue' in str(path) else '.js') for m in matches3]
-        lst4 = [m + ('.js.o' if 'vue' in str(path) else '.js') for m in matches4]
+        lst1 = [m + '.js' for m in matches1]
+        lst2 = [m + '.js' for m in matches2]
+        lst3 = [m + '.js' for m in matches3]
+        lst4 = [m + '.js' for m in matches4]
 
         lst = lst1 + lst2 + lst3 + lst4
         
