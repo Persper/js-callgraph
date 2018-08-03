@@ -19,7 +19,7 @@ var componentVNodeHooks = {
       ...
 
 OUTPUT:
-create-component.js.o:undefined:29 -> create-component.js.o:init:33
+create-component.js.o:anon:29 -> create-component.js.o:init:33
 create-component.js.o:init:37 -> create-component.js.o:prepatch:43
 create-component.js.o:init:39 -> create-component.js.o:createComponentIntanceForVnode:178
 

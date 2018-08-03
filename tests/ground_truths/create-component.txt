@@ -1,14 +1,14 @@
-create-component.js.o:undefined:3 -> Native
-create-component.js.o:undefined:9 -> Native
-create-component.js.o:undefined:11 -> create-component.js.o:_interopRequireDefault:27
-create-component.js.o:undefined:13 -> Native
-create-component.js.o:undefined:15 -> Native
-create-component.js.o:undefined:17 -> Native
-create-component.js.o:undefined:19 -> Native
-create-component.js.o:undefined:21 -> Native
-create-component.js.o:undefined:23 -> Native
-create-component.js.o:undefined:25 -> Native
-create-component.js.o:undefined:29 -> create-component.js.o:init:33
+create-component.js.o:anon:3 -> Native
+create-component.js.o:anon:9 -> Native
+create-component.js.o:anon:11 -> create-component.js.o:_interopRequireDefault:27
+create-component.js.o:anon:13 -> Native
+create-component.js.o:anon:15 -> Native
+create-component.js.o:anon:17 -> Native
+create-component.js.o:anon:19 -> Native
+create-component.js.o:anon:21 -> Native
+create-component.js.o:anon:23 -> Native
+create-component.js.o:anon:25 -> Native
+create-component.js.o:anon:29 -> create-component.js.o:init:33
 create-component.js.o:init:37 -> create-component.js.o:prepatch:43
 create-component.js.o:init:39 -> create-component.js.o:createComponentInstanceForVnode:178
 create-component.js.o:init:40 ->
@@ -16,9 +16,9 @@ create-component.js.o:prepatch:46 -> lifecycle.js.o:updateChildComponent:218
 create-component.js.o:insert:58 -> lifecycle.js.o:callHook:319
 create-component.js.o:insert:67 -> scheduler.js.o:queueActivatedComponent:114
 create-component.js.o:insert:69 -> lifecycle.js.o:activateChildComponent:285
-create-component.js.o:destroy:78 -> lifecycle.js.o:undefined:113
+create-component.js.o:destroy:78 -> lifecycle.js.o:anon:113
 create-component.js.o:destroy:80 -> lifecycle.js.o:deactivateChildComponent:303
-create-component.js.o:undefined:86 -> Native
+create-component.js.o:anon:86 -> Native
 create-component.js.o:createComponent:89 -> util.js.o:isUndef:37
 create-component.js.o:createComponent:96 -> util.js.o:isObject:67
 create-component.js.o:createComponent:97 ->
