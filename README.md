@@ -33,4 +33,4 @@ Modules `dftc.js`, `heuristictc.js` and `nuutila.js` implement several transitiv
 
 # License #
 
-This code is licensed under the [Eclipse Public License (v1.0)](http://www.eclipse.org/legal/epl-v10.html), a copy of which is included in this repository in file `epl-v10.html`.
+This code is licensed under the [Eclipse Public License (v2.0)](http://www.eclipse.org/legal/epl-2.0), a copy of which is included in this repository in file `LICENSE`.
