@@ -8,7 +8,7 @@ import sys
 
 tests_dir = dirname(sys.argv[0])
 
-test_directories = ['basics', 'unexpected', 'classes',
+test_directories = ['basics', 'unexpected', 'classes', 'es6',
                     'import-export/define', 'import-export/es6', 'import-export/module.exports']
 
 total_w_natives_intersection = 0
