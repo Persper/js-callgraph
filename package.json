@@ -22,7 +22,7 @@
     "jest": "^23.1.0"
   },
   "scripts": {
-    "test": "jest"
+    "test": "jest && ./tests/test.py"
   },
   "jest": {
     "testRegex": "tests/jest/.*\\.(js|jsx)$"
