@@ -6,7 +6,7 @@ from os.path import isfile, join
 import bcolors
 import sys
 
-test_directories = ['basics', 'limits', 'unexpected', 'classes',
+test_directories = ['basics', 'unexpected', 'classes',
                     'import-export/define', 'import-export/es6', 'import-export/module.exports']
 
 total_w_natives_intersection = 0
