@@ -362,7 +362,8 @@ define(function (require, exports) {
         natives.addNativeFlowEdges(fg);
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
 
-        let exported_functions = collectExports(ast);
+        let exported_functions = {};
+        exported_functions = collectExports(ast, exported_functions);
         connectImports(ast, fg, exported_functions);
 
         addInterproceduralFlowEdges(ast, fg);
