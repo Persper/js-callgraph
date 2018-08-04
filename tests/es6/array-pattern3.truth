@@ -1,0 +1,3 @@
+array-pattern3.js:main:7 -> array-pattern3.js:anon:6
+array-pattern3.js:main:8 -> array-pattern3.js:anon:6
+array-pattern3.js:global:11 -> array-pattern3.js:main:5

@@ -1,0 +1,2 @@
+object-pattern2.js:main:9 -> object-pattern2.js:anon:7
+object-pattern2.js:global:12 -> object-pattern2.js:main:5

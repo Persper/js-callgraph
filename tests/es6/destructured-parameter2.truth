@@ -1,0 +1,3 @@
+destructured-parameter2.js:f:10 -> destructured-parameter2.js:anon:12
+destructured-parameter2.js:main:13 -> destructured-parameter2.js:f:9
+destructured-parameter2.js:global:16 -> destructured-parameter2.js:main:8
