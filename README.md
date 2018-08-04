@@ -14,6 +14,15 @@ node src/main.js -h # for a list of command line arguments
 node src/main.js --cg input-scripts/simple-scripts/functioncall-arithmetic.js
 ```
 
+## Running Tests
+To run the testing framework run:
+```
+npm test
+```
+To install the git hooks to run tests automatically pre-commit run:
+```
+scripts/install-hooks
+```
 ## Structure
 
 The call graph constructor can be run in two basic modes (selected using the `--strategy` flag to `main.js`), *pessimistic* and *optimistic*, which differ in how interprocedural flows are handled. In the basic pessimistic approach (strategy `NONE`), interprocedural flow is not tracked at all; a slight refinement is strategy `ONESHOT`, where interprocedural flow is tracked only for one-shot closures that are invoked immediatel. The optimistic approach (strategy `DEMAND`) performs interprocedural propagation along edges that may ultimately end at a call site (and are thus interesting for call graph construction). Full interprocedural propagation (strategy `FULL`) is not implemented yet.
