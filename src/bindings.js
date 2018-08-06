@@ -23,7 +23,7 @@ define(function (require, exports) {
         var scope = global_scope;
         var decl_scope = scope;
         astutil.visit(ast,
-            function enter(nd, visit) {
+            function enter(nd, doVisit) {
                 switch (nd.type) {
                     case 'FunctionDeclaration':
                         /* This check is needed for:
@@ -32,7 +32,7 @@ define(function (require, exports) {
                            a FunctionDeclaration in ES6 */
                         if (nd.id) {
                           decl_scope.set(nd.id.name, nd.id);
-                          visit(nd.id);
+                          doVisit(nd.id);
                         }
                     // FALL THROUGH
                     case 'FunctionExpression':
@@ -45,7 +45,7 @@ define(function (require, exports) {
                         if (( nd.type === 'FunctionExpression' ||
                               nd.type === 'ArrowFunctionExpression' ) && nd.id) {
                             decl_scope.set(nd.id.name, nd.id);
-                            visit(nd.id);
+                            doVisit(nd.id);
                         }
                         // Put params into symbol table
                         decl_scope.set('this',
@@ -68,10 +68,10 @@ define(function (require, exports) {
                             // Always visit nd.params[i]
                             // Case 1: If nd.params[i] is an Identifer, visit it to set its scope attribute
                             // Case 2: If nd.params[i] is not an Identifer, visit it to set decl_scope
-                            visit(nd.params[i]);
+                            doVisit(nd.params[i]);
                         }
 
-                        visit(nd.body);
+                        doVisit(nd.body);
 
                         // restore previous scope
                         if (!decl_scope.hasOwn('arguments'))
@@ -97,8 +97,8 @@ define(function (require, exports) {
                         scope.global = false;
                         scope.set(nd.param.name, nd.param);
 
-                        visit(nd.param);
-                        visit(nd.body);
+                        doVisit(nd.param);
+                        doVisit(nd.body);
 
                         scope = scope.outer;
                         return false;
@@ -117,9 +117,9 @@ define(function (require, exports) {
                         the node corresponds to a static e1.x expression
                         and property is an Identifier.
                         */
-                        visit(nd.object);
+                        doVisit(nd.object);
                         if (nd.computed)
-                            visit(nd.property);
+                            doVisit(nd.property);
                         return false;
 
                     case 'VariableDeclarator':
@@ -148,7 +148,7 @@ define(function (require, exports) {
                             if (prop.value.type === 'Identifier' && !decl_scope.hasOwn(prop.value.name))
                                 decl_scope.set(prop.value.name, prop.value);
 
-                            visit(prop.value);
+                            doVisit(prop.value);
                         }
                         return false;
 
@@ -163,14 +163,14 @@ define(function (require, exports) {
                                 if (elm.type === 'Identifier' && !decl_scope.hasOwn(elm.name))
                                     decl_scope.set(elm.name, elm);
 
-                                visit(elm);
+                                doVisit(elm);
                             }
                         }
                         return false;
 
                     case 'Property':
                         // don't visit nd.key
-                        visit(nd.value);
+                        doVisit(nd.value);
                         return false;
                 }
             });

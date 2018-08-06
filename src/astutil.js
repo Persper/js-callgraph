@@ -51,7 +51,7 @@ define(function (require, exports) {
         // global collections containing all functions and all call sites
         root.attr.functions = [];
         root.attr.calls = [];
-        visit(root, function (nd, visit, parent, childProp) {
+        visit(root, function (nd, doVisit, parent, childProp) {
             if (nd.type && !nd.attr)
                 nd.attr = {};
 
@@ -72,9 +72,9 @@ define(function (require, exports) {
                 nd.attr.childProp = childProp;
                 var old_enclosingFunction = enclosingFunction;
                 enclosingFunction = nd;
-                visit(nd.id);
-                visit(nd.params);
-                visit(nd.body);
+                doVisit(nd.id);
+                doVisit(nd.params);
+                doVisit(nd.body);
                 enclosingFunction = old_enclosingFunction;
                 return false;
             }
