@@ -7,7 +7,7 @@ function main () {
 
 main();
 /*
-This test illustrates how the old implementation incorrectly set decl_scope
+This test illustrates how the current implementation incorrectly set decl_scope
 for 'BindingPattern' in binding.js.
 The arrow functinon defined on line 1 is called on line 4.
 But when the 'ArrayPattern' on line 5 is visited, the name 'v' is added to local symbol table.

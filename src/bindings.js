@@ -22,8 +22,8 @@ define(function (require, exports) {
         global_scope.global = true;
         var scope = global_scope;
         var decl_scope = scope;
-        astutil.visit(ast,
-            function enter(nd, doVisit) {
+        astutil.visitWithState(ast,
+            function enter(nd, doVisit, state) {
                 switch (nd.type) {
                     case 'FunctionDeclaration':
                         /* This check is needed for:
@@ -60,6 +60,8 @@ define(function (require, exports) {
                                 }
                             }
                         );
+
+                        state['withinParams'] = true;
                         for (var i = 0; i < nd.params.length; ++i) {
                             // Handle identifer as before
                             if (nd.params[i].type === 'Identifier')
@@ -70,6 +72,7 @@ define(function (require, exports) {
                             // Case 2: If nd.params[i] is not an Identifer, visit it to set decl_scope
                             doVisit(nd.params[i]);
                         }
+                        state['withinParams'] = false;
 
                         doVisit(nd.body);
 
@@ -128,24 +131,30 @@ define(function (require, exports) {
                         if (nd.id.type === 'Identifier' && !decl_scope.hasOwn(nd.id.name))
                             decl_scope.set(nd.id.name, nd.id);
 
-                        // break to visit nd.id and nd.init
-                        // Case 1: If nd.id is an Identifer, visit it and set its scope attribute
-                        // Case 2: If nd.id is not an Identifer ('ObjectPattern' or 'ArrayPattern'),
-                        //          visit it to set decl_scope
-                        break;
+                        // visit both nd.id and nd.init
+                        // nd.id
+                        //     Case 1: If nd.id is an Identifer, visit it and set its scope attribute
+                        //     Case 2: If nd.id is a BindingPattern, visit it to extract declarations
+                        // nd.init might contain function expression
+                        state['withinDeclarator'] = true;
+                        doVisit(nd.id)
+                        doVisit(nd.init)
+                        state['withinDeclarator'] = false;
+                        return false;
 
                     case 'ObjectPattern':
                         // ES6 Object Destructuring
                         // { key: value }
                         // The newly declared name is always in value
                         // Haven't tested with rest and default params
+
+                        // Only visit this node if it's
+                        // within VariableDeclarator or
+                        // within params
                         for (let prop of nd.properties) {
-                            // This solution has a bug:
-                            // Suppose this 'ObjectPattern' unpacks the value into a global variable
-                            // decl_scope won't have the global variable name as its own property
-                            // thus, we would set its name in decl_scope, which is a mistake
-                            // For code example, please see tests/es6/binding-pattern-global.js
-                            if (prop.value.type === 'Identifier' && !decl_scope.hasOwn(prop.value.name))
+                            if ((state['withinDeclarator'] || state['withinParams']) &&
+                                prop.value.type === 'Identifier' &&
+                                !decl_scope.hasOwn(prop.value.name))
                                 decl_scope.set(prop.value.name, prop.value);
 
                             doVisit(prop.value);
@@ -155,12 +164,16 @@ define(function (require, exports) {
                     case 'ArrayPattern':
                         // ES6 Array Destructuring
                         // Haven't tested with rest and default params
+
+                        // Only visit this node if it's
+                        // within VariableDeclarator or
+                        // within params
                         for (let elm of nd.elements) {
                             // Array destructuring can ignore some values, so check null first
                             if (elm) {
-                                // This solution has a bug, please see 'ObjectPattern' above
-                                // For code example, please see tests/es6/binding-pattern-global.js
-                                if (elm.type === 'Identifier' && !decl_scope.hasOwn(elm.name))
+                                if ((state['withinDeclarator'] || state['withinParams']) &&
+                                    elm.type === 'Identifier' &&
+                                    !decl_scope.hasOwn(elm.name))
                                     decl_scope.set(elm.name, elm);
 
                                 doVisit(elm);

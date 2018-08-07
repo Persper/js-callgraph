@@ -43,6 +43,34 @@ define(function (require, exports) {
         doVisit(root);
     }
 
+    /* AST visitor with state */
+    function visitWithState(root, visitor) {
+        const state = {
+            'withinDeclarator': false,
+            'withinParams': false
+        };
+
+        function doVisit(nd, parent, childProp) {
+            if (!nd || typeof nd !== 'object')
+                return;
+
+            if (nd.type) {
+                var res = visitor(nd, doVisit, state, parent, childProp);
+                if (res === false)
+                    return;
+            }
+
+            for (var p in nd) {
+                // skip over magic properties
+                if (!nd.hasOwnProperty(p) || p.match(/^(range|loc|attr|comments|raw)$/))
+                    continue;
+                doVisit(nd[p], nd, p);
+            }
+        }
+
+        doVisit(root);
+    }
+
     /* Set up `attr` field that can be used to attach attributes to
      * nodes, and fill in `enclosingFunction` and `enclosingFile`
      * attributes. */
@@ -51,7 +79,7 @@ define(function (require, exports) {
         // global collections containing all functions and all call sites
         root.attr.functions = [];
         root.attr.calls = [];
-        visit(root, function (nd, doVisit, parent, childProp) {
+        visit(root, function (nd, doVisit, state, parent, childProp) {
             if (nd.type && !nd.attr)
                 nd.attr = {};
 
@@ -239,6 +267,7 @@ define(function (require, exports) {
     }
 
     exports.visit = visit;
+    exports.visitWithState = visitWithState;
     exports.init = init;
     exports.ppPos = ppPos;
     exports.funcname = funcname;
