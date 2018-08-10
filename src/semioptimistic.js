@@ -199,7 +199,46 @@ define(function (require, exports) {
       return required_file
     }
 
-    function addDefaultImport(exp_fns, fg, imported_file, ast) {
+    function addDefaultImport(imp_fns, filename, imported_file, ast) {
+      if (filename in imp_fns) {
+        if (imported_file in imp_fns[filename]) {
+          imp_fns[filename][imported_file]['default'].push(nd);
+        } else {
+          imp_fns[filename][imported_file] = {'default': [], 'named': {}};
+          imp_fns[filename][imported_file]['default'] = [ast];
+        }
+      }
+      else {
+        imp_fns[filename] = {};
+        imp_fns[filename][imported_file] = {'default': [], 'named': {}};
+        imp_fns[filename][imported_file]['default'] = [ast];
+      }
+    }
+
+    function addNamedImport(imp_fns, filename, imported_file, local, imported) {
+      if (filename in imp_fns) {
+        if (imported_file in imp_fns[filename]) {
+          let named = imp_fns[filename][imported_file]['named']
+
+          if (imported in named) {
+            named[imported] = named[imported].push(local);
+          } else {
+            named[imported] = [local];
+          }
+        } else {
+          imp_fns[filename][imported_file] = {'default': [], 'named': {}};
+          imp_fns[filename][imported_file]['named'][imported] = [local];
+        }
+
+      } else {
+        imp_fns[filename] = {};
+        imp_fns[filename][imported_file] = {'default': [], 'named': {}};
+        imp_fns[filename][imported_file]['named'][imported] = [local];
+      }
+    }
+
+
+    function connectDefaultImport(exp_fns, fg, imported_file, ast) {
       if (!(imported_file in exp_fns))
           return;
 
@@ -217,30 +256,73 @@ define(function (require, exports) {
       }
     }
 
-    function addNamedImport(exp_fns, fg, imported_file, local, imported) {
+    function connectNamedImport(exp_fns, fg, imported_file, local, imported) {
       if (!(imported_file in exp_fns))
-          return;
+      return;
 
       let redirect = exp_fns[imported_file]['redirect'];
 
       for (let i = 0; i < redirect.length; i++) {
-           addNamedImport(exp_fns, fg, redirect[i], local, imported);
+        connectNamedImport(exp_fns, fg, redirect[i], local, imported);
       }
       let named = exp_fns[imported_file]['named'];
 
       if (!(imported in named))
-          return;
+      return;
 
       let imp = named[imported];
 
       for (let i = 0; i < imp.length; i++) {
         if (imp[i].type === 'FunctionDeclaration')
-            fg.addEdge(flowgraph.funcVertex(imp[i]),
-                       flowgraph.vertexFor(local));
+        fg.addEdge(flowgraph.funcVertex(imp[i]),
+        flowgraph.vertexFor(local));
         else
-            fg.addEdge(flowgraph.vertexFor(imp[i]),
-                       flowgraph.vertexFor(local));
+        fg.addEdge(flowgraph.vertexFor(imp[i]),
+        flowgraph.vertexFor(local));
       }
+    }
+
+    /* Arguments:
+              ast - a ProgramCollection
+          imp_fns - a dictionary with filenames as keys
+                    and a list of exported values as values
+
+       Postcondition: edges connecting imports to the corresponding
+                      exported value have been added to the flowgraph */
+    function collectImports(ast, imp_fns) {
+      for (var i = 0; i < ast.programs.length; i++) {
+        let filename = ast.programs[i].attr.filename;
+
+        astutil.visit(ast.programs[i], function (nd) {
+          if (nd.type === 'VariableDeclarator') {
+            let init = nd.init;
+
+            if (init && isCallTo(init, 'require')) {
+              let required_file = getRequiredFile(filename, init);
+               addDefaultImport(imp_fns, filename, required_file, nd.id);
+            }
+          }
+          if (nd.type === 'ImportDeclaration') {
+            let imported_file = getImportedFile(filename, nd.source);
+            for (var i = 0; i < nd.specifiers.length; i++) {
+              let specifier = nd.specifiers[i];
+              switch (specifier.type) {
+                case 'ImportSpecifier':
+                    addNamedImport(imp_fns, filename, imported_file,
+                                   specifier.local, specifier.imported.name);
+                    break;
+                case 'ImportDefaultSpecifier':
+                    addDefaultImport(imp_fns, filename, imported_file, specifier.local);
+                    break;
+                case 'ImportNamespaceSpecifier':
+                    break;
+              }
+
+            }
+          }
+        })
+      }
+      return imp_fns;
     }
 
     /* Arguments:
@@ -251,39 +333,25 @@ define(function (require, exports) {
 
        Postcondition: edges connecting imports to the corresponding
                       exported value have been added to the flowgraph */
-    function connectImports(ast, fg, exp_fns) {
-      for (var i = 0; i < ast.programs.length; i++) {
-        let filename = ast.programs[i].attr.filename;
+    function connectImports(fg, imp_fns, exp_fns) {
+      console.log(exp_fns)
+      for (let filename in imp_fns) {
+        imports = imp_fns[filename]
+        for (let imp_file in imports) {
+          if (!(imp_file in exp_fns))
+            continue;
 
-        astutil.visit(ast.programs[i], function (nd) {
-          if (nd.type === 'VariableDeclarator') {
-            let init = nd.init;
+          let imp = imports[imp_file];
 
-            if (init && isCallTo(init, 'require')) {
-              let required_file = getRequiredFile(filename, init);
-              if (required_file in exp_fns)
-                 addDefaultImport(exp_fns, fg, required_file, nd.id);
+          for (let i = 0; i < imp['default'].length; i++) {
+            connectDefaultImport(exp_fns, fg, imp_file, imp['default'][i])
+          }
+          for (let name in imp['named']) {
+            for (let i = 0; i < imp['named'][name].length; i++) {
+              connectNamedImport(exp_fns, fg, imp_file, imp['named'][name][i], name)
             }
           }
-          if (nd.type === 'ImportDeclaration') {
-            let imported_file = getImportedFile(filename, nd.source);
-            for (var i = 0; i < nd.specifiers.length; i++) {
-              let specifier = nd.specifiers[i];
-              switch (specifier.type) {
-                case 'ImportSpecifier':
-                    addNamedImport(exp_fns, fg, imported_file,
-                                   specifier.local, specifier.imported.name);
-                    break;
-                case 'ImportDefaultSpecifier':
-                    addDefaultImport(exp_fns, fg, imported_file, specifier.local);
-                    break;
-                case 'ImportNamespaceSpecifier':
-                    break;
-              }
-
-            }
-          }
-        })
+        }
       }
     }
 
@@ -362,9 +430,13 @@ define(function (require, exports) {
         natives.addNativeFlowEdges(fg);
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
 
-        let exported_functions = {};
+        let exported_functions = {},
+            imported_functions = {};
+
         exported_functions = collectExports(ast, exported_functions);
-        connectImports(ast, fg, exported_functions);
+        imported_functions = collectImports(ast, imported_functions);
+
+        connectImports(fg, imported_functions, exported_functions);
 
         addInterproceduralFlowEdges(ast, fg);
 
