@@ -126,6 +126,9 @@ define(function (require, exports) {
     function removeExports(filename, exportFuncs) {
       delete exportFuncs[filename];
     }
+    function removeImports(filename, importFuncs) {
+      delete importFuncs[filename];
+    }
 
     /* Arguments: ast - a ProgramCollection
        Return value: dictionary with filenames as keys
@@ -446,6 +449,7 @@ define(function (require, exports) {
     exports.addInterproceduralFlowEdges = addInterproceduralFlowEdges;
     exports.buildCallGraph = buildCallGraph;
     exports.removeExports = removeExports;
+    exports.removeImports = removeImports;
     exports.collectExports = collectExports;
     exports.connectImports = connectImports;
     return exports;
