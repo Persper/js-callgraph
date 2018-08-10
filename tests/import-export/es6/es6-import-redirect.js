@@ -1,5 +1,5 @@
-// import {login, logout, addProject, updateProject, executeSearch} from 'redirect/index';
-import {updateProject} from 'redirect/index';
+import {login, logout, addProject, updateProject, executeSearch} from 'redirect/index';
+// import {updateProject} from 'redirect/index';
 login(4);
 logout(8, 0);
 updateProject();
