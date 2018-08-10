@@ -35,6 +35,7 @@ function initializeCallGraph () {
         'fg': fg,
         'totalEdits': {},
         'exportFuncs': {},
+        'importFuncs': {},
         'edges': null
     };
 }
@@ -152,18 +153,20 @@ function stripFlow(src) {
     });
 }
 
-function updateFlowGraph (fg, exportFuncs, oldFname, oldSrc, newFname, newSrc) {
+function updateFlowGraph (fg, exportFuncs, importFuncs, oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
         // semioptimistic.removeExports(oldFname, exportFuncs);
+        // semioptimistic.removeImports(oldFname, importFuncs);
     }
     if (newFname) {
         const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
         if (ast !== null) {
           bindings.addBindings(ast);
           // @Alex
-          // semioptimistic.collectExports(ast, exportFuncs);
-          // semioptimistic.connectImports(ast, fg, exportFuncs);
+          // exportFuncs = semioptimistic.collectExports(ast, exportFuncs);
+          // importFuncs = semioptimistic.collectImports(ast, importFuncs);
+          // semioptimistic.connectImports(fg, exportFuncs, importFuncs);
 
           flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
           semioptimistic.addInterproceduralFlowEdges(ast, fg);
@@ -277,7 +280,7 @@ app.post('/update', jsonParser, function (req, res) {
     }
     */
 
-    updateFlowGraph(gcg.fg, gcg.exportFuncs, oldFname, oldSrc, newFname, newSrc);
+    updateFlowGraph(gcg.fg, gcg.exportFuncs, gcg.importFuncs, oldFname, oldSrc, newFname, newSrc);
     gcg.edges = callgraph.extractCG(null, gcg.fg).edges;
     res.json(stats);
 });
