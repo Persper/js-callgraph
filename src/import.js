@@ -178,11 +178,7 @@ function connectNamedImport(expFuncs, fg, srcFname, local, importedName) {
     if (!(importedName in named))
         return;
 
-    if (named[importedName].type === 'FunctionDeclaration')
-        // TODO: This case probably never happens
-        fg.addEdge(flowgraph.funcVertex(named[importedName]), flowgraph.vertexFor(local));
-    else
-        fg.addEdge(flowgraph.vertexFor(named[importedName]), flowgraph.vertexFor(local));
+    fg.addEdge(flowgraph.vertexFor(named[importedName]), flowgraph.vertexFor(local));
 }
 
 function connectEntireImport(expFuncs, fg, srcFname) {
@@ -194,19 +190,11 @@ function connectEntireImport(expFuncs, fg, srcFname) {
 
     let named = expFuncs[srcFname]['named'];
 
-    for (let oldName in named)
-        if (named[oldName].type === 'FunctionDeclaration')
-            // TODO: This case probably never happens
-            fg.addEdge(
-                flowgraph.funcVertex(named[oldName]),
-                flowgraph.propVertex({ type: 'Literal', value: oldName })
-            );
-        else {
-            fg.addEdge(
-                flowgraph.vertexFor(named[oldName]),
-                flowgraph.propVertex({ type: 'Literal', value: oldName })
-            );
-        }
+    for (let exportedName in named)
+        fg.addEdge(
+            flowgraph.vertexFor(named[exportedName]),
+            flowgraph.propVertex({ type: 'Literal', value: exportedName })
+        );
 }
 
 /*
