@@ -98,7 +98,9 @@ define(function (require, exports) {
                 case 'ObjectExpression':
                     nd.properties.forEach(function (prop) {
                         if (prop.kind === 'init') {
-                            flow_graph.addEdge(vertexFor(prop.value), propVertex(prop.key));
+                            // Temporary fix for computed property names
+                            if (prop.key.type === 'Identifier' || prop.key.type == 'Literal')
+                                flow_graph.addEdge(vertexFor(prop.value), propVertex(prop.key));
                         }
                     });
                     break;
