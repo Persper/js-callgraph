@@ -1,6 +1,5 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const babel = require('babel-core');
 const bindings = require('./bindings.js');
 const astutil = require('./astutil.js');
 const semioptimistic = require('./semioptimistic.js');
@@ -135,32 +134,15 @@ function removeNodesInFile(fg, fname) {
     });
 }
 
-/* Deprecated
-function stripAndTranspile(src) {
-    return babel.transform(src, {
-        presets: ['es2015', 'flow'],
-        retainLines: true,
-        parserOpts: {strictMode: false}
-    });
-}
-*/
-
-function stripFlow(src) {
-    return babel.transform(src, {
-        presets: ['flow'],
-        retainLines: true,
-        parserOpts: {strictMode: false}
-    });
-}
-
-function updateFlowGraph (fg, exportFuncs, importFuncs, oldFname, oldSrc, newFname, newSrc) {
+function updateFlowGraph (fg, exportFuncs, importFuncs,
+    oldFname, oldSrc, newFname, newSrc, stripFlow) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
         // semioptimistic.removeExports(oldFname, exportFuncs);
         // semioptimistic.removeImports(oldFname, importFuncs);
     }
     if (newFname) {
-        const ast = astutil.singleSrcAST(newFname, newSrc, stripFlow);
+        const ast = astutil.buildSingleAST(newFname, newSrc, stripFlow);
         if (ast !== null) {
           bindings.addBindings(ast);
           // @Alex
@@ -216,21 +198,21 @@ This function does two things:
 The mapping is empty if no function's colon format ID gets changed
 or either of oldFname and newFname is null.
 */
-function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
+function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch, stripFlow) {
     let stats = { 'idToLines': {}, 'idMap': {} };
     let forwardStats = null, bckwardStats = null;
     let forwardFuncs = null, bckwardFuncs = null;
     let forwardAST = null, bckwardAST = null;
 
     if (oldFname) {
-        forwardAST = astutil.singleSrcAST(oldFname, oldSrc, stripFlow);
+        forwardAST = astutil.buildSingleAST(oldFname, oldSrc, stripFlow);
         if (forwardAST !== null) {
           forwardFuncs = astutil.getFunctions(forwardAST);
           forwardStats = detectChange(parser.parse(patch), forwardFuncs);
         }
     }
     if (newFname) {
-        bckwardAST = astutil.singleSrcAST(newFname, newSrc, stripFlow);
+        bckwardAST = astutil.buildSingleAST(newFname, newSrc, stripFlow);
         if (bckwardAST !== null) {
           bckwardFuncs = astutil.getFunctions(bckwardAST);
           bckwardStats = detectChange(parser.invParse(patch), bckwardFuncs);
@@ -269,9 +251,11 @@ app.post('/update', jsonParser, function (req, res) {
           oldSrc = req.body.oldSrc,
           newFname = req.body.newFname,
           newSrc = req.body.newSrc,
-          patch = req.body.patch;
+          patch = req.body.patch,
+          stripFlow = req.body.stripFlow;
 
-    const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch)
+    const stats = getChangeStats(
+        oldFname, oldSrc, newFname, newSrc, patch, stripFlow);
     updateTotalEdits(gcg.totalEdits, stats);
     /* for debug
     for (let cf in gcg.totalEdits) {
@@ -280,7 +264,9 @@ app.post('/update', jsonParser, function (req, res) {
     }
     */
 
-    updateFlowGraph(gcg.fg, gcg.exportFuncs, gcg.importFuncs, oldFname, oldSrc, newFname, newSrc);
+    updateFlowGraph(
+        gcg.fg, gcg.exportFuncs, gcg.importFuncs,
+        oldFname, oldSrc, newFname, newSrc, stripFlow);
     gcg.edges = callgraph.extractCG(null, gcg.fg).edges;
     res.json(stats);
 });
@@ -293,8 +279,11 @@ app.get('/stats', jsonParser, function (req, res) {
           oldSrc = req.body.oldSrc,
           newFname = req.body.newFname,
           newSrc = req.body.newSrc,
-          patch = req.body.patch;
-    const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch);
+          patch = req.body.patch,
+          stripFlow = req.body.stripFlow;
+
+    const stats = getChangeStats(
+        oldFname, oldSrc, newFname, newSrc, patch, stripFlow);
     res.json(stats);
 });
 
