@@ -23,8 +23,13 @@ define(function (require, exports) {
             if (!nativeFlows.hasOwnProperty(native))
                 continue;
             var target = nativeFlows[native];
-            flow_graph.addEdge(flowgraph.nativeVertex(native), flowgraph.propVertex({ type: 'Identifier',
-                name: target }));
+            flow_graph.addEdge(
+                flowgraph.nativeVertex(native),
+                flowgraph.globVertex({
+                    type: 'Identifier',
+                    name: target
+                })
+            );
         }
         return flow_graph;
     }

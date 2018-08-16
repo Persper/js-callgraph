@@ -67,7 +67,7 @@ define(function (require, exports) {
                     var body = nd.body.body;
                     for (var i = 0; i < body.length; ++i)
                         if (body[i].kind === 'constructor')
-                          flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
+                            flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
                     break;
 
                 case 'FunctionDeclaration':
@@ -158,14 +158,17 @@ define(function (require, exports) {
 
     /* Return the flow graph vertex corresponding to a given AST node. */
     function vertexFor(nd) {
+        var decl;
         switch (nd.type) {
             case 'Identifier':
-                // global variables use a property vertex, local variables a var vertex
-                var decl = nd.attr.scope.get(nd.name);
-                return decl && !decl.attr.scope.global ? varVertex(decl) : propVertex(nd);
+                // global variables use a global vertex, local variables a var vertex
+                if (!nd.attr.scope)
+                    debugger;
+                decl = nd.attr.scope.get(nd.name);
+                return decl && !decl.attr.scope.global ? varVertex(decl) : globVertex(nd);
             case 'ThisExpression':
                 // 'this' is treated like a variable
-                var decl = nd.attr.scope.get('this');
+                decl = nd.attr.scope.get('this');
                 return decl ? varVertex(decl) : exprVertex(nd);
             case 'MemberExpression':
                 // ignore dynamic property accesses
@@ -201,15 +204,42 @@ define(function (require, exports) {
         if (nd.type === 'Identifier')
             p = nd.name;
         else if (nd.type === 'Literal')
+            // this case handles array, property field: 0, 1, 2...
             p = nd.value + "";
         else
             throw new Error("invalid property vertex");
 
-        return propVertices.get(p, { type: 'PropertyVertex',
+        return propVertices.get(p, {
+            type: 'PropertyVertex',
             name: p,
-            attr: { pp: function () {
-                return 'Prop(' + p + ')';
-            } } });
+            attr: {
+                pp: function () { return 'Prop(' + p + ')'; }
+            }
+        });
+    }
+
+    // global cache of global vertices
+    let globVertices = new symtab.Symtab();
+
+    // globVertices are propVertices in the global scope
+    // similar to propVertex, globVertex doesn't have an associated ast node
+    function globVertex(nd) {
+        let gp;
+        if (nd.type === 'Identifier')
+            gp = nd.name;
+        else if (nd.type === 'Literal')
+            // this case handles array, property field: 0, 1, 2...
+            gp = nd.value + "";
+        else
+            throw new Error("invalid global vertex");
+
+        return globVertices.get(gp, {
+            type: 'GlobalVertex',
+            name: gp,
+            attr: {
+                pp: function () { return 'Glob(' + gp + ')'; }
+            }
+        });
     }
 
     // vertices representing well-known native functions
@@ -360,7 +390,7 @@ define(function (require, exports) {
     exports.addIntraproceduralFlowGraphEdges = addIntraproceduralFlowGraphEdges;
     exports.funcVertex = funcVertex;
     exports.unknownVertex = unknownVertex;
-    exports.propVertex = propVertex;
+    exports.globVertex = globVertex;
     exports.nativeVertex = nativeVertex;
     exports.getNativeVertices = getNativeVertices;
     exports.parmVertex = parmVertex;
@@ -368,5 +398,6 @@ define(function (require, exports) {
     exports.retVertex = retVertex;
     exports.resVertex = resVertex;
     exports.vertexFor = vertexFor;
+    exports.propVertex = propVertex;
     return exports;
 });
