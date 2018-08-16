@@ -1,9 +1,12 @@
 // This module directly assigns the constructor function for User to module.exports
-define(function() {
-  let User = function(name, email) {
-  	this.name = name;
-  	this.email = email;
-  };
+if (typeof define !== 'function') {
+	var define = require('amdefine')(module);
+}
 
-  return User;
+define(function() {
+	let User = function(name, email) {
+		this.name = name;
+		this.email = email;
+	};
+	return User;
 });
