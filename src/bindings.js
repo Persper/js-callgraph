@@ -182,7 +182,9 @@ define(function (require, exports) {
                         return false;
 
                     case 'Property':
-                        // don't visit nd.key
+                        // Temporary fix for computed property names
+                        // visit nd.key to avoid scope of identifer in computed property names being undefined
+                        doVisit(nd.key);
                         doVisit(nd.value);
                         return false;
                 }

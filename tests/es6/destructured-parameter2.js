@@ -22,8 +22,8 @@ Before supporting nested destructuring, running
 
 gives the following output:
 
-	'f' (destructured-parameter2.js@10:262-265) -> 'undefined' (destructured-parameter2.js@6:181-206)
-	'f' (destructured-parameter2.js@10:262-265) -> 'undefined' (destructured-parameter2.js@12:282-301)
+	'f' (destructured-parameter2.js@10:262-265) -> 'anon' (destructured-parameter2.js@6:181-206)
+	'f' (destructured-parameter2.js@10:262-265) -> 'anon' (destructured-parameter2.js@12:282-301)
 	'main' (destructured-parameter2.js@13:304-319) -> 'f' (destructured-parameter2.js@9:229-269)
 	'global' (destructured-parameter2.js@16:324-330) -> 'main' (destructured-parameter2.js@8:209-322)
 
