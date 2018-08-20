@@ -18,7 +18,8 @@ if (typeof define !== 'function') {
 }
 
 define(function (require, exports) {
-    var impl = require('./olist');
+    // var impl = require('./olist');
+    var impl = require('./set');
 
     for (var p in impl)
         exports[p] = impl[p];
