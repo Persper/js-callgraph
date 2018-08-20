@@ -106,13 +106,6 @@ function NodeLinkFormat (edges, totalEdits={}, defaultNumLines=1) {
     return nlf;
 }
 
-function simpleCallGraph () {
-    const files = ['tests/basics/assignment.js'];
-    const ast = astutil.buildAST(files);
-    bindings.addBindings(ast);
-    return semioptimistic.buildCallGraph(ast);
-}
-
 /* Get enclosingFile of a node in flow graph by querying its associated AST node */
 function getEnclosingFile (nd) {
     if (nd.hasOwnProperty('node')) {
@@ -236,11 +229,8 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch, stripFlow) {
 }
 
 app.get('/callgraph', function (req, res) {
-    if (gcg.edges) {
-        res.json(NodeLinkFormat(gcg.edges, gcg.totalEdits));
-    } else {
-        res.json(NodeLinkFormat(simpleCallGraph().edges));
-    }
+    gcg.edges = callgraph.extractCG(null, gcg.fg).edges;
+    res.json(NodeLinkFormat(gcg.edges, gcg.totalEdits));
 });
 
 app.post('/update', jsonParser, function (req, res) {
@@ -263,11 +253,9 @@ app.post('/update', jsonParser, function (req, res) {
             debugger;
     }
     */
-
     updateFlowGraph(
         gcg.fg, gcg.exportFuncs, gcg.importFuncs,
         oldFname, oldSrc, newFname, newSrc, stripFlow);
-    gcg.edges = callgraph.extractCG(null, gcg.fg).edges;
     res.json(stats);
 });
 
