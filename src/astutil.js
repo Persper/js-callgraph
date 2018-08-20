@@ -82,8 +82,14 @@ function init(root) {
         if (enclosingFile)
             nd.attr.enclosingFile = enclosingFile;
 
-        if (nd.type === 'Program')
+        if (nd.type === 'Program') {
             enclosingFile = nd.attr.filename;
+            enclosingFunction = nd
+            nd.id = {
+                    "type": "Identifier",
+                    "name": "global"
+                };
+        }
 
         if (nd.type === 'FunctionDeclaration' ||
             nd.type === 'FunctionExpression'  ||
