@@ -84,11 +84,12 @@ function init(root) {
 
         if (nd.type === 'Program') {
             enclosingFile = nd.attr.filename;
-            enclosingFunction = nd
+            nd.type = 'FunctionDeclaration';
             nd.id = {
                     "type": "Identifier",
                     "name": "global"
                 };
+            nd.params = [];
         }
 
         if (nd.type === 'FunctionDeclaration' ||
