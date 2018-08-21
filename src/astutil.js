@@ -84,12 +84,6 @@ function init(root) {
 
         if (nd.type === 'Program') {
             enclosingFile = nd.attr.filename;
-            nd.type = 'FunctionDeclaration';
-            nd.id = {
-                    "type": "Identifier",
-                    "name": "global"
-                };
-            nd.params = [];
         }
 
         if (nd.type === 'FunctionDeclaration' ||
@@ -157,7 +151,6 @@ function funcname(func) {
 // encFunc can be undefined
 function encFuncName(encFunc) {
     if (encFunc === undefined) {
-        console.log("WARNING encFunc should NOT be undefined")
         return "global";
     } else if (encFunc.id === null)
         return "anon";
