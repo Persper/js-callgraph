@@ -303,6 +303,16 @@ function getFunctions(root) {
             'encFuncName': encFuncName(fn.attr.enclosingFunction)
         });
     }
+    for (let i = 0; i < root.programs.length; i++) {
+      let prog = root.programs[i];
+      funcs.push({
+        'name': 'global',
+        'file': prog.attr.filename,
+        'range': prog.range,
+        'code': null,
+        'encFuncName': null
+      });
+    }
     funcs.forEach(funcObj => {
         funcObj['cf'] = cf(funcObj);
     });
