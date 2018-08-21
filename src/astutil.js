@@ -156,9 +156,10 @@ function funcname(func) {
 
 // encFunc can be undefined
 function encFuncName(encFunc) {
-    if (encFunc === undefined)
+    if (encFunc === undefined) {
+        console.log("WARNING encFunc should NOT be undefined")
         return "global";
-    else if (encFunc.id === null)
+    } else if (encFunc.id === null)
         return "anon";
     else
         return encFunc.id.name
