@@ -221,7 +221,7 @@ function getRequiredFile(curr_filename, nd) {
     if (argument === undefined) {
         return
     }
-    required_file = path.resolve(curr_filename, '..', argument);
+    let required_file = path.resolve(curr_filename, '..', argument);
     return required_file + '.js';
 }
 
