@@ -215,8 +215,10 @@ function buildSingleAST (fname, src) {
 
 // cf is used by getFunctions
 const cf = funcObj => {
-    return funcObj.file + ':' + funcObj.name + ':' +
-        funcObj.range[0] + ':' + funcObj.range[1];
+    return funcObj.file + ':' +
+           funcObj.name + ':' +
+           funcObj.range[0] + ':' +
+           funcObj.range[1];
 };
 
 // astToCode is used by getFunctions
@@ -227,6 +229,24 @@ const astToCode = astNode => {
     });
 }
 
+/* Return a list of objects storing function info in root
+
+Args:
+    root - An ast node of type 'ProgramCollection',
+         - the output of buildSingleAST function,
+         - thus, root.programs.length is equal to 1
+
+Returns:
+    A list of objects, each with the following properties
+    {
+        'name': a valid function name | 'anon' | 'global',
+        'file': a valid file name,
+        'range': a list of two integers,
+        'code': code of the function | null (for global context),
+        'encFuncName': a valid function name | 'anon' | 'global' | null (for global context),
+        'cf': a string representing the colon format id
+    }
+*/
 function getFunctions(root) {
     const funcs = [];
     const funcNodes = root.attr.functions;
@@ -251,16 +271,19 @@ function getFunctions(root) {
             'encFuncName': encFuncName(fn.attr.enclosingFunction)
         });
     }
-    for (let i = 0; i < root.programs.length; i++) {
-      let prog = root.programs[i];
-      funcs.push({
+
+    // Create a fake function object for global context
+    console.assert(root.programs.length === 1);
+    let prog = root.programs[0];
+    funcs.push({
         'name': 'global',
         'file': prog.attr.filename,
-        'range': prog.range,
+        'range': [prog.loc.start['line'], prog.loc.end['line']],
         'code': null,
         'encFuncName': null
-      });
-    }
+    });
+
+    // Add 'cf' property for all function objects in funcs
     funcs.forEach(funcObj => {
         funcObj['cf'] = cf(funcObj);
     });
