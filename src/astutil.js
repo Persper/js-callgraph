@@ -82,8 +82,9 @@ function init(root) {
         if (enclosingFile)
             nd.attr.enclosingFile = enclosingFile;
 
-        if (nd.type === 'Program')
+        if (nd.type === 'Program') {
             enclosingFile = nd.attr.filename;
+        }
 
         if (nd.type === 'FunctionDeclaration' ||
             nd.type === 'FunctionExpression'  ||
@@ -149,9 +150,9 @@ function funcname(func) {
 
 // encFunc can be undefined
 function encFuncName(encFunc) {
-    if (encFunc === undefined)
+    if (encFunc === undefined) {
         return "global";
-    else if (encFunc.id === null)
+    } else if (encFunc.id === null)
         return "anon";
     else
         return encFunc.id.name
@@ -301,6 +302,16 @@ function getFunctions(root) {
             'code': astToCode(fn),
             'encFuncName': encFuncName(fn.attr.enclosingFunction)
         });
+    }
+    for (let i = 0; i < root.programs.length; i++) {
+      let prog = root.programs[i];
+      funcs.push({
+        'name': 'global',
+        'file': prog.attr.filename,
+        'range': prog.range,
+        'code': null,
+        'encFuncName': null
+      });
     }
     funcs.forEach(funcObj => {
         funcObj['cf'] = cf(funcObj);
