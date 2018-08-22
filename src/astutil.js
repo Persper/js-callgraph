@@ -12,7 +12,6 @@ const esprima = require('esprima');
 const fs = require('fs');
 const sloc  = require('sloc');
 const escodegen = require('escodegen');
-const babel = require('babel-core');
 
 /* AST visitor */
 function visit(root, visitor) {
@@ -190,68 +189,17 @@ function buildAST(files) {
     return ast;
 }
 
-function stripFlowPrep(src) {
-    return babel.transform(src, {
-        presets: ['flow'],
-        retainLines: true,
-        parserOpts: {strictMode: false}
-    }).code;
-}
-
-/* Trim hashbang to avoid the parser blowing up
-Example:
-    #!/usr/bin/env node
-Reference:
-    https://github.com/jquery/esprima/issues/1151
-*/
-function trimHashbangPrep(src) {
-    if (src.substring(0, 2) === '#!') {
-        var end = src.indexOf('\n');
-        var filler = '';
-        for (var i = 0; i < end; ++i) {
-           filler += ' ';
-        }
-        src = filler + src.substring(end, src.length);
-    }
-    return src;
-}
-
-/* Parse src and return an esprima ast, wrapper around singleSrcAST */
-function buildSingleAST(fname, src, stripFlow) {
-    if (stripFlow)
-        return singleSrcAST(fname, src, [trimHashbangPrep, stripFlowPrep]);
-    else
-        return singleSrcAST(fname, src, [trimHashbangPrep]);
-}
-
-/*
-Args:
-    preprocessor - A list of preprocessor
-                 - which takes a string (src code) as input
-                 - and returns a string (the preprocessed code)
-*/
-function singleSrcAST (fname, src, preprocessors) {
-    try {
-        if (preprocessors)
-            for (let prep of preprocessors)
-                src = prep(src);
-    }
-    catch(err) {
-        console.log('-------------------------------------------')
-        console.log('Warning: Preprocessing errored ' + fname)
-        console.log(err.stack);
-        console.log('-------------------------------------------')
-    }
+function buildSingleAST (fname, src) {
     let prog;
     try {
         prog = esprima.parseModule(src,
             {loc: true, range: true, tolerant: true, jsx: true});
     }
     catch(err) {
-        console.log('-------------------------------------------')
+        console.log('-------------------------------------------');
         console.log('Warning: Esprima failed to parse ' + fname);
         console.log(err.stack);
-        console.log('-------------------------------------------')
+        console.log('-------------------------------------------');
         return null;
     }
     prog.attr = {filename: fname, sloc: sloc(src, 'js').sloc };

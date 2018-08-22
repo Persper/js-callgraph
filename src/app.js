@@ -10,6 +10,7 @@ const Parser = require('./parsePatch').Parser;
 const detectChange = require('./detectChange').detectChange;
 const { trackFunctions } = require('./trackFunctions');
 const natives = require('./natives');
+const prep = require('./srcPreprocessor');
 
 const app = express();
 const jsonParser = bodyParser.json({limit: '1mb'});
@@ -128,14 +129,14 @@ function removeNodesInFile(fg, fname) {
 }
 
 function updateFlowGraph (fg, exportFuncs, importFuncs,
-    oldFname, oldSrc, newFname, newSrc, stripFlow) {
+    oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
         // semioptimistic.removeExports(oldFname, exportFuncs);
         // semioptimistic.removeImports(oldFname, importFuncs);
     }
     if (newFname) {
-        const ast = astutil.buildSingleAST(newFname, newSrc, stripFlow);
+        const ast = astutil.buildSingleAST(newFname, newSrc);
         if (ast !== null) {
           bindings.addBindings(ast);
           // @Alex
@@ -191,21 +192,21 @@ This function does two things:
 The mapping is empty if no function's colon format ID gets changed
 or either of oldFname and newFname is null.
 */
-function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch, stripFlow) {
+function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
     let stats = { 'idToLines': {}, 'idMap': {} };
     let forwardStats = null, bckwardStats = null;
     let forwardFuncs = null, bckwardFuncs = null;
     let forwardAST = null, bckwardAST = null;
 
     if (oldFname) {
-        forwardAST = astutil.buildSingleAST(oldFname, oldSrc, stripFlow);
+        forwardAST = astutil.buildSingleAST(oldFname, oldSrc);
         if (forwardAST !== null) {
           forwardFuncs = astutil.getFunctions(forwardAST);
           forwardStats = detectChange(parser.parse(patch), forwardFuncs);
         }
     }
     if (newFname) {
-        bckwardAST = astutil.buildSingleAST(newFname, newSrc, stripFlow);
+        bckwardAST = astutil.buildSingleAST(newFname, newSrc);
         if (bckwardAST !== null) {
           bckwardFuncs = astutil.getFunctions(bckwardAST);
           bckwardStats = detectChange(parser.invParse(patch), bckwardFuncs);
@@ -236,43 +237,70 @@ app.get('/callgraph', function (req, res) {
 app.post('/update', jsonParser, function (req, res) {
     if (!req.body)
         return res.sendStatus(400);
-    // console.log(req.body)
-    const oldFname = req.body.oldFname,
-          oldSrc = req.body.oldSrc,
-          newFname = req.body.newFname,
-          newSrc = req.body.newSrc,
-          patch = req.body.patch,
-          stripFlow = req.body.stripFlow;
 
-    const stats = getChangeStats(
-        oldFname, oldSrc, newFname, newSrc, patch, stripFlow);
-    updateTotalEdits(gcg.totalEdits, stats);
-    /* for debug
-    for (let cf in gcg.totalEdits) {
-        if (!(gcg.totalEdits[cf] > 0))
-            debugger;
+    let oldSrc = req.body.oldSrc,
+        newSrc = req.body.newSrc;
+    const oldFname = req.body.oldFname,
+          newFname = req.body.newFname,
+          patch = req.body.patch,
+          config = req.body.config;
+
+    // Apply preprocessors to src code
+    const preprocessors = config.preprocessors || [];
+    let prepFailed = false;
+    if (oldFname) {
+        oldSrc = prep.applyPreps(oldSrc, oldFname, preprocessors);
+        if (oldSrc === null)
+            prepFailed = true;
     }
-    */
-    updateFlowGraph(
-        gcg.fg, gcg.exportFuncs, gcg.importFuncs,
-        oldFname, oldSrc, newFname, newSrc, stripFlow);
-    res.json(stats);
+    if (newFname) {
+        newSrc = prep.applyPreps(newSrc, newFname, preprocessors);
+        if (newSrc === null)
+            prepFailed = true;
+    }
+
+    if (prepFailed)
+        res.json({ 'idToLines': {}, 'idMap': {} });
+    else {
+        const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch);
+        updateTotalEdits(gcg.totalEdits, stats);
+        updateFlowGraph(gcg.fg, gcg.exportFuncs, gcg.importFuncs,
+            oldFname, oldSrc, newFname, newSrc);
+        res.json(stats);
+    }
 });
 
 app.get('/stats', jsonParser, function (req, res) {
     if (!req.body)
         return res.sendStatus(400);
-    // console.log(req.body);
-    const oldFname = req.body.oldFname,
-          oldSrc = req.body.oldSrc,
-          newFname = req.body.newFname,
-          newSrc = req.body.newSrc,
-          patch = req.body.patch,
-          stripFlow = req.body.stripFlow;
 
-    const stats = getChangeStats(
-        oldFname, oldSrc, newFname, newSrc, patch, stripFlow);
-    res.json(stats);
+    let oldSrc = req.body.oldSrc,
+        newSrc = req.body.newSrc;
+    const oldFname = req.body.oldFname,
+          newFname = req.body.newFname,
+          patch = req.body.patch,
+          config = req.body.config;
+
+    // Apply preprocessors to src code
+    const preprocessors = config.preprocessors || [];
+    let prepFailed = false;
+    if (oldFname) {
+        oldSrc = prep.applyPreps(oldSrc, oldFname, preprocessors);
+        if (oldSrc === null)
+            prepFailed = true;
+    }
+    if (newFname) {
+        newSrc = prep.applyPreps(newSrc, newFname, preprocessors);
+        if (newSrc === null)
+            prepFailed = true;
+    }
+
+    if (prepFailed)
+        res.json({ 'idToLines': {}, 'idMap': {} });
+    else {
+        const stats = getChangeStats(oldFname, oldSrc, newFname, newSrc, patch);
+        res.json(stats);
+    }
 });
 
 app.post('/reset', function (req, res) {
