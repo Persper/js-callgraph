@@ -221,10 +221,7 @@ function getRequiredFile(curr_filename, nd) {
     if (argument === undefined) {
         return
     }
-    // Question and potential TODO
-    // What would happen if argument is not "./define-module"?
-    let required_file = argument.slice(2);
-    required_file = path.resolve(curr_filename, '..', required_file);
+    required_file = path.resolve(curr_filename, '..', argument);
     return required_file + '.js';
 }
 
