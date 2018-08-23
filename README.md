@@ -12,6 +12,12 @@ node src/main.js -h # for a list of command line arguments
 
 # Running on simple input scripts
 node src/main.js --cg input-scripts/simple-scripts/functioncall-arithmetic.js
+
+# Running on a whole directory
+node src/main.js --cg input-scripts/fullcalendar/
+
+# Running on mixed input
+node src/main.js --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
 ```
 
 ## Running Tests
