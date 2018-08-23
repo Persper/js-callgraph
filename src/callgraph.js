@@ -27,6 +27,7 @@ define(function (require, exports) {
             return nd.type !== 'UnknownVertex';
         });
 
+        /* fn is a flow graph node of type 'FuncVertex' */
         function processFuncVertex(fn) {
             var r = reach.getReachable(fn);
             r.forEach(function (nd) {
@@ -45,7 +46,7 @@ define(function (require, exports) {
 
         flow_graph.iterNodes(function (nd) {
             if (nd.type === 'FuncVertex'){
-                processFuncVertex(flowgraph.funcVertex(nd.func));
+                processFuncVertex(nd);
             }
         });
 
