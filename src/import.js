@@ -52,7 +52,7 @@ function addSrcToFile(impFuncs, fname, srcFname) {
 }
 
 /* Remove fname's entry in impFuncs */
-function rmFileFromImports(fname, impFuncs) {
+function rmFileFromImports(impFuncs, fname) {
     delete impFuncs[fname];
 }
 
@@ -197,12 +197,28 @@ function connectEntireImport(expFuncs, fg, srcFname) {
         );
 }
 
+/* Return the relative import path to the project root directory
+
+Args:
+       curPath - A string, path to the current file
+    importPath - A string, from source property of 'ImportDeclaration' node
+
+Returns:
+    A string, the relative import path to the project root directory
+*/
+function getRelativePath(curPath, importPath) {
+    let relativePath = path.join(curPath, '..', importPath);
+    return relativePath + '.js';
+}
+
+
 /*
 Args:
-    curr_filename - full path of the file calling require
-               nd - ast node representing call to require
+           ast - a ProgramCollection
+      impFuncs - A dictionary storing import info with file names being keys
 
-Return value: full path of file being required
+Returns:
+    Updated impFuncs
 
 Relevant docs:
 
@@ -216,41 +232,6 @@ Relevant docs:
 
     type ArgumentListElement = Expression | SpreadElement;
 */
-function getRequiredFile(curr_filename, nd) {
-    let argument = nd.arguments[0].value;
-    if (argument === undefined) {
-        return
-    }
-    let required_file = path.resolve(curr_filename, '..', argument);
-    return required_file + '.js';
-}
-
-/*
-Args:
-    curr_filename - path to the current file
-               nd - An ast node of "Literal" type
-                  - (from source property of ImportDeclaration node)
-
-Returns:
-    A string, full path of the file being imported
-
-Todo:
-    Add more test cases for path resolution
-
-*/
-function getFullImportPath(curPath, importPath) {
-    let fullImportPath = path.resolve(curPath, '..', importPath);
-    return fullImportPath + '.js';
-}
-
-
-/*
-Args:
-           ast - a ProgramCollection
-      impFuncs - A dictionary storing import info with file names being keys
-
-Returns: updated impFuncs
-*/
 function collectImports(ast, impFuncs) {
     for (var i = 0; i < ast.programs.length; i++) {
         let fname = ast.programs[i].attr.filename;
@@ -261,14 +242,15 @@ function collectImports(ast, impFuncs) {
                 let init = nd.init;
 
                 if (init && astutil.isCallTo(init, 'require')) {
-                    let required_file = getRequiredFile(fname, init);
-                    addDefaultImport(impFuncs, fname, required_file, nd.id);
+                    let requirePath = init.arguments[0].value;
+                    let relativeRequirePath = getRelativePath(fname, requirePath);
+                    addDefaultImport(impFuncs, fname, relativeRequirePath, nd.id);
                 }
             }
 
             // import
             if (nd.type === 'ImportDeclaration') {
-                let fullImportPath = getFullImportPath(fname, nd.source.value);
+                let fullImportPath = getRelativePath(fname, nd.source.value);
 
                 for (var i = 0; i < nd.specifiers.length; i++) {
                     let specifier = nd.specifiers[i];
@@ -328,4 +310,4 @@ function connectImports(fg, impFuncs, expFuncs) {
 module.exports.collectImports = collectImports;
 module.exports.connectImports = connectImports;
 module.exports.rmFileFromImports = rmFileFromImports;
-module.exports.getFullImportPath = getFullImportPath;
+module.exports.getRelativePath = getRelativePath;

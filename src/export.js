@@ -9,7 +9,6 @@
  *******************************************************************************/
 
 const astutil = require('./astutil');
-const path = require('path');
 const imp = require('./import');
 
 /*
@@ -153,7 +152,6 @@ Returns: updated expFuncs
 function collectExports(ast, expFuncs) {
     for (let i = 0; i < ast.programs.length; i++) {
         let fname = ast.programs[i].attr.filename;
-        fname  = path.resolve(fname);
 
         astutil.visit(ast.programs[i], function (nd) {
             /* CommonJS
@@ -183,8 +181,8 @@ function collectExports(ast, expFuncs) {
 
             if (nd.type === 'ExportNamedDeclaration') {
                 if (nd.source) {
-                    let fullImportPath = imp.getFullImportPath(fname, nd.source.value);
-                    addRedirectExport(expFuncs, fname, fullImportPath);
+                    let relativeImportPath = imp.getRelativePath(fname, nd.source.value);
+                    addRedirectExport(expFuncs, fname, relativeImportPath);
                 }
                 else if (nd.declaration) {
                     if (nd.declaration.type === 'FunctionDeclaration')

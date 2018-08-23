@@ -135,14 +135,13 @@ function updateFlowGraph (fg, exportFuncs, importFuncs,
     oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
-        exp.rmFileFromExports(oldFname, exportFuncs);
-        imp.rmFileFromImports(oldFname, importFuncs);
+        exp.rmFileFromExports(exportFuncs, oldFname);
+        imp.rmFileFromImports(importFuncs, oldFname);
     }
     if (newFname) {
         const ast = astutil.buildSingleAST(newFname, newSrc);
         if (ast !== null) {
           bindings.addBindings(ast);
-          // @Alex
           exportFuncs = exp.collectExports(ast, exportFuncs);
           importFuncs = imp.collectImports(ast, importFuncs);
           imp.connectImports(fg, exportFuncs, importFuncs);
