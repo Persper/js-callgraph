@@ -15,7 +15,10 @@ var bindings = require('./bindings'),
     diagnostics = require('./diagnostics'),
     callbackCounter = require('./callbackCounter'),
     requireJsGraph = require('./requireJsGraph'),
-    ArgumentParser = require('argparse').ArgumentParser;
+    ArgumentParser = require('argparse').ArgumentParser,
+    path = require('path'),
+    fs = require('fs'),
+    utils = require('./utils');
 
 var argParser = new ArgumentParser({
     addHelp: true,
@@ -59,9 +62,32 @@ argParser.addArgument(
     }
 );
 
-var r = argParser.parseKnownArgs();
-var args = r[0],
-    files = r[1];
+const r = argParser.parseKnownArgs();
+const args = r[0];
+const inputList = r[1];
+
+let filelist = [];
+
+inputList.forEach(function (file) {
+    file = path.resolve(file);
+    if (!fs.existsSync(file)) {
+        console.warn('The path "' + file + '" does not exists.');
+    }
+    else if (fs.statSync(file).isDirectory()) {
+        filelist = utils.collectFiles(file, filelist);
+    }
+    else if (file.endsWith(".js")) {
+        filelist.push(file);
+    }
+});
+
+let files = Array.from(new Set(filelist)); // remove the duplicates
+
+if (files.length === 0) {
+    console.warn("Input file list is empty!");
+    argParser.printHelp();
+    process.exit(-1);
+}
 
 args.strategy = args.strategy || 'ONESHOT';
 if (!args.strategy.match(/^(NONE|ONESHOT|DEMAND|FULL)$/)) {
