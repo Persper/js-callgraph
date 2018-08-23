@@ -273,8 +273,7 @@ define(function (require, exports) {
     function funcVertex(fn) {
         if (fn.type !== 'FunctionDeclaration' &&
             fn.type !== 'FunctionExpression'  &&
-            fn.type !== 'ArrowFunctionExpression' &&
-            fn.type !== 'ClassDeclaration')
+            fn.type !== 'ArrowFunctionExpression')
             throw new Error("invalid function vertex");
         return fn.attr.func_vertex
             || (fn.attr.func_vertex = {
@@ -290,8 +289,7 @@ define(function (require, exports) {
     function parmVertex(fn, i) {
       if (fn.type !== 'FunctionDeclaration' &&
           fn.type !== 'FunctionExpression'  &&
-          fn.type !== 'ArrowFunctionExpression' &&
-          fn.type !== 'ClassDeclaration')
+          fn.type !== 'ArrowFunctionExpression')
             throw new Error("invalid function vertex");
         var vertex;
         if (i === 0) {
