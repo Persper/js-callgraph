@@ -62,13 +62,20 @@ function pp(v) {
     }
 }
 
+/* Return the colon format id of funcNd
+
+Args:
+    funcNd - An ast node of type 'FunctionDeclaration' || 'FunctionExpression' || 'ArrowFunctionExpression'
+
+Example outputs:
+    src/app.js:colonformat:73:79
+    src/astutils.js:anon:217:222
+*/
 function colonFormat(funcNd){
-    // funcNd is an AST node
-    // example output: a.js:funcA:1:5
     return funcNd.attr.enclosingFile + ':' +
-        astutil.funcname(funcNd) + ':' +
-        funcNd.loc.start.line + ':' +
-        funcNd.loc.end.line;
+           astutil.funcname(funcNd) + ':' +
+           funcNd.loc.start.line + ':' +
+           funcNd.loc.end.line;
 }
 
 /* Convert call graph to node link format that networkx can read */
