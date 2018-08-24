@@ -394,6 +394,21 @@ function getReturnValues(fn) {
     return lst;
 }
 
+/*
+Args:
+    nd - An ast node
+
+Returns:
+    A boolean, true if nd is a function declaration
+    or function expression or arrow function expression,
+    false otherwise.
+*/
+function isFunction(nd) {
+   return nd.type === 'FunctionDeclaration' ||
+          nd.type === 'FunctionExpression' ||
+          nd.type === 'ArrowFunctionExpression'
+}
+
 module.exports.visit = visit;
 module.exports.visitWithState = visitWithState;
 module.exports.init = init;
@@ -407,3 +422,4 @@ module.exports.isAnon = isAnon;
 module.exports.isModuleExports = isModuleExports;
 module.exports.isCallTo = isCallTo;
 module.exports.getReturnValues = getReturnValues;
+module.exports.isFunction= isFunction;

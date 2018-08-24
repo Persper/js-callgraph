@@ -271,9 +271,7 @@ define(function (require, exports) {
 
     // function vertex
     function funcVertex(fn) {
-        if (fn.type !== 'FunctionDeclaration' &&
-            fn.type !== 'FunctionExpression'  &&
-            fn.type !== 'ArrowFunctionExpression')
+        if (!astutil.isFunction(fn))
             throw new Error("invalid function vertex");
         return fn.attr.func_vertex
             || (fn.attr.func_vertex = {
@@ -287,9 +285,7 @@ define(function (require, exports) {
 
     // parameter vertex
     function parmVertex(fn, i) {
-      if (fn.type !== 'FunctionDeclaration' &&
-          fn.type !== 'FunctionExpression'  &&
-          fn.type !== 'ArrowFunctionExpression')
+        if (!astutil.isFunction(fn))
             throw new Error("invalid function vertex");
         var vertex;
         if (i === 0) {
@@ -304,9 +300,7 @@ define(function (require, exports) {
 
     // vertex representing function return value
     function retVertex(fn) {
-      if (fn.type !== 'FunctionDeclaration' &&
-          fn.type !== 'FunctionExpression'  &&
-          fn.type !== 'ArrowFunctionExpression')
+        if (!astutil.isFunction(fn))
             throw new Error("invalid return vertex");
 
         return fn.attr.ret_vertex

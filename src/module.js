@@ -397,8 +397,11 @@ function collectExportsImports(ast, expFuncs, impFuncs) {
             */
             if (astutil.isCallTo(nd, 'define')) {
                 // the last argument given to define is a function
-                let retVals = astutil.getReturnValues(nd.arguments[nd.arguments.length - 1]);
+                const lastArg = nd.arguments[nd.arguments.length - 1];
+                if (!astutil.isFunction(lastArg))
+                    return;
 
+                const retVals = astutil.getReturnValues(lastArg);
                 for (let retVal of retVals)
                     addDefaultExport(expFuncs, fname, retVal);
             }
