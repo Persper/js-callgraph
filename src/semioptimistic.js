@@ -21,8 +21,7 @@ define(function (require, exports) {
         natives = require('./natives'),
         flowgraph = require('./flowgraph'),
         callgraph = require('./callgraph'),
-        imp = require('./import'),
-        exp = require('./export');
+        mod = require('./module');
 
     function addInterproceduralFlowEdges(ast, fg) {
         fg = fg || new graph.Graph();
@@ -101,11 +100,8 @@ define(function (require, exports) {
 
         let expFuncs = {},
             impFuncs = {};
-
-        expFuncs = exp.collectExports(ast, expFuncs);
-        impFuncs = imp.collectImports(ast, impFuncs);
-
-        imp.connectImports(fg, impFuncs, expFuncs);
+        mod.collectExportsImports(ast, expFuncs, impFuncs);
+        mod.connectImports(fg, expFuncs, impFuncs);
 
         addInterproceduralFlowEdges(ast, fg);
 
