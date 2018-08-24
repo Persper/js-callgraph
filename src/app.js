@@ -11,9 +11,7 @@ const detectChange = require('./detectChange').detectChange;
 const { trackFunctions } = require('./trackFunctions');
 const natives = require('./natives');
 const prep = require('./srcPreprocessor');
-
-const imp = require('./import');
-const exp = require('./export');
+const mod = require('./module');
 
 const app = express();
 const jsonParser = bodyParser.json({limit: '1mb'});
@@ -142,16 +140,15 @@ function updateFlowGraph (fg, exportFuncs, importFuncs,
     oldFname, oldSrc, newFname, newSrc) {
     if (oldFname) {
         removeNodesInFile(fg, oldFname);
-        exp.rmFileFromExports(exportFuncs, oldFname);
-        imp.rmFileFromImports(importFuncs, oldFname);
+        mod.rmFileFromExports(exportFuncs, oldFname);
+        mod.rmFileFromImports(importFuncs, oldFname);
     }
     if (newFname) {
         const ast = astutil.buildSingleAST(newFname, newSrc);
         if (ast !== null) {
           bindings.addBindings(ast);
-          exportFuncs = exp.collectExports(ast, exportFuncs);
-          importFuncs = imp.collectImports(ast, importFuncs);
-          imp.connectImports(fg, exportFuncs, importFuncs);
+          mod.collectExportsImports(ast, exportFuncs, importFuncs);
+          mod.connectImports(fg, exportFuncs, importFuncs);
 
           flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
           semioptimistic.addInterproceduralFlowEdges(ast, fg);
