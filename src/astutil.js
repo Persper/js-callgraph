@@ -272,6 +272,11 @@ function getFunctions(root) {
         });
     }
 
+    // Add 'cf' property
+    funcs.forEach(funcObj => {
+        funcObj['cf'] = cf(funcObj);
+    });
+
     // Create a fake function object for global context
     console.assert(root.programs.length === 1);
     let prog = root.programs[0];
@@ -280,13 +285,10 @@ function getFunctions(root) {
         'file': prog.attr.filename,
         'range': [prog.loc.start['line'], prog.loc.end['line']],
         'code': null,
-        'encFuncName': null
+        'encFuncName': null,
+        'cf': prog.attr.filename + ':global'
     });
 
-    // Add 'cf' property for all function objects in funcs
-    funcs.forEach(funcObj => {
-        funcObj['cf'] = cf(funcObj);
-    });
     return funcs;
 }
 
