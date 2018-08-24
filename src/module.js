@@ -413,7 +413,7 @@ function collectExportsImports(ast, expFuncs, impFuncs) {
 
             if (nd.type === 'ExportNamedDeclaration') {
                 if (nd.source) {
-                    let relativeImportPath = getRelativePath(fname, nd.source.value);
+                    const relativeImportPath = getRelativePath(fname, nd.source.value);
                     addRedirectExport(expFuncs, fname, relativeImportPath);
                 }
                 else if (nd.declaration) {
@@ -437,27 +437,29 @@ function collectExportsImports(ast, expFuncs, impFuncs) {
 
                 if (init && astutil.isCallTo(init, 'require')) {
                     let requirePath = init.arguments[0].value;
-                    let relativeRequirePath = getRelativePath(fname, requirePath);
-                    addDefaultImport(impFuncs, fname, relativeRequirePath, nd.id);
+                    if (requirePath && typeof requirePath === 'string') {
+                        const relativeRequirePath = getRelativePath(fname, requirePath);
+                        addDefaultImport(impFuncs, fname, relativeRequirePath, nd.id);
+                    }
                 }
             }
 
             // import
             if (nd.type === 'ImportDeclaration') {
-                let fullImportPath = getRelativePath(fname, nd.source.value);
+                const relativeImportPath = getRelativePath(fname, nd.source.value);
 
                 for (var i = 0; i < nd.specifiers.length; i++) {
-                    let specifier = nd.specifiers[i];
+                    const specifier = nd.specifiers[i];
                     switch (specifier.type) {
                         case 'ImportSpecifier':
-                            addNamedImport(impFuncs, fname, fullImportPath,
+                            addNamedImport(impFuncs, fname, relativeImportPath,
                                            specifier.local, specifier.imported.name);
                             break;
                         case 'ImportDefaultSpecifier':
-                            addDefaultImport(impFuncs, fname, fullImportPath, specifier.local);
+                            addDefaultImport(impFuncs, fname, relativeImportPath, specifier.local);
                             break;
                         case 'ImportNamespaceSpecifier':
-                            addEntireImport(impFuncs, fname, fullImportPath);
+                            addEntireImport(impFuncs, fname, relativeImportPath);
                             break;
                     }
                 }
