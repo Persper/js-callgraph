@@ -168,8 +168,12 @@ function addNamedExport(expFuncs, fname, local, exportedName) {
     if (!(fname in expFuncs))
         addFileToExports(expFuncs, fname);
 
-    // Re-assignment warning
-    if (exportedName in expFuncs[fname]['named'])
+    /* Re-assignment warning
+    Note that if (exportedName in expFuncs[fname]['named']) doesn't work here,
+    because exportedName can be properties of named's prototype,
+    for example, 'toString'.
+    */
+    if (expFuncs[fname]['named'].hasOwnProperty(exportedName))
         console.log('WARNING: Re-assignment in addNamedExport.');
 
     expFuncs[fname]['named'][exportedName] = local;
@@ -236,7 +240,12 @@ function addNamedImport(impFuncs, fname, srcFname, local, importedName) {
 
     let named = impFuncs[fname][srcFname]['named'];
 
-    if (importedName in named)
+    /*
+    Note that 'if (importedName in named)' doesn't work here,
+    because importedName can be properties of named's prototype,
+    for example, 'toString'.
+    */
+    if (named.hasOwnProperty(importedName))
         named[importedName].push(local);
     else
         named[importedName] = [local];
@@ -306,7 +315,12 @@ function connectNamedImport(expFuncs, fg, srcFname, local, importedName) {
 
     let named = expFuncs[srcFname]['named'];
 
-    if (!(importedName in named))
+    /*
+    Note that 'if (importedName in named)' doesn't work here,
+    because importedName can be properties of named's prototype,
+    for example, 'toString'.
+    */
+    if (!named.hasOwnProperty(importedName))
         return;
 
     fg.addEdge(flowgraph.vertexFor(named[importedName]), flowgraph.vertexFor(local));
