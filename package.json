@@ -2,7 +2,7 @@
   "name": "javascript-call-graph",
   "version": "1.0.0",
   "description": "This project implements a field-based call graph construction algorithm for JavaScript as described in",
-  "main": "main.js",
+  "main": "javascript-call-graph.js",
   "dependencies": {
     "amdefine": "^1.0.1",
     "argparse": "^1.0.10",
@@ -29,12 +29,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alexstennet/javascript-call-graph.git"
+    "url": "git+https://github.com/Persper/javascript-call-graph.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/alexstennet/javascript-call-graph/issues"
+    "url": "https://github.com/Persper/javascript-call-graph/issues"
   },
-  "homepage": "https://github.com/alexstennet/javascript-call-graph#readme"
+  "homepage": "https://github.com/Persper/javascript-call-graph#readme"
 }

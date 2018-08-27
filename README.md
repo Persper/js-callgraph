@@ -8,16 +8,16 @@ This project implements a field-based call graph construction algorithm for Java
 ## Get Started
 ```
 npm install
-node src/main.js -h # for a list of command line arguments
+node javascript-call-graph -h # for a list of command line arguments
 
 # Running on simple input scripts
-node src/main.js --cg input-scripts/simple-scripts/functioncall-arithmetic.js
+node javascript-call-graph --cg input-scripts/simple-scripts/functioncall-arithmetic.js
 
 # Running on a whole directory
-node src/main.js --cg input-scripts/fullcalendar/
+node javascript-call-graph --cg input-scripts/fullcalendar/
 
 # Running on mixed input
-node src/main.js --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
+node javascript-call-graph --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
 ```
 
 ## Running Tests
@@ -31,7 +31,7 @@ scripts/install-hooks
 ```
 ## Structure
 
-The call graph constructor can be run in two basic modes (selected using the `--strategy` flag to `main.js`), *pessimistic* and *optimistic*, which differ in how interprocedural flows are handled. In the basic pessimistic approach (strategy `NONE`), interprocedural flow is not tracked at all; a slight refinement is strategy `ONESHOT`, where interprocedural flow is tracked only for one-shot closures that are invoked immediatel. The optimistic approach (strategy `DEMAND`) performs interprocedural propagation along edges that may ultimately end at a call site (and are thus interesting for call graph construction). Full interprocedural propagation (strategy `FULL`) is not implemented yet.
+The call graph constructor can be run in two basic modes (selected using the `--strategy` flag to `javascript-call-graph`), *pessimistic* and *optimistic*, which differ in how interprocedural flows are handled. In the basic pessimistic approach (strategy `NONE`), interprocedural flow is not tracked at all; a slight refinement is strategy `ONESHOT`, where interprocedural flow is tracked only for one-shot closures that are invoked immediatel. The optimistic approach (strategy `DEMAND`) performs interprocedural propagation along edges that may ultimately end at a call site (and are thus interesting for call graph construction). Full interprocedural propagation (strategy `FULL`) is not implemented yet.
 
 All strategies use the same intraprocedural flow graph, in which properties are only identified by name; thus, like-named properties of different objects are conflated; this can lead to imprecise call graphs. Dynamic property reads and writes are ignored, as are reflective calls using `call` and `apply`; thus, the call graphs are intrinsically incomplete.
 
