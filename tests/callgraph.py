@@ -1,6 +1,6 @@
 import subprocess
 
-node_program = './src/main.js'
+node_program = 'jcg'
 
 def callgraph(files):
     """Run the primary callgraph generator and return its standard output."""

@@ -14,17 +14,22 @@ This repo builds upon [Max Schaefer](https://github.com/xiemaisi)'s original [ac
 ## Get Started
 ```
 npm install
-node src/main.js -h # for a list of command line arguments
+node jcg -h # for a list of command line arguments
 
 # Running on simple input scripts
-node src/main.js --cg input-scripts/simple-scripts/functioncall-arithmetic.js
+node jcg --cg input-scripts/simple-scripts/functioncall-arithmetic.js
 
 # Running on a whole directory
-node src/main.js --cg input-scripts/fullcalendar/
+node jcg --cg input-scripts/fullcalendar/
 
 # Running on mixed input
-node src/main.js --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
+node jcg --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
+
+# Running with output file
+node jcg --cg input-scripts/simple-scripts/functioncall-arithmetic.js --output filename.json
 ```
+
+For an example of the output json, please see [here](#unified-json-format).
 
 ## Running Tests
 To run the testing framework run:
@@ -37,7 +42,7 @@ scripts/install-hooks
 ```
 ## Structure
 
-The call graph constructor can be run in two basic modes (selected using the `--strategy` flag to `main.js`), *pessimistic* and *optimistic*, which differ in how interprocedural flows are handled. In the basic pessimistic approach (strategy `NONE`), interprocedural flow is not tracked at all; a slight refinement is strategy `ONESHOT`, where interprocedural flow is tracked only for one-shot closures that are invoked immediatel. The optimistic approach (strategy `DEMAND`) performs interprocedural propagation along edges that may ultimately end at a call site (and are thus interesting for call graph construction). Full interprocedural propagation (strategy `FULL`) is not implemented yet.
+The call graph constructor can be run in two basic modes (selected using the `--strategy` flag to `javascript-call-graph`), *pessimistic* and *optimistic*, which differ in how interprocedural flows are handled. In the basic pessimistic approach (strategy `NONE`), interprocedural flow is not tracked at all; a slight refinement is strategy `ONESHOT`, where interprocedural flow is tracked only for one-shot closures that are invoked immediatel. The optimistic approach (strategy `DEMAND`) performs interprocedural propagation along edges that may ultimately end at a call site (and are thus interesting for call graph construction). Full interprocedural propagation (strategy `FULL`) is not implemented yet.
 
 All strategies use the same intraprocedural flow graph, in which properties are only identified by name; thus, like-named properties of different objects are conflated; this can lead to imprecise call graphs. Dynamic property reads and writes are ignored, as are reflective calls using `call` and `apply`; thus, the call graphs are intrinsically incomplete.
 
@@ -50,6 +55,49 @@ The remaining modules define key data structures, in several variants.
 Module `graph.js` implements graphs using adjacency sets, using sets of numbers as implemented by `numset.js`. The latter includes either `olist.js` to implement sets as ordered lists of numbers, or `bitset.js` to use bitsets (with disappointing performance, so we use ordered lists by default).
 
 Modules `dftc.js`, `heuristictc.js` and `nuutila.js` implement several transitive closure algorithms used by `callgraph.js`. By default, we use `dftc.js` which uses a simple, depth first-search based algorithm. `heuristictc.js` does something even simpler, which is very fast but unsound. Finally, `nuutila.js` implements Nuutila's algorithm for transitive closure, which for our graphs is usually slower than the depth first-based ones.
+
+## Unified JSON Format
+
+```
+[ # The calls are represented with a list object, which elements contains the bindings of nodes.
+  {
+    "source": { # The source object represent the start point of call
+      "label": "global",
+      "file": "...\\input-scripts\\simple-scripts\\functioncall-arithmetic.js",
+      "start": { # The start point of source with row-column based pointers.
+        "row": 7,
+        "column": 4
+      },
+      "end": { # The end point of source with row-column based pointers.
+        "row": 7,
+        "column": 8
+      },
+      "range": { # The source node range with index-based pointers.
+        "start": 59,
+        "end": 63
+      }
+    },
+    "target": { # The target object represent the end point of call
+      "label": "f",
+      "file": "...\\input-scripts\\simple-scripts\\functioncall-arithmetic.js",
+      "start": { # The start point of target with row-column based pointers.
+        "row": 3,
+        "column": 0
+      },
+      "end": { # The end point of target with row-column based pointers.
+        "row": 5,
+        "column": 1
+      },
+      "range": { # The target node range with index-based pointers.
+        "start": 14,
+        "end": 51
+      }
+    }
+  }
+]
+```
+
+
 
 # How to contribute
 
