@@ -4,6 +4,12 @@ This project implements a field-based call graph construction algorithm for Java
 
 > A. Feldthaus, M. Schäfer, M. Sridharan, J. Dolby, F. Tip. Efficient Construction of Approximate Call Graphs for JavaScript IDE Services. In *ICSE*, 2013.
 
+This repo builds upon [Max Schaefer](https://github.com/xiemaisi)'s original [acg.js](https://github.com/xiemaisi/acg.js) and adds 
+
+* ES6 Support
+* Module resolution
+* Better scoping
+* More tests
 
 ## Get Started
 ```
