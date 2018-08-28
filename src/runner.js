@@ -96,7 +96,6 @@ define(function (require, exports) {
 
         args.strategy = args.strategy || 'ONESHOT';
         if (!args.strategy.match(/^(NONE|ONESHOT|DEMAND|FULL)$/)) {
-            argParser.printHelp();
             process.exit(-1);
         }
         if (args.strategy === 'FULL') {
