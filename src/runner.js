@@ -15,13 +15,12 @@ define(function (require, exports) {
         astutil = require('./astutil'),
         pessimistic = require('./pessimistic'),
         semioptimistic = require('./semioptimistic'),
-        diagnostics = require('./diagnostics'),
         callbackCounter = require('./callbackCounter'),
         requireJsGraph = require('./requireJsGraph'),
-        ArgumentParser = require('argparse').ArgumentParser,
         path = require('path'),
         fs = require('fs'),
-        utils = require('./utils');
+        utils = require('./utils'),
+        JSONStream = require('JSONStream');
     this.args = null;
     this.files = null;
     this.consoleOutput = null;
@@ -137,6 +136,27 @@ define(function (require, exports) {
                 if (consoleOutput)
                     console.log(pp(call) + " -> " + pp(fn));
             });
+            if(this.args.output !== null){
+                let filename = this.args.output[0];
+                if(!filename.endsWith(".json")){
+                    filename += ".json";
+                }
+                fs.writeFile(filename, JSON.stringify(result, null, 2), function (err) {
+                    if (err) {
+                        /*
+                        When happened something wrong (usually out of memory when we want print
+                        the result into a file), then we try to file with JSONStream.
+                         */
+                        let transformStream = JSONStream.stringify();
+                        let outputStream = fs.createWriteStream(filename);
+                        transformStream.pipe(outputStream);
+                        result.forEach(transformStream.write);
+                        transformStream.end();
+                    }
+                });
+
+
+            }
             return result;
         }
     };
@@ -157,7 +177,6 @@ define(function (require, exports) {
         this.files = Array.from(new Set(filelist));
         if (this.files.length === 0) {
             console.warn("Input file list is empty!");
-            argParser.printHelp();
             process.exit(-1);
         }
     };

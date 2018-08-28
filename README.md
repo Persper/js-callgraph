@@ -8,16 +8,59 @@ This project implements a field-based call graph construction algorithm for Java
 ## Get Started
 ```
 npm install
-node javascript-call-graph -h # for a list of command line arguments
+node jcg -h # for a list of command line arguments
 
 # Running on simple input scripts
-node javascript-call-graph --cg input-scripts/simple-scripts/functioncall-arithmetic.js
+node jcg --cg input-scripts/simple-scripts/functioncall-arithmetic.js
 
 # Running on a whole directory
-node javascript-call-graph --cg input-scripts/fullcalendar/
+node jcg --cg input-scripts/fullcalendar/
 
 # Running on mixed input
-node javascript-call-graph --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
+node jcg --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
+
+# Running with output file
+node jcg --cg input-scripts/simple-scripts/functioncall-arithmetic.js --output filename.json
+```
+
+The output JSON format:
+```
+[ # The calls are represented with a list object, which elements contains the bindings of nodes.
+  {
+    "source": { # The source object represent the start point of call
+      "label": "global",
+      "file": "...\\input-scripts\\simple-scripts\\functioncall-arithmetic.js",
+      "start": { # The start point of source with row-column based pointers.
+        "row": 7,
+        "column": 4
+      },
+      "end": { # The end point of source with row-column based pointers.
+        "row": 7,
+        "column": 8
+      },
+      "range": { # The source node range with index-based pointers.
+        "start": 59,
+        "end": 63
+      }
+    },
+    "target": { # The target object represent the end point of call
+      "label": "f",
+      "file": "...\\input-scripts\\simple-scripts\\functioncall-arithmetic.js",
+      "start": { # The start point of target with row-column based pointers.
+        "row": 3,
+        "column": 0
+      },
+      "end": { # The end point of target with row-column based pointers.
+        "row": 5,
+        "column": 1
+      },
+      "range": { # The target node range with index-based pointers.
+        "start": 14,
+        "end": 51
+      }
+    }
+  }
+]
 ```
 
 ## Running Tests

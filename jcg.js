@@ -8,9 +8,9 @@
  * http://www.eclipse.org/legal/epl-2.0.
  *******************************************************************************/
 const JCG = require("./src/runner");
-var ArgumentParser = require('argparse').ArgumentParser;
+const ArgumentParser = require('argparse').ArgumentParser;
 
-var argParser = new ArgumentParser({
+let argParser = new ArgumentParser({
     addHelp: true,
     description: 'Call graph generator'
 });
@@ -60,12 +60,23 @@ argParser.addArgument(
     }
 );
 
-const r = argParser.parseKnownArgs();
+argParser.addArgument(
+    ['--output'],
+    {
+        nargs: 1,
+        help: 'The output file name, which contains the JSON of result. (extension: .json)'
+    }
+);
+
+let r = argParser.parseKnownArgs();
+r[0].json = r[0].json !== null;
 const args = r[0];
 const inputList = r[1];
-args.json = args.json !== null;
 
-JCG.args = args;
+JCG.setArgs(args);
 JCG.setFiles(inputList);
 JCG.setConsoleOutput(true);
-let result = JCG.build(true);
+/*
+* The build return with a JSON of result.
+ */
+JCG.build(true);
