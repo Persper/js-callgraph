@@ -27,9 +27,25 @@ node jcg --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalenda
 
 # Running with output file
 node jcg --cg input-scripts/simple-scripts/functioncall-arithmetic.js --output filename.json
+
+# Running on a whole directory with filtering
+node jcg --cg input-scripts/fullcalendar/ --filter filename.filter
 ```
 
 For an example of the output json, please see [here](#unified-json-format).
+For an example of filtering file, please see [here](#filtering-format).
+
+## Use as npm module
+
+```
+const JCG = require("./src/runner");
+# The list of arguments available on Arguments section.
+JCG.setArgs(); # optional.
+JCG.setFiles(['file.js', 'directory/']); # list of files or directories.
+JCG.setFilter(['-test[^\.]*.js', '+test576.js']); # optional, read more on "Filtering format" section.
+JCG.setConsoleOutput(true); # optional, the console output turnable off.
+JCG.build(); # Run the module, the value of return a valid JSON output. Read more on "Unified JSON Format".
+```
 
 ## Running Tests
 To run the testing framework run:
@@ -97,7 +113,40 @@ Modules `dftc.js`, `heuristictc.js` and `nuutila.js` implement several transitiv
 ]
 ```
 
+## Filtering format
 
+In the filter useable all valid regular expression. The list order influence the effective filtering.
+The first character of line represent the type of filtering.
+```
+# Comment line
+- Exclude
++ Include
+```
+
+```
+# Filter out all source files starting with "test":
+-test[^\.]*.js
+# But test576.js is needed:
++test576.js
+# Furthermore, files beginning with "test1742" are also needed:
++test1742[^\.]*.js
+# Finally, test1742_b.js is not needed:
+-test1742_b.js
+```
+
+## List of arguments
+
+```
+-h         : List of command line arguments
+--fg       : print flow graph
+--cg       : print call graph
+--time     : print timings
+--strategy : interprocedural propagation strategy; one of NONE, ONESHOT (default), DEMAND, and FULL (not yet implemented)
+--countCB  : Counts the number of callbacks.
+--reqJs    : Make a RequireJS dependency graph.
+--output   : The output file name, which contains the JSON of result. (extension: .json)
+--filter   : The filters contains file. The syntax of filtering readable in README.md
+```
 
 # How to contribute
 
