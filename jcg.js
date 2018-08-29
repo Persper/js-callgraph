@@ -9,6 +9,7 @@
  *******************************************************************************/
 const JCG = require("./src/runner");
 const ArgumentParser = require('argparse').ArgumentParser;
+const fs = require('fs');
 
 let argParser = new ArgumentParser({
     addHelp: true,
@@ -67,16 +68,48 @@ argParser.addArgument(
         help: 'The output file name, which contains the JSON of result. (extension: .json)'
     }
 );
+argParser.addArgument(
+    ['--filter'],
+    {
+        nargs: 1,
+        help: 'The filters contains file. The syntax of filtering readable in README.md'
+    }
+);
 
 let r = argParser.parseKnownArgs();
-r[0].json = r[0].json !== null;
 const args = r[0];
 const inputList = r[1];
 
 JCG.setArgs(args);
 JCG.setFiles(inputList);
+if (args.filter !== null) {
+    let filter = [];
+    let filterFile = args.filter[0];
+    if (!fs.existsSync(filterFile)) {
+        console.warn('The path of filter file "' + filterFile + '" does not exists.');
+    } else {
+        let content = fs.readFileSync(filterFile, 'utf8').split(/\r?\n/);
+        let lineNumber = 0;
+        content.forEach(function (line) {
+            line = line.trim();
+            lineNumber++;
+
+            if (line.trim().length <= 1)
+                return;
+
+            if (!line.startsWith("#")) {
+                if (line.startsWith("+") || line.startsWith("-")) {
+                    filter.push(line);
+                } else {
+                    console.warn("[" + filterFile + "] Line " + lineNumber + " contains a not valid filter: " + line);
+                }
+            }
+        });
+        JCG.setFilter(filter);
+    }
+}
 JCG.setConsoleOutput(true);
 /*
 * The build return with a JSON of result.
  */
-JCG.build(true);
+JCG.build();

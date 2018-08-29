@@ -25,6 +25,17 @@ define(function (require, exports) {
     this.files = null;
     this.consoleOutput = null;
 
+    Array.prototype.remove = function () {
+        var what, a = arguments, L = a.length, ax;
+        while (L && this.length) {
+            what = a[--L];
+            while ((ax = this.indexOf(what)) !== -1) {
+                this.splice(ax, 1);
+            }
+        }
+        return this;
+    };
+
     let addNode = function (edge, v) {
         if (v.type === 'CalleeVertex') {
             let nd = v.call;
@@ -94,6 +105,30 @@ define(function (require, exports) {
         let files = this.files;
         let consoleOutput = this.consoleOutput;
 
+        let filter = this.filter;
+
+        if (filter !== undefined && filter.length > 0) {
+            let filteredfiles = [];
+            files.forEach(function (file) {
+                filteredfiles.push(file);
+                filter.forEach(function (elem) {
+                    let trunk = elem.substr(1).trim();
+                    let expression = new RegExp(trunk, "gm");
+                    let result = expression.test(file);
+
+                    if (result && elem.startsWith('-')) {
+                        filteredfiles.remove(file);
+                    }
+
+                    if (result && elem.startsWith('+')) {
+                        filteredfiles.push(file);
+                    }
+
+                });
+            });
+            this.files = Array.from(new Set(filteredfiles));
+        }
+
         args.strategy = args.strategy || 'ONESHOT';
         if (!args.strategy.match(/^(NONE|ONESHOT|DEMAND|FULL)$/)) {
             process.exit(-1);
@@ -135,9 +170,9 @@ define(function (require, exports) {
                 if (consoleOutput)
                     console.log(pp(call) + " -> " + pp(fn));
             });
-            if(this.args.output !== null){
+            if (this.args.output !== null) {
                 let filename = this.args.output[0];
-                if(!filename.endsWith(".json")){
+                if (!filename.endsWith(".json")) {
                     filename += ".json";
                 }
                 fs.writeFile(filename, JSON.stringify(result, null, 2), function (err) {
@@ -154,11 +189,11 @@ define(function (require, exports) {
                     }
                 });
 
-
             }
             return result;
         }
     };
+
     exports.setFiles = function (inputList) {
         let filelist = [];
         inputList.forEach(function (file) {
@@ -179,12 +214,19 @@ define(function (require, exports) {
             process.exit(-1);
         }
     };
+
+    exports.setFilter = function (filter) {
+        this.filter = filter;
+    };
+
     exports.setArgs = function (args) {
         this.args = args;
     };
+
     exports.setConsoleOutput = function (value) {
         this.consoleOutput = value;
     };
+
     exports.build = build;
     return exports;
 });

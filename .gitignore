@@ -1,5 +1,5 @@
 node_modules
-
+.idea
 *.pickle
 
 # Byte-compiled / optimized / DLL files
