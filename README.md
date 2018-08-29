@@ -25,7 +25,7 @@ node jcg --cg input-scripts/fullcalendar/
 # Running on mixed input
 node jcg --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
 
-# Running with output file
+# Saving the result into a file
 node jcg --cg input-scripts/simple-scripts/functioncall-arithmetic.js --output filename.json
 
 # Running on a whole directory with filtering
@@ -33,18 +33,18 @@ node jcg --cg input-scripts/fullcalendar/ --filter filename.filter
 ```
 
 For an example of the output json, please see [here](#unified-json-format).
-For an example of filtering file, please see [here](#filtering-format).
+For an example of filtering file, please see [here](#filter-file-format).
 
-## Use as npm module
+## Use as a module from JavaScript
 
 ```
 const JCG = require("./src/runner");
 # The list of arguments available on Arguments section.
 JCG.setArgs(); # optional.
 JCG.setFiles(['file.js', 'directory/']); # list of files or directories.
-JCG.setFilter(['-test[^\.]*.js', '+test576.js']); # optional, read more on "Filtering format" section.
-JCG.setConsoleOutput(true); # optional, the console output turnable off.
-JCG.build(); # Run the module, the value of return a valid JSON output. Read more on "Unified JSON Format".
+JCG.setFilter(['-test[^\.]*.js', '+test576.js']); # optional, read more on "Filter file format" section.
+JCG.setConsoleOutput(true); # optional, the console output can be turned off.
+JCG.build(); # Run the module and returns the result as a JSON object. Read more on "Unified JSON Format".
 ```
 
 ## Running Tests
@@ -75,36 +75,36 @@ Modules `dftc.js`, `heuristictc.js` and `nuutila.js` implement several transitiv
 ## Unified JSON Format
 
 ```
-[ # The calls are represented with a list object, which elements contains the bindings of nodes.
+[ # The calls are represented with a list of objects. Each call is an object in this list.
   {
-    "source": { # The source object represent the start point of call
+    "source": { # The source object represents the start point of a call (the caller node)
       "label": "global",
       "file": "...\\input-scripts\\simple-scripts\\functioncall-arithmetic.js",
-      "start": { # The start point of source with row-column based pointers.
+      "start": { # The start point of the source with row-column based position.
         "row": 7,
         "column": 4
       },
-      "end": { # The end point of source with row-column based pointers.
+      "end": { # The end point of the source node with row-column based position.
         "row": 7,
         "column": 8
       },
-      "range": { # The source node range with index-based pointers.
+      "range": { # The position of the source node in index-based representation.
         "start": 59,
         "end": 63
       }
     },
-    "target": { # The target object represent the end point of call
+    "target": { # The target object represents the end point of a call (this node is called by the source)
       "label": "f",
       "file": "...\\input-scripts\\simple-scripts\\functioncall-arithmetic.js",
-      "start": { # The start point of target with row-column based pointers.
+      "start": { # The start point of the target node with row-column based position..
         "row": 3,
         "column": 0
       },
-      "end": { # The end point of target with row-column based pointers.
+      "end": { # The end point of the target node with row-column based position.
         "row": 5,
         "column": 1
       },
-      "range": { # The target node range with index-based pointers.
+      "range": { # The position of the target node in index-based representation.
         "start": 14,
         "end": 51
       }
@@ -113,11 +113,11 @@ Modules `dftc.js`, `heuristictc.js` and `nuutila.js` implement several transitiv
 ]
 ```
 
-## Filtering format
+## Filter file format
 
-In the filter usable all valid regular expression. The list order influence the effective filtering.
+Any valid regular expression can be specified in the filter file. The order of the including and excluding lines are important since they are processed sequentially.
 
-The first character of line represent the type of filtering:
+The first character of each line represents the type of the filtering:
 ```
 # Comment line
 - Exclude
@@ -147,8 +147,8 @@ An example for filtering:
 --strategy : interprocedural propagation strategy; one of NONE, ONESHOT (default), DEMAND, and FULL (not yet implemented)
 --countCB  : Counts the number of callbacks.
 --reqJs    : Make a RequireJS dependency graph.
---output   : The output file name, which contains the JSON of result. (extension: .json)
---filter   : The filters contains file. The syntax of filtering readable in README.md
+--output   : The output file name into which the result JSON should be saved. (extension: .json)
+--filter   : Path to the filter file.
 ```
 
 # How to contribute
