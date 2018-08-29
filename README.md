@@ -115,7 +115,8 @@ Modules `dftc.js`, `heuristictc.js` and `nuutila.js` implement several transitiv
 
 ## Filtering format
 
-In the filter useable all valid regular expression. The list order influence the effective filtering.
+In the filter usable all valid regular expression. The list order influence the effective filtering.
+
 The first character of line represent the type of filtering:
 ```
 # Comment line
