@@ -35,16 +35,16 @@ node jcg --cg input-scripts/fullcalendar/ --filter filename.filter
 For an example of the output json, please see [here](#unified-json-format).
 For an example of filtering file, please see [here](#filter-file-format).
 
-## Use as a module from JavaScript
+## Programming Interface
 
 ```
 const JCG = require("./src/runner");
-# The list of arguments available on Arguments section.
-JCG.setArgs(); # optional.
-JCG.setFiles(['file.js', 'directory/']); # list of files or directories.
-JCG.setFilter(['-test[^\.]*.js', '+test576.js']); # optional, read more on "Filter file format" section.
-JCG.setConsoleOutput(true); # optional, the console output can be turned off.
-JCG.build(); # Run the module and returns the result as a JSON object. Read more on "Unified JSON Format".
+args = { ... };
+JCG.setArgs(args);                                # Optional, specify a list of arguments
+JCG.setFiles(['file.js', 'directory/']);          # List of files or directories to analyze
+JCG.setFilter(['-test[^\.]*.js', '+test576.js']); # Optional, please see "Filter file format" section for details
+JCG.setConsoleOutput(true);                       # Optional, the console output can be turned off.
+JCG.build();                                      # build returns the call graph as a JSON object, please see "Unified JSON Format" section
 ```
 
 ## Running Tests
@@ -62,7 +62,7 @@ The call graph constructor can be run in two basic modes (selected using the `--
 
 All strategies use the same intraprocedural flow graph, in which properties are only identified by name; thus, like-named properties of different objects are conflated; this can lead to imprecise call graphs. Dynamic property reads and writes are ignored, as are reflective calls using `call` and `apply`; thus, the call graphs are intrinsically incomplete.
 
-Module `flowgraph.js` contains the code for extracting an intraprocedural flow graph from an [Esprima](esprima.org) AST (for convenience, a version of Esprima is included in `esprima.js`) annotated with name bindings for local variables (see `bindings.js`, which uses `symtab.js` and `astutil.js`).
+Module `flowgraph.js` contains the code for extracting an intraprocedural flow graph from an [Esprima](esprima.org) AST annotated with name bindings for local variables (see `bindings.js`, which uses `symtab.js` and `astutil.js`).
 
 Modules `pessimistic.js` and `semioptimistic.js` implement the pessimistic and optimistic call graph builders, respectively. They both use `flowgraph.js` to build an intraprocedural flow graph, and then add some edges corresponding to interprocedural flow. Both use module `callgraph.js` for extracting a call graph from a given flow graph, by collecting, for every call site, all functions that can flow into the callee position. Both use module `natives.js` to add flow edges modelling well-known standard library functions.
 
