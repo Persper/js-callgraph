@@ -89,9 +89,20 @@ if (args.filter !== null) {
         console.warn('The path of filter file "' + filterFile + '" does not exists.');
     } else {
         let content = fs.readFileSync(filterFile, 'utf8').split(/\r?\n/);
+        let lineNumber = 0;
         content.forEach(function (line) {
+            line = line.trim();
+            lineNumber++;
+
+            if (line.trim().length <= 1)
+                return;
+
             if (!line.startsWith("#")) {
-                filter.push(line);
+                if (line.startsWith("+") || line.startsWith("-")) {
+                    filter.push(line);
+                } else {
+                    console.warn("[" + filterFile + "] Line " + lineNumber + " contains a not valid filter: " + line);
+                }
             }
         });
         JCG.setFilter(filter);

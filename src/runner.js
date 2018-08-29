@@ -112,17 +112,16 @@ define(function (require, exports) {
             files.forEach(function (file) {
                 filteredfiles.push(file);
                 filter.forEach(function (elem) {
-                    let trunk = elem.substr(1);
+                    let trunk = elem.substr(1).trim();
                     let expression = new RegExp(trunk, "gm");
-                    let match = file.match(expression);
-                    let result = match !== null ? match[0] : false;
-                    if (result) {
-                        if (elem.startsWith('-')) {
-                            filteredfiles.remove(file);
-                        }
-                        if (elem.startsWith('+')) {
-                            filteredfiles.push(file);
-                        }
+                    let result = expression.test(file);
+
+                    if (result && elem.startsWith('-')) {
+                        filteredfiles.remove(file);
+                    }
+
+                    if (result && elem.startsWith('+')) {
+                        filteredfiles.push(file);
                     }
 
                 });
