@@ -116,12 +116,14 @@ Modules `dftc.js`, `heuristictc.js` and `nuutila.js` implement several transitiv
 ## Filtering format
 
 In the filter useable all valid regular expression. The list order influence the effective filtering.
-The first character of line represent the type of filtering.
+The first character of line represent the type of filtering:
 ```
 # Comment line
 - Exclude
 + Include
 ```
+
+An example for filtering:
 
 ```
 # Filter out all source files starting with "test":
