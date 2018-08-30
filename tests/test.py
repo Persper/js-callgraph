@@ -3,7 +3,6 @@
 from process import precision_recall
 from os import listdir, getcwd
 from os.path import isfile, join, dirname, isdir
-import bcolors
 import sys
 
 tests_dir = dirname(sys.argv[0])
@@ -24,14 +23,14 @@ if len(sys.argv) > 1:
         test_directories = test_directories[-3:]
 
 print()
-print(bcolors.UNDERLINE + bcolors.BOLD + 'RUNNING REGRESSION TESTS' + bcolors.ENDC)
+print('RUNNING REGRESSION TESTS')
 
 num_passed = 0
 num_failed = 0
 
 
 for d in test_directories:
-    print(bcolors.HEADER + bcolors.BOLD + '='*5, d, '='*5 + bcolors.ENDC)
+    print('='*5, d, '='*5)
 
     d = tests_dir + '/' + d
 
@@ -41,15 +40,15 @@ for d in test_directories:
 
     for tf in test_files:
         if tf in output_files:
-            print(bcolors.WARNING + tf + '.js' + bcolors.ENDC, end='')
+            print(tf + '.js', end='')
 
             _, wo_natives = precision_recall(d + '/' + tf + '.js', d + '/' + tf + '.truth')
 
             if wo_natives[0] == 100 and wo_natives[1] == 100:
-                print('\r' + bcolors.OKGREEN + tf + '.js ✓' + bcolors.ENDC)
+                print('\r' + tf + '.js ✓')
                 num_passed += 1
             else:
-                print('\r' + bcolors.FAIL + tf + '.js ❌' + bcolors.ENDC)
+                print('\r' + tf + '.js ❌')
                 num_failed += 1
 
 print()
