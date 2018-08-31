@@ -160,35 +160,37 @@ Keys in totalEdits are colon format ids from the last commit
 Keys in stats['idMap'] are colon format ids from the last commit
 Keys in stats['idToLines'] are colon format ids from the latest commit
 */
-
-function updateTotalEdits (totalEdits, stats) {
-    // First, update keys in totalEdits using stats['idMap']
+function updateTotalEdits(totalEdits, stats) {
+    let newCf2edits = {};
+    let removeSet = new Set();
+    // Transfer old edits to new colon format ids
     for (let oldCf in stats['idMap']) {
-        let newCf = stats['idMap'][oldCf];
-        // Sanity checks
-        if (newCf in totalEdits)
-            console.log('WARNING: newCf already exists in totalEdits.');
-        if (newCf in stats['idMap'])
-            console.log('WARNING: oldCf and newCf both are keys in idMap.');
+        const newCf = stats['idMap'][oldCf];
+
         if (oldCf in totalEdits) {
-            totalEdits[newCf] = totalEdits[oldCf];
-            delete totalEdits[oldCf];
+            removeSet.add(oldCf);
+            newCf2edits[newCf] = totalEdits[oldCf];
         }
         else {
-            // One possible cause is that we did not track the file from
-            // the very beginning.
+            // This could happen if we did not track the file from the very beginning.
+            debugger;
             console.log('WARNING: oldCf in idMap but not in totalEdits.');
         }
     }
 
-    for (let newCf in stats['idToLines']) {
-        if (!(stats['idToLines'][newCf] > 0))
-            console.log('WARNING: idToLines contains invalid data.');
-        if (newCf in totalEdits)
-            totalEdits[newCf] += stats['idToLines'][newCf];
+    // Add new edits
+    for (let newCf in stats['idToLines'])
+        if (newCf in newCf2edits)
+            newCf2edits[newCf] += stats['idToLines'][newCf];
         else
-            totalEdits[newCf] = stats['idToLines'][newCf];
-    }
+            newCf2edits[newCf] = stats['idToLines'][newCf];
+
+    // Remove old colon format ids that have changed
+    for (let oldCf of removeSet)
+        delete totalEdits[oldCf];
+
+    // Merge newCf2edits to totalEdits
+    Object.assign(totalEdits, newCf2edits);
 }
 
 /*
