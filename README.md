@@ -1,5 +1,7 @@
 # Field-based Call Graph Construction for JavaScript #
 
+[![Build Status](https://travis-ci.org/Persper/javascript-call-graph.svg?branch=master)](https://travis-ci.org/Persper/javascript-call-graph)
+
 This project implements a field-based call graph construction algorithm for JavaScript as described in
 
 > A. Feldthaus, M. Schäfer, M. Sridharan, J. Dolby, F. Tip. Efficient Construction of Approximate Call Graphs for JavaScript IDE Services. In *ICSE*, 2013.
