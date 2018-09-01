@@ -9,8 +9,19 @@ This project implements a field-based call graph construction algorithm for Java
 This repo builds upon [Max Schaefer](https://github.com/xiemaisi)'s original [acg.js](https://github.com/xiemaisi/acg.js) and adds 
 
 * ES6 Support
-* Module resolution
-* Better scoping
+	* Arrow functions
+	* Destructuring assignments
+	* Classes
+	* Enhanced object literals
+	* Rest/Spread operator
+* Module Support
+	* ES6/CommonJS/AMD
+* More sophisticated scoping
+* Partial update to a large call graph
+* Unified JSON format representing a call graph
+* More flexible CLI
+	* Take directory parameter
+	* Support filtering files by regex
 * More tests
 
 ## Get Started
