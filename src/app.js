@@ -254,17 +254,18 @@ app.post('/update', jsonParser, function (req, res) {
           config = req.body.config;
 
     // Apply preprocessors to src code
-    const preprocessors = config.preprocessors || [];
     let prepFailed = false;
-    if (oldFname) {
-        oldSrc = prep.applyPreps(oldSrc, oldFname, preprocessors);
-        if (oldSrc === null)
-            prepFailed = true;
-    }
-    if (newFname) {
-        newSrc = prep.applyPreps(newSrc, newFname, preprocessors);
-        if (newSrc === null)
-            prepFailed = true;
+    if (config && config.preprocessors) {
+        if (oldFname) {
+            oldSrc = prep.applyPreps(oldSrc, oldFname, config.preprocessors);
+            if (oldSrc === null)
+                prepFailed = true;
+        }
+        if (newFname) {
+            newSrc = prep.applyPreps(newSrc, newFname, config.preprocessors);
+            if (newSrc === null)
+                prepFailed = true;
+        }
     }
 
     if (prepFailed)
@@ -290,17 +291,18 @@ app.get('/stats', jsonParser, function (req, res) {
           config = req.body.config;
 
     // Apply preprocessors to src code
-    const preprocessors = config.preprocessors || [];
     let prepFailed = false;
-    if (oldFname) {
-        oldSrc = prep.applyPreps(oldSrc, oldFname, preprocessors);
-        if (oldSrc === null)
-            prepFailed = true;
-    }
-    if (newFname) {
-        newSrc = prep.applyPreps(newSrc, newFname, preprocessors);
-        if (newSrc === null)
-            prepFailed = true;
+    if (config && config.preprocessors) {
+        if (oldFname) {
+            oldSrc = prep.applyPreps(oldSrc, oldFname, config.preprocessors);
+            if (oldSrc === null)
+                prepFailed = true;
+        }
+        if (newFname) {
+            newSrc = prep.applyPreps(newSrc, newFname, config.preprocessors);
+            if (newSrc === null)
+                prepFailed = true;
+        }
     }
 
     if (prepFailed)
