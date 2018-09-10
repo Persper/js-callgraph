@@ -1,0 +1,15 @@
+{
+  "env": {
+    "es6": true,
+    "node": true,
+  },
+  "rules": {
+    "no-console": "off",
+    "no-trailing-spaces": "error"
+  },
+  "parserOptions": {
+    "ecmaVersion": 2017,
+    "sourceType": "module"
+  },
+  "extends": "eslint:recommended"
+}
