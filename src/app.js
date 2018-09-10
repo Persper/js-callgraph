@@ -173,7 +173,6 @@ function updateTotalEdits(totalEdits, stats) {
         }
         else {
             // This could happen if we did not track the file from the very beginning.
-            debugger;
             console.log('WARNING: oldCf in idMap but not in totalEdits.');
         }
     }
@@ -318,5 +317,5 @@ app.post('/reset', function (req, res) {
     res.send('A new graph has been created!');
 });
 
-
-app.listen(3000, () => console.log('Simple server listening on port 3000!'));
+app.set('port', process.env.PORT || 3000);
+app.listen(app.get('port'), () => console.log(`Simple server listening on port ${app.get('port')}!`));
