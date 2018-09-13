@@ -76,42 +76,45 @@ function colonFormat(funcNd){
            funcNd.loc.end.line;
 }
 
-/* Convert call graph to node link format that networkx can read */
-function NodeLinkFormat (edges, totalEdits={}, defaultNumLines=1) {
-    let nextId = 0;
-    const node2id = {}
-    const nlf = { 'directed': true, 'multigraph': false, 'links': [], 'nodes': [] };
-    /* Example node link format for graph that only has edge ('A', 'B')
+/* Convert call graph to node link format that networkx can read
+
+Example node link format for graph that only has edge ('A', 'B'):
+
     {
         'directed': True,
         'multigraph': False,
-        'links': [{'source': 1, 'target': 0}],
+        'links': [{'source': 'A', 'target': 'B'}],
         'nodes': [{'id': 'B', 'num_lines': 10}, {'id': 'A', 'num_lines': 2}]
     }
-    */
+*/
+function NodeLinkFormat (edges, totalEdits={}, defaultNumLines=1) {
+    const nodeNameSet = new Set();
+    const nlf = { 'directed': true, 'multigraph': false, 'links': [], 'nodes': [] };
 
-    function nodeId (nodeName) {
+    function addNodeToGraph(nodeName) {
         /* There're 3 possibilities for nodeName
         1. A proper colon format id
         2. <filename>:global
         3. Native:<funcname>
         Only case 1. functions can and should be found in totalEdits
         */
-        if (!(nodeName in node2id)) {
-            node2id[nodeName] = nextId++;
+        if (!(nodeName in nodeNameSet)) {
+            nodeNameSet.add(nodeName);
             if (nodeName in totalEdits)
                 nlf.nodes.push({'id': nodeName, 'num_lines': totalEdits[nodeName]});
             else
                 nlf.nodes.push({'id': nodeName, 'num_lines': defaultNumLines});
         }
-        return node2id[nodeName]
     }
 
     edges.iter(function (call, fn) {
-        const callerId = nodeId(pp(call));
-        const calleeId = nodeId(pp(fn));
-        nlf.links.push({'source':  callerId, 'target': calleeId});
-    })
+        const callerName = pp(call);
+        const calleeName = pp(fn);
+        addNodeToGraph(callerName);
+        addNodeToGraph(calleeName);
+        nlf.links.push({'source': callerName, 'target': calleeName});
+    });
+
     return nlf;
 }
 
