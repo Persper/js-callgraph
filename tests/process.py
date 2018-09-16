@@ -11,9 +11,8 @@ import sys
 from pathlib import Path
 import re
 from required_files import collect_requires
-from resolve_path import resolve_path
-from callgraph import callgraph
-from format_callgraph import format_output
+from callgraph import callgraph_formatted
+
 
 def get_output(test_file):
     # Recursively descend through require's to find all files that
