@@ -1,10 +1,11 @@
 import re
-from resolve_path import resolve_path
+from pathlib import Path
 
-reg1 = re.compile("require\(\'(.*)\'\)");
-reg2 = re.compile("import .* from \'(.*)\'");
-reg3 = re.compile("import \'(.*)\'(?! from)");
-reg4 = re.compile("export .* from \'(.*)\'");
+reg1 = re.compile("require\\(\'(.*)\'\\)")
+reg2 = re.compile("import .* from \'(.*)\'")
+reg3 = re.compile("import \'(.*)\'(?! from)")
+reg4 = re.compile("export .* from \'(.*)\'")
+
 
 def get_requires(path):
     """ Returns list of imports in path """
@@ -28,6 +29,7 @@ def get_requires(path):
 
 
 def collect_requires(path):
+    """ Recursively descends imports and returns all imported files """
     read_files = []
     unread_files = [path]
 
