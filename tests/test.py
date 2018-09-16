@@ -8,19 +8,8 @@ import sys
 tests_dir = dirname(sys.argv[0])
 
 test_directories = ['basics', 'unexpected', 'classes', 'es6',
-                    'import-export/define', 'import-export/es6', 'import-export/module.exports']
-
-total_w_natives_intersection = 0
-total_w_natives_output = 0
-total_w_natives_expected = 0
-
-total_wo_natives_intersection = 0
-total_wo_natives_output = 0
-total_wo_natives_expected = 0
-
-if len(sys.argv) > 1:
-    if sys.argv[1] == 'import-export':
-        test_directories = test_directories[-3:]
+                    'import-export/define', 'import-export/es6',
+                    'import-export/module.exports']
 
 print()
 print('RUNNING REGRESSION TESTS')
