@@ -29,7 +29,7 @@ def get_requires(path):
 
 def collect_requires(path):
     read_files = []
-    unread_files = [resolve_path(path, path.parent)]
+    unread_files = [path]
 
     while unread_files:
         uf = unread_files.pop(0)
@@ -41,7 +41,8 @@ def collect_requires(path):
         required_files = get_requires(uf)
 
         for rf in required_files:
-            rp = resolve_path(rf, uf.parent)
+            rp = uf.parent.joinpath(rf)
             if rp and rp.exists():
                 unread_files.append(rp.resolve())
+
     return read_files
