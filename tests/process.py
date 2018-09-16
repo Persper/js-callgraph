@@ -21,26 +21,14 @@ def get_output(test_file):
     strd_files = [str(rf) for rf in required_files]
 
     # Run the javascript call graph program and capture the output
-    output = callgraph(strd_files)
-    lines = str(output)[2:].split('\\n')
+    output = callgraph_formatted(strd_files, keep=required_files[0].name,
+                                 natives=False)
 
-    # The output will contain lines for all files that were required
-    # This will filter out so only one's relevant to the file selected are shown
-    reg_input_file_name = re.compile(r'.*\(' + required_files[0].name + r'@[0-9]*:[0-9]*-[0-9]*\) ->.*')
-    filtered_out = [line for line in lines if reg_input_file_name.match(line)]
+    return output
 
-    # Format output to align with the expected output
-    fo = []
-    for f in filtered_out:
-        fo.append(format_output(f))
 
-    return fo
-
-def precision_recall(test_file, expected_output=None, display=False):
+def precision_recall(test_file, expected_output):
     fo = get_output(test_file)
-
-    if expected_output == None:
-        return fo
 
     # Reading in expected output file and comparing with output
     f = open(expected_output)
@@ -79,5 +67,7 @@ def precision_recall(test_file, expected_output=None, display=False):
 
 
 if __name__ == "__main__":
-    assert len(sys.argv) == 3, "Incorrect number of arguments: process.py FILENAME TEST_FILE"
+    assert len(sys.argv) == 3,\
+           "Incorrect number of arguments: process.py FILENAME TEST_FILE"
+
     precision_recall(sys.argv[1], sys.argv[2], display=True)
