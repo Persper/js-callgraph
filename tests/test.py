@@ -17,9 +17,8 @@ print('RUNNING REGRESSION TESTS')
 num_passed = 0
 num_failed = 0
 
-
 for d in test_directories:
-    print('='*5, d, '='*5)
+    print('\n' + '='*5, d, '='*5 + '\n')
 
     d = tests_dir + '/' + d
 
@@ -31,13 +30,15 @@ for d in test_directories:
         if tf in output_files:
             print(tf + '.js', end='')
 
-            _, wo_natives = precision_recall(d + '/' + tf + '.js', d + '/' + tf + '.truth')
+            test_file = d + '/' + tf + '.js'
+            truth_file = d + '/' + tf + '.truth'
+            precision, recall = precision_recall(test_file, truth_file)
 
-            if wo_natives[0] == 100 and wo_natives[1] == 100:
+            if precision == 100 and recall == 100:
                 print('\r' + tf + '.js ✓')
                 num_passed += 1
             else:
-                print('\r' + tf + '.js ❌')
+                print('FAILED: ' + tf + '.js ❌\n')
                 num_failed += 1
 
 print()
