@@ -51,6 +51,22 @@ def precision_recall(test_file, expected_output=None, display=False):
     expected_lines = set(lines)
 
     intersection = output_lines & expected_lines
+    difference = output_lines ^ expected_lines
+
+    if len(difference) != 0:
+        extra_output = expected_lines - output_lines
+        missing_output = output_lines - expected_lines
+
+        print()
+
+        for l in intersection:
+            print('\t' + l)
+
+        for l in extra_output:
+            print('\t+', l)
+
+        for l in missing_output:
+            print('\t-', l)
 
     if len(output_lines) > 0:
         precision = 100 * len(intersection) // len(output_lines)
