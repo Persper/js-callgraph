@@ -289,12 +289,18 @@ Todo:
 function connectDefaultImport(expFuncs, fg, srcFname, idNode) {
     if (!(srcFname in expFuncs))
         return;
-
     for (let expr of expFuncs[srcFname]['default']) {
-        if (expr.type === 'FunctionDeclaration')
+        if (expr.type === 'FunctionDeclaration') {
             fg.addEdge(flowgraph.funcVertex(expr), flowgraph.vertexFor(idNode));
-        else
-            fg.addEdge(flowgraph.vertexFor(expr), flowgraph.vertexFor(idNode));
+        } else if (expr.type === 'ClassDeclaration') {
+            let body = expr.body.body
+            for (var i = 0; i < body.length; ++i)
+              if (body[i].kind === 'constructor') {
+                  fg.addEdge(flowgraph.funcVertex(body[i].value), flowgraph.vertexFor(idNode));
+                }
+        } else {
+          fg.addEdge(flowgraph.vertexFor(expr), flowgraph.vertexFor(idNode));
+        }
     }
 }
 
