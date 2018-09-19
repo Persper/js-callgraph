@@ -8,19 +8,8 @@ import sys
 tests_dir = dirname(sys.argv[0])
 
 test_directories = ['basics', 'unexpected', 'classes', 'es6',
-                    'import-export/define', 'import-export/es6', 'import-export/module.exports']
-
-total_w_natives_intersection = 0
-total_w_natives_output = 0
-total_w_natives_expected = 0
-
-total_wo_natives_intersection = 0
-total_wo_natives_output = 0
-total_wo_natives_expected = 0
-
-if len(sys.argv) > 1:
-    if sys.argv[1] == 'import-export':
-        test_directories = test_directories[-3:]
+                    'import-export/define', 'import-export/es6',
+                    'import-export/module.exports']
 
 print()
 print('RUNNING REGRESSION TESTS')
@@ -28,9 +17,8 @@ print('RUNNING REGRESSION TESTS')
 num_passed = 0
 num_failed = 0
 
-
 for d in test_directories:
-    print('='*5, d, '='*5)
+    print('\n' + '='*5, d, '='*5 + '\n')
 
     d = tests_dir + '/' + d
 
@@ -42,13 +30,15 @@ for d in test_directories:
         if tf in output_files:
             print(tf + '.js', end='')
 
-            _, wo_natives = precision_recall(d + '/' + tf + '.js', d + '/' + tf + '.truth')
+            test_file = d + '/' + tf + '.js'
+            truth_file = d + '/' + tf + '.truth'
+            precision, recall = precision_recall(test_file, truth_file)
 
-            if wo_natives[0] == 100 and wo_natives[1] == 100:
+            if precision == 100 and recall == 100:
                 print('\r' + tf + '.js ✓')
                 num_passed += 1
             else:
-                print('\r' + tf + '.js ❌')
+                print('FAILED: ' + tf + '.js ❌\n')
                 num_failed += 1
 
 print()
