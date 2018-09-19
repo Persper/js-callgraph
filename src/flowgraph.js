@@ -66,7 +66,7 @@ define(function (require, exports) {
                 case 'ClassDeclaration':
                     var body = nd.body.body;
                     for (var i = 0; i < body.length; ++i)
-                        if (body[i].kind === 'constructor')
+                        if (body[i].kind === 'constructor' && nd.id)
                             flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
                     break;
 
