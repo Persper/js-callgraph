@@ -1,8 +1,8 @@
 {
-  "name": "javascript-call-graph",
+  "name": "js-callgraph",
   "version": "1.0.0",
   "description": "This project implements a field-based call graph construction algorithm for JavaScript as described in",
-  "main": "jcg.js",
+  "main": "js-callgraph.js",
   "dependencies": {
     "amdefine": "^1.0.1",
     "argparse": "^1.0.10",

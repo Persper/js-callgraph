@@ -72,7 +72,7 @@ function init(root) {
     // global collections containing all functions and all call sites
     root.attr.functions = [];
     root.attr.calls = [];
-    visit(root, function (nd, doVisit, state, parent, childProp) {
+    visit(root, function (nd, doVisit, parent, childProp) {
         if (nd.type && !nd.attr)
             nd.attr = {};
 

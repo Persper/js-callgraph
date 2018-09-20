@@ -1,6 +1,7 @@
 # Field-based Call Graph Construction for JavaScript #
 
-[![Build Status](https://travis-ci.org/Persper/javascript-call-graph.svg?branch=master)](https://travis-ci.org/Persper/javascript-call-graph)
+
+[![Build Status](https://travis-ci.org/Persper/js-callgraph.svg?branch=master)](https://travis-ci.org/Persper/js-callgraph)
 
 This project implements a field-based call graph construction algorithm for JavaScript as described in
 

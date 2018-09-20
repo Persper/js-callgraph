@@ -4,7 +4,7 @@
 import subprocess
 import re
 
-NODE_PROGRAM = 'jcg'
+NODE_PROGRAM = 'js-callgraph'
 
 
 def callgraph(files):
