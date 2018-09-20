@@ -1,7 +1,7 @@
 {
   "name": "js-callgraph",
   "version": "1.0.0",
-  "description": "This project implements a field-based call graph construction algorithm for JavaScript as described in",
+  "description": "Builds static call graph for Javascript with a field-based algorithm.",
   "main": "js-callgraph.js",
   "dependencies": {
     "amdefine": "^1.0.1",
@@ -30,12 +30,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Persper/javascript-call-graph.git"
+    "url": "git+https://github.com/Persper/js-callgraph.git"
   },
-  "author": "",
-  "license": "ISC",
+  "license": "EPL-2.0",
   "bugs": {
-    "url": "https://github.com/Persper/javascript-call-graph/issues"
+    "url": "https://github.com/Persper/js-callgraph/issues"
   },
-  "homepage": "https://github.com/Persper/javascript-call-graph#readme"
+  "homepage": "https://github.com/Persper/js-callgraph#readme",
+  "keywords": [
+    "call graph",
+    "call",
+    "graph",
+    "ast",
+    "static analysis"
+  ]
 }
