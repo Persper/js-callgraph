@@ -1,5 +1,5 @@
 {
-  "name": "js-callgraph",
+  "name": "@persper/js-callgraph",
   "version": "1.0.0",
   "description": "Builds static call graph for Javascript with a field-based algorithm.",
   "main": "js-callgraph.js",
