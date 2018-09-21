@@ -43,5 +43,8 @@
     "graph",
     "ast",
     "static analysis"
-  ]
+  ],
+  "bin": {
+    "js-callgraph": "./js-callgraph.js"
+  }
 }
