@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 /*******************************************************************************
  * Copyright (c) 2013 Max Schaefer
  * Copyright (c) 2018 Persper Foundation
