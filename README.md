@@ -2,14 +2,14 @@
 
 
 [![Build Status](https://travis-ci.org/Persper/js-callgraph.svg?branch=master)](https://travis-ci.org/Persper/js-callgraph)
-[![NPM version](https://img.shields.io/badge/npm-v1.0.0-blue.svg)](https://www.npmjs.com/package/@persper/js-callgraph)
+[![NPM version](https://img.shields.io/badge/npm-v1.0.1-blue.svg)](https://www.npmjs.com/package/@persper/js-callgraph)
 [![License](https://img.shields.io/badge/license-EPL--2.0-green.svg)](https://www.eclipse.org/legal/epl-2.0/)
 
 This project implements a field-based call graph construction algorithm for JavaScript as described in
 
 > A. Feldthaus, M. Schäfer, M. Sridharan, J. Dolby, F. Tip. Efficient Construction of Approximate Call Graphs for JavaScript IDE Services. In *ICSE*, 2013.
 
-This repo builds upon [Max Schaefer](https://github.com/xiemaisi)'s original [acg.js](https://github.com/xiemaisi/acg.js) and adds 
+This repo builds upon [Max Schaefer](https://github.com/xiemaisi)'s original [acg.js](https://github.com/xiemaisi/acg.js) and adds
 
 * ES6 Support
 	* Arrow functions
@@ -27,25 +27,25 @@ This repo builds upon [Max Schaefer](https://github.com/xiemaisi)'s original [ac
 	* Support filtering files by regex
 * More tests
 
-## Get Started
+## Get Started (CLI)
 ```
-npm install
-node jcg -h # for a list of command line arguments
+npm install -g @persper/js-callgraph
+js-callgraph -h # for a list of command line arguments
 
 # Running on simple input scripts
-node jcg --cg input-scripts/simple-scripts/functioncall-arithmetic.js
+js-callgraph --cg input-scripts/simple-scripts/functioncall-arithmetic.js
 
 # Running on a whole directory
-node jcg --cg input-scripts/fullcalendar/
+js-callgraph --cg input-scripts/fullcalendar/
 
 # Running on mixed input
-node jcg --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
+js-callgraph --cg input-scripts/fullcalendar/fullcalendar/ input-scripts/fullcalendar/lib/jquery-2.1.0.js
 
 # Saving the result into a file
-node jcg --cg input-scripts/simple-scripts/functioncall-arithmetic.js --output filename.json
+js-callgraph --cg input-scripts/simple-scripts/functioncall-arithmetic.js --output filename.json
 
 # Running on a whole directory with filtering
-node jcg --cg input-scripts/fullcalendar/ --filter filename.filter
+js-callgraph --cg input-scripts/fullcalendar/ --filter filename.filter
 ```
 
 For an example of the output json, please see [here](#unified-json-format).
