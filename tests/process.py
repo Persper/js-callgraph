@@ -42,8 +42,8 @@ def precision_recall(test_file, expected_output):
     difference = output_lines ^ expected_lines
 
     if len(difference) != 0:
-        extra_output = expected_lines - output_lines
-        missing_output = output_lines - expected_lines
+        missing_output = expected_lines - output_lines
+        extra_output = output_lines - expected_lines
 
         print()
 
