@@ -292,7 +292,7 @@ function connectDefaultImport(expFuncs, fg, srcFname, idNode) {
     for (let expr of expFuncs[srcFname]['default']) {
         if (expr.type === 'FunctionDeclaration') {
             fg.addEdge(flowgraph.funcVertex(expr), flowgraph.vertexFor(idNode));
-        } else if (expr.type === 'ClassDeclaration') {
+        } else if (expr.type === 'ClassDeclaration' || expr.type === 'ClassExpression') {
             let body = expr.body.body
             for (var i = 0; i < body.length; ++i)
               if (body[i].kind === 'constructor') {
