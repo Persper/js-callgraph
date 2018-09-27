@@ -64,10 +64,12 @@ define(function (require, exports) {
 
                 // R7
                 case 'ClassDeclaration':
+                case 'ClassExpression':
                     var body = nd.body.body;
-                    for (var i = 0; i < body.length; ++i)
-                        if (body[i].kind === 'constructor' && nd.id)
-                            flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
+                    if (nd.id)
+                        for (let i = 0; i < body.length; ++i)
+                            if (body[i].kind === 'constructor')
+                                flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
                     break;
 
                 case 'FunctionDeclaration':
@@ -160,7 +162,7 @@ define(function (require, exports) {
 
     /* Return the flow graph vertex corresponding to a given AST node. */
     function vertexFor(nd) {
-        var decl;
+        var decl, body;
         switch (nd.type) {
             case 'Identifier':
                 // global variables use a global vertex, local variables a var vertex
@@ -172,14 +174,21 @@ define(function (require, exports) {
                 // 'this' is treated like a variable
                 decl = nd.attr.scope.get('this');
                 return decl ? varVertex(decl) : exprVertex(nd);
+            case 'ClassExpression':
+                if (nd.id)
+                  return vertexFor(nd.id);
+
+                body = nd.body.body;
+                for (let i = 0; i < body.length; ++i)
+                    if (body[i].kind === 'constructor')
+                        return funcVertex(body[i].value);
+                break;
             case 'MemberExpression':
                 // ignore dynamic property accesses
                 if (!nd.computed)
                     return propVertex(nd.property);
-            // FALL THROUGH
-            default:
-                return exprVertex(nd);
         }
+        return exprVertex(nd);
     }
 
     // variable vertices are cached at the variable declarations
