@@ -45,12 +45,12 @@ function pp(v) {
     // v is a call graph vertex, which stores a reference to its AST node
     if (v.type === 'CalleeVertex') {
         if (v.call.attr.enclosingFunction)
-            return colonFormat(v.call.attr.enclosingFunction);
+            return astutil.colonFormat(v.call.attr.enclosingFunction);
         else
             return v.call.attr.enclosingFile + ':global'
     }
     else if (v.type === 'FuncVertex') {
-        return colonFormat(v.func);
+        return astutil.colonFormat(v.func);
     }
     else if (v.type === 'NativeVertex') {
         return 'Native:' + v.name;
