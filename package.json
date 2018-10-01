@@ -4,6 +4,7 @@
   "description": "Builds static call graph for Javascript with a field-based algorithm.",
   "main": "js-callgraph.js",
   "dependencies": {
+    "JSONStream": "1.3.3",
     "amdefine": "^1.0.1",
     "argparse": "^1.0.10",
     "body-parser": "^1.18.2",
@@ -12,14 +13,14 @@
     "express": "^4.16.3",
     "npm": "^5.10.0",
     "sloc": "^0.2.0",
-    "source-map": "^0.7.3",
-    "JSONStream": "1.3.3"
+    "source-map": "^0.7.3"
   },
   "devDependencies": {
-    "babel-cli": "^6.26.0",
-    "babel-core": "^6.26.3",
-    "babel-preset-es2015": "^6.24.1",
-    "babel-preset-flow": "^6.23.0",
+    "@babel/cli": "^7.0.0",
+    "@babel/core": "^7.0.0",
+    "@babel/preset-env": "^7.0.0",
+    "@babel/preset-flow": "^7.0.0",
+    "babel-core": "^7.0.0-bridge.0",
     "jest": "^23.1.0"
   },
   "scripts": {
