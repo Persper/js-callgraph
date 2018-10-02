@@ -1,44 +1,60 @@
 #!/usr/bin/python3
 
-from process import precision_recall
-from os import listdir, getcwd
-from os.path import isfile, join, dirname, isdir
+import os
 import sys
+import glob
+from os.path import isfile, join, dirname, isdir, basename
+from process import precision_recall
 
-tests_dir = dirname(sys.argv[0])
+# -------------- Configuration --------------
 
-test_directories = ['basics', 'unexpected', 'classes', 'es6',
-                    'import-export/define', 'import-export/es6',
-                    'import-export/module.exports']
+# Only scan the following directories for test cases
+test_dirs = ['basics',
+             'unexpected',
+             'classes',
+             'es6',
+             'import-export/define',
+             'import-export/es6',
+             'import-export/module.exports',
+             'typescript']
+
+# Only consider test cases in the following languages
+langs = ['*.js', '*.ts']
+
+# -------------------------------------------
 
 print()
 print('RUNNING REGRESSION TESTS')
 
+test_root_dir = dirname(sys.argv[0])
 num_passed = 0
 num_failed = 0
 
-for d in test_directories:
+
+def find_truth_file(test_file):
+    truth_file = test_file.rsplit('.', 1)[0] + '.truth'
+    if os.path.isfile(truth_file):
+        return truth_file
+    else:
+        return None
+
+for d in test_dirs:
     print('\n' + '='*5, d, '='*5 + '\n')
+    d = join(test_root_dir, d)
 
-    d = tests_dir + '/' + d
-
-    files = [f for f in listdir(d) if not isdir(join(d, f))]
-    test_files = [f[:-3] for f in files if f[-3:] == '.js']
-    output_files = [f[:-6] for f in files if f[-6:] == '.truth']
-
-    for tf in test_files:
-        if tf in output_files:
-            print(tf + '.js', end='')
-
-            test_file = d + '/' + tf + '.js'
-            truth_file = d + '/' + tf + '.truth'
+    for lang in langs:
+        for test_file in glob.iglob(d + '/**/' + lang, recursive=True):
+            truth_file = find_truth_file(test_file)
+            if not truth_file:
+                continue
             precision, recall = precision_recall(test_file, truth_file)
 
+            print(basename(test_file), end='')
             if precision == 100 and recall == 100:
-                print('\r' + tf + '.js ✓')
+                print('\r' + test_file + ' ✓')
                 num_passed += 1
             else:
-                print('FAILED: ' + tf + '.js ❌\n')
+                print('\rFAILED: ' + test_file + ' ❌\n')
                 num_failed += 1
 
 print()
