@@ -38,7 +38,6 @@ define(function(require, exports) {
         var callbackPercentage = callbacks.length / totalParameters * 100;
         console.log("I found " + callbacks.length + " callbacks and " + callbackUses + " call back uses. In total we have " + functionDeclarationParameter + " function declaration parameters and " + functionExpressionParameter + " function expression parameters.");
         console.log("This makes a total of " + totalParameters + " parameters. Which means that (counting each function once as a callback) " + callbackPercentage + " percent of parameters are callbacks.");
-        console.log("The total SLOC is " + ast.attr.sloc);
     };
 
     function findEnclosingFunctionParameter(node, functionName) {

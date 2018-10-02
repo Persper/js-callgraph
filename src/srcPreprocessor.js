@@ -69,7 +69,22 @@ function trimHashbangPrep(src) {
     return src;
 }
 
+/* Compile Typescript into plain Javascript
+Plugin @babel/typescript needs filename option to trigger,
+see the following issue for details:
+https://github.com/babel/babel/issues/8065
+*/
+function typescriptPrep(src) {
+    return babel.transform(src, {
+        presets: ["@babel/preset-typescript"],
+        filename: '.ts',
+        retainLines: true,
+        parserOpts: {strictMode: false}
+    }).code;
+}
+
 module.exports.applyPreps = applyPreps;
 module.exports.stripFlowPrep = stripFlowPrep;
 module.exports.trimHashbangPrep = trimHashbangPrep;
+module.exports.typescriptPrep = typescriptPrep;
 

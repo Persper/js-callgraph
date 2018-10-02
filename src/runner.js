@@ -138,7 +138,7 @@ define(function (require, exports) {
             args.strategy = 'DEMAND';
         }
         if (args.time) console.time("parsing  ");
-        var ast = astutil.buildAST(files);
+        var ast = astutil.astFromFiles(files);
         if (args.time) console.timeEnd("parsing  ");
 
         if (args.time) console.time("bindings ");
@@ -204,7 +204,7 @@ define(function (require, exports) {
             else if (fs.statSync(file).isDirectory()) {
                 filelist = utils.collectFiles(file, filelist);
             }
-            else if (file.endsWith(".js")) {
+            else if (file.endsWith(".js") || file.endsWith(".ts")) {
                 filelist.push(file);
             }
         });

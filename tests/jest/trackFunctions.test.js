@@ -47,8 +47,8 @@ test('Test trackFunctions', () => {
 	const newFname = 'tests/jest/WebPage.new';
 	const oldSrc = fs.readFileSync(oldFname, 'utf-8');
 	const newSrc = fs.readFileSync(newFname, 'utf-8');
-	const oldAST = astutil.buildSingleAST('WebPage.js', oldSrc);
-	const newAST = astutil.buildSingleAST('WebPage.js', newSrc);
+	const oldAST = astutil.astFromSrc('WebPage.js', oldSrc);
+	const newAST = astutil.astFromSrc('WebPage.js', newSrc);
 	const oldFuncLst = astutil.getFunctions(oldAST);
 	const newFuncLst = astutil.getFunctions(newAST);
 	expect(trackFunctions(oldFuncLst, newFuncLst)).toEqual(truth);

@@ -10,8 +10,8 @@
 
 const esprima = require('esprima');
 const fs = require('fs');
-const sloc  = require('sloc');
 const escodegen = require('escodegen');
+const prep = require('./srcPreprocessor');
 
 /* AST visitor */
 function visit(root, visitor) {
@@ -162,55 +162,68 @@ function ppPos(nd) {
     return basename(nd.attr.enclosingFile) + "@" + nd.loc.start.line + ":" + nd.range[0] + "-" + nd.range[1];
 }
 
-/* Build an AST from a collection of source files. */
-function buildAST(files) {
-    var sources = files.map(function (file) {
-        return { filename: file,
-            program: fs.readFileSync(file, 'utf-8') };
-    });
-
-    var ast = {
+/* Build as AST from a collection of source files */
+function astFromFiles(files) {
+    const ast = {
         type: 'ProgramCollection',
         programs: [],
         attr: {}
-    };
-    sources.forEach(function (source) {
-        var prog = esprima.parseModule(source.program, { loc: true, range: true, tolerant: true});
-        prog.attr = { filename: source.filename, sloc : sloc(source.program, "js").sloc};
-        ast.programs.push(prog);
-    });
+    }
+
+    for (let file of files) {
+        let src = fs.readFileSync(file, 'utf-8');
+        ast.programs.push(buildProgram(file, src));
+    }
     init(ast);
-    ast.attr.sloc = ast.programs
-        .map(function(program){
-            return program.attr.sloc;
-        }).reduce(function(previous, current) {
-        return previous + current;
-    });
     return ast;
 }
 
-function buildSingleAST (fname, src) {
-    let prog;
-    try {
-        prog = esprima.parseModule(src,
-            {loc: true, range: true, tolerant: true, jsx: true});
-    }
-    catch(err) {
-        console.log('-------------------------------------------');
-        console.log('Warning: Esprima failed to parse ' + fname);
-        console.log(err.stack);
-        console.log('-------------------------------------------');
-        return null;
-    }
-    prog.attr = {filename: fname, sloc: sloc(src, 'js').sloc };
-
+/* Build an AST from file name and source code */
+function astFromSrc(fname, src) {
+    const prog = buildProgram(fname, src);
     const ast = {
         'type': 'ProgramCollection',
         'programs': [prog],
-        'attr': {sloc: prog.attr.sloc}
+        'attr': {}
     }
     init(ast);
     return ast;
+}
+
+function reportError(msg, err) {
+    console.log('-------------------------------------------');
+    console.log(msg);
+    console.log(err.stack);
+    console.log('-------------------------------------------');
+}
+
+function buildProgram (fname, src) {
+    // transpile typescript
+    try {
+        if (fname.endsWith('.ts'))
+            src = prep.typescriptPrep(src);
+    }
+    catch (err) {
+        reportError('WARNING: Transpiling typescript failed.', err);
+        return null;
+    }
+
+    // parse javascript
+    let prog;
+    try {
+        prog = esprima.parseModule(src, {
+            loc: true,
+            range: true,
+            tolerant: true,
+            jsx: true
+        });
+    }
+    catch(err) {
+        reportError('Warning: Esprima failed to parse ' + fname, err);
+        return null;
+    }
+    prog.attr = {filename: fname};
+    return prog;
 }
 
 // cf is used by getFunctions
@@ -233,7 +246,7 @@ const astToCode = astNode => {
 
 Args:
     root - An ast node of type 'ProgramCollection',
-         - the output of buildSingleAST function,
+         - the output of astFromSrc function,
          - thus, root.programs.length is equal to 1
 
 Returns:
@@ -415,8 +428,8 @@ module.exports.init = init;
 module.exports.ppPos = ppPos;
 module.exports.funcname = funcname;
 module.exports.encFuncName = encFuncName;
-module.exports.buildAST = buildAST;
-module.exports.buildSingleAST = buildSingleAST;
+module.exports.astFromFiles = astFromFiles;
+module.exports.astFromSrc = astFromSrc;
 module.exports.getFunctions = getFunctions;
 module.exports.isAnon = isAnon;
 module.exports.isModuleExports = isModuleExports;

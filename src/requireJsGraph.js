@@ -44,7 +44,7 @@ define(function(require, exports) {
             normOutgoingDep = normOutgoingDep.replace(/\//, "\\");
             var newStart = folder + normOutgoingDep;
             if (fs.existsSync(newStart)) {
-                var referencedAST = astutil.buildAST([newStart]);
+                var referencedAST = astutil.astFromFiles([newStart]);
                 dependencyGraph = dependencyGraph.concat(makeRequireJsGraph(referencedAST))
             }
         });

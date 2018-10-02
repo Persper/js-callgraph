@@ -147,7 +147,7 @@ function updateFlowGraph (fg, exportFuncs, importFuncs,
         mod.rmFileFromImports(importFuncs, oldFname);
     }
     if (newFname) {
-        const ast = astutil.buildSingleAST(newFname, newSrc);
+        const ast = astutil.astFromSrc(newFname, newSrc);
         if (ast !== null) {
           bindings.addBindings(ast);
           mod.collectExportsImports(ast, exportFuncs, importFuncs);
@@ -209,14 +209,14 @@ function getChangeStats (oldFname, oldSrc, newFname, newSrc, patch) {
     let forwardAST = null, bckwardAST = null;
 
     if (oldFname) {
-        forwardAST = astutil.buildSingleAST(oldFname, oldSrc);
+        forwardAST = astutil.astFromSrc(oldFname, oldSrc);
         if (forwardAST !== null) {
           forwardFuncs = astutil.getFunctions(forwardAST);
           forwardStats = detectChange(parser.parse(patch), forwardFuncs);
         }
     }
     if (newFname) {
-        bckwardAST = astutil.buildSingleAST(newFname, newSrc);
+        bckwardAST = astutil.astFromSrc(newFname, newSrc);
         if (bckwardAST !== null) {
           bckwardFuncs = astutil.getFunctions(bckwardAST);
           bckwardStats = detectChange(parser.invParse(patch), bckwardFuncs);
