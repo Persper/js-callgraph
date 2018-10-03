@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-var await = require('./utilities').await;
+var await2 = require('./utilities').await2;
 var EventEmitter = require('events');
 var fs = require('fs');
 var path = require('path');
@@ -32,7 +32,7 @@ class WebPage {
      * @param {!Object=} options
      */
     constructor(browser, scriptPath, options) {
-        this._page = await(browser.newPage());
+        this._page = await2(browser.newPage());
         this.settings = new WebPageSettings(this._page);
 
         options = options || {};
@@ -40,9 +40,9 @@ class WebPage {
         if (options.settings.userAgent)
             this.settings.userAgent = options.settings.userAgent;
         if (options.viewportSize)
-            await(this._page.setSize(options.viewportSize));
+            await2(this._page.setSize(options.viewportSize));
 
-        await(this._page.setInPageCallback('callPhantom', (...args) => {
+        await2(this._page.setInPageCallback('callPhantom', (...args) => {
             return this.onCallback.apply(null, args);
         }));
 
@@ -105,7 +105,7 @@ class WebPage {
      * @param {!Object} value
      */
     set customHeaders(value) {
-        await(this._page.setExtraHTTPHeaders(value));
+        await2(this._page.setExtraHTTPHeaders(value));
     }
 
     /**
@@ -124,14 +124,14 @@ class WebPage {
      * @return {string}
      */
     get plainText() {
-        return await(this._page.plainText());
+        return await2(this._page.plainText());
     }
 
     /**
      * @return {string}
      */
     get title() {
-        return await(this._page.title());
+        return await2(this._page.title());
     }
 
     /**
@@ -170,21 +170,21 @@ class WebPage {
         if (!this._onConfirm)
             return;
         var accept = this._onConfirm.call(null);
-        await(this._page.handleDialog(accept));
+        await2(this._page.handleDialog(accept));
     }
 
     /**
      * @return {string}
      */
     get url() {
-        return await(this._page.url());
+        return await2(this._page.url());
     }
 
     /**
      * @param {string} html
      */
     set content(html) {
-        await(this._page.setContent(html));
+        await2(this._page.setContent(html));
     }
 
     /**
@@ -212,7 +212,7 @@ class WebPage {
      * @param {!{width: number, height: number}} options
      */
     set viewportSize(options) {
-        await(this._page.setSize(options));
+        await2(this._page.setSize(options));
     }
 
     /**
@@ -220,7 +220,7 @@ class WebPage {
      * @param {!Array<!Object>} args
      */
     evaluate(fun, ...args) {
-        return await(this._page.evaluate(fun, ...args));
+        return await2(this._page.evaluate(fun, ...args));
     }
 
     /**
@@ -244,7 +244,7 @@ class WebPage {
                 height: this.clipRect.height
             };
         }
-        var imageBuffer = await(this._page.screenshot(screenshotType, clipRect));
+        var imageBuffer = await2(this._page.screenshot(screenshotType, clipRect));
         fs.writeFileSync(fileName, imageBuffer);
     }
 
@@ -269,7 +269,7 @@ class WebPageSettings {
      * @param {string} value
      */
     set userAgent(value) {
-        await(this._page.setUserAgentOverride(value));
+        await2(this._page.setUserAgentOverride(value));
     }
 
     /**

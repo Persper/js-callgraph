@@ -233,7 +233,6 @@ function buildProgram (fname, src) {
         prog = esprima.parseModule(src, {
             loc: true,
             range: true,
-            tolerant: true,
             jsx: true
         });
     }
