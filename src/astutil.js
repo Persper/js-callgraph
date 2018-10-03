@@ -178,9 +178,19 @@ function astFromFiles(files) {
     return ast;
 }
 
-/* Build an AST from file name and source code */
+/* Build an AST from file name and source code
+Args:
+    fname - A string, the name of the source file
+      src - A string, the source code
+
+Return:
+    If succeeded, return an ast node of type 'ProgramCollection'.
+    If failed, return null.
+*/
 function astFromSrc(fname, src) {
     const prog = buildProgram(fname, src);
+    if (prog === null)
+        return null;
     const ast = {
         'type': 'ProgramCollection',
         'programs': [prog],
@@ -197,6 +207,15 @@ function reportError(msg, err) {
     console.log('-------------------------------------------');
 }
 
+/* Parse a single source file and return its ast
+Args:
+    fname - A string, the name of the source file
+      src - A string, the source code
+
+Return:
+    If succeeded, return an ast node of type 'Program'.
+    If failed, return null.
+*/
 function buildProgram (fname, src) {
     // transpile typescript
     try {
