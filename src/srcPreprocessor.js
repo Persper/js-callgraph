@@ -70,14 +70,24 @@ function trimHashbangPrep(src) {
 }
 
 /* Compile Typescript into plain Javascript
+
+General reference: https://github.com/Microsoft/TypeScript-Babel-Starter
+
 Plugin @babel/typescript needs filename option to trigger,
 see the following issue for details:
 https://github.com/babel/babel/issues/8065
+
+Plugins:
+
+    @babel/plugin-proposal-class-properties
+        https://medium.com/@jacobworrel/babels-transform-class-properties-plugin-how-it-works-and-what-it-means-for-your-react-apps-6983539ffc22
+        https://github.com/babel/babelify/issues/167
 */
-function typescriptPrep(src) {
+function typescriptPrep(fname, src) {
     return babel.transform(src, {
         presets: ["@babel/preset-typescript"],
-        filename: '.ts',
+        plugins: ["@babel/plugin-proposal-class-properties"],
+        filename: fname,
         retainLines: true,
         parserOpts: {strictMode: false}
     }).code;

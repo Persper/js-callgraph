@@ -217,10 +217,12 @@ Return:
     If failed, return null.
 */
 function buildProgram (fname, src) {
+    // trim hashbang
+    src = prep.trimHashbangPrep(src);
     // transpile typescript
     try {
         if (fname.endsWith('.ts'))
-            src = prep.typescriptPrep(src);
+            src = prep.typescriptPrep(fname, src);
     }
     catch (err) {
         reportError('WARNING: Transpiling typescript failed.', err);
