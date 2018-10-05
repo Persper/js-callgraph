@@ -150,7 +150,8 @@ define(function (require, exports) {
                     break;
 
                 case 'MethodDefinition':
-                    flow_graph.addEdge(funcVertex(nd.value), propVertex(nd.key))
+                    if (nd.key.type === 'Identifier')
+                        flow_graph.addEdge(funcVertex(nd.value), propVertex(nd.key))
                     break;
 
                 case 'WithStatement':
