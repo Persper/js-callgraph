@@ -207,6 +207,18 @@ function reportError(msg, err) {
     console.log('-------------------------------------------');
 }
 
+/* Returns an ast node of type 'Program'
+To avoid confusion caused by too many different parsing settings,
+please call this function whenever possible instead of rewriting esprima.parseModule...
+*/
+function parse(src) {
+    return esprima.parseModule(src, {
+        loc: true,
+        range: true,
+        jsx: true
+    });
+}
+
 /* Parse a single source file and return its ast
 Args:
     fname - A string, the name of the source file
@@ -232,11 +244,7 @@ function buildProgram (fname, src) {
     // parse javascript
     let prog;
     try {
-        prog = esprima.parseModule(src, {
-            loc: true,
-            range: true,
-            jsx: true
-        });
+        prog = parse(src);
     }
     catch(err) {
         reportError('Warning: Esprima failed to parse ' + fname, err);
@@ -319,7 +327,7 @@ function getFunctions(root) {
         'name': 'global',
         'file': prog.attr.filename,
         'range': [prog.loc.start['line'], prog.loc.end['line']],
-        'charRange': [prog.range],
+        'charRange': null,
         'code': null,
         'encFuncName': null,
         'cf': prog.attr.filename + ':global'
@@ -453,6 +461,7 @@ module.exports.funcname = funcname;
 module.exports.encFuncName = encFuncName;
 module.exports.astFromFiles = astFromFiles;
 module.exports.astFromSrc = astFromSrc;
+module.exports.parse = parse;
 module.exports.getFunctions = getFunctions;
 module.exports.isAnon = isAnon;
 module.exports.isModuleExports = isModuleExports;
