@@ -267,6 +267,7 @@ function getFunctions(root) {
             'name': funcName,
             'file': fn.attr.enclosingFile,
             'range': [startLine, endLine],
+            'charRange': fn.range,
             'code': astToCode(fn),
             'encFuncName': encFuncName(fn.attr.enclosingFunction)
         });
@@ -284,6 +285,7 @@ function getFunctions(root) {
         'name': 'global',
         'file': prog.attr.filename,
         'range': [prog.loc.start['line'], prog.loc.end['line']],
+        'charRange': [prog.range],
         'code': null,
         'encFuncName': null,
         'cf': prog.attr.filename + ':global'
