@@ -251,7 +251,8 @@ const cf = funcObj => {
     return funcObj.file + ':' +
            funcObj.name + ':' +
            funcObj.range[0] + ':' +
-           funcObj.range[1];
+           funcObj.range[1] + ':' +
+           (funcObj.charRange[1] - funcObj.charRange[0]);
 };
 
 // astToCode is used by getFunctions
@@ -300,6 +301,7 @@ function getFunctions(root) {
             'name': funcName,
             'file': fn.attr.enclosingFile,
             'range': [startLine, endLine],
+            'charRange': fn.range,
             'code': astToCode(fn),
             'encFuncName': encFuncName(fn.attr.enclosingFunction)
         });
@@ -317,6 +319,7 @@ function getFunctions(root) {
         'name': 'global',
         'file': prog.attr.filename,
         'range': [prog.loc.start['line'], prog.loc.end['line']],
+        'charRange': [prog.range],
         'code': null,
         'encFuncName': null,
         'cf': prog.attr.filename + ':global'
