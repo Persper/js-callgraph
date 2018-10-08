@@ -73,7 +73,8 @@ function colonFormat(funcNd){
     return funcNd.attr.enclosingFile + ':' +
            astutil.funcname(funcNd) + ':' +
            funcNd.loc.start.line + ':' +
-           funcNd.loc.end.line;
+           funcNd.loc.end.line + ':' +
+           (funcNd.range[1] - funcNd.range[0]);
 }
 
 /* Convert call graph to node link format that networkx can read

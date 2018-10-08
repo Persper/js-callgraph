@@ -218,7 +218,8 @@ const cf = funcObj => {
     return funcObj.file + ':' +
            funcObj.name + ':' +
            funcObj.range[0] + ':' +
-           funcObj.range[1];
+           funcObj.range[1] + ':' +
+           (funcObj.charRange[1] - funcObj.charRange[0]);
 };
 
 // astToCode is used by getFunctions
