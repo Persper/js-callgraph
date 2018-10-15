@@ -1,0 +1,7 @@
+client.on('Debugger.paused', event => this._onDebuggerPaused(event));
+client.on('Debugger.scriptParsed', event => this._onScriptParsed(event));
+client.on('Network.responseReceived', event => this.emit(Page.Events.ResponseReceived, event.response));
+client.on('Network.loadingFailed', event => this.emit(Page.Events.ResourceLoadingFailed, event));
+client.on('Runtime.consoleAPICalled', event => this._onConsoleAPI(event));
+client.on('Page.javascriptDialogOpening', dialog => this.emit(Page.Events.DialogOpened, dialog));
+client.on('Runtime.exceptionThrown', exception => this._handleException(exception.exceptionDetails));
