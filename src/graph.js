@@ -59,14 +59,22 @@ define(function (require, exports) {
     };
 
     Graph.prototype.iter = function (cb) {
-        for (var i = 0; i < this.succ.length; ++i) {
-            if (!this.succ[i])
-                continue;
-            var from = id2node[i];
-            numset.iter(this.succ[i], function (succ) {
-                cb(from, id2node[succ]);
-            });
+        let edges = this.graph.serialize()['links'];
+
+        for (let i = 0; i < edges.length; i++) {
+          let from = edges[i]['source'];
+          let to = edges[i]['target'];
+          cb(from, to);
         }
+
+        // for (var i = 0; i < this.succ.length; ++i) {
+        //     if (!this.succ[i])
+        //         continue;
+        //     var from = id2node[i];
+        //     numset.iter(this.succ[i], function (succ) {
+        //         cb(from, id2node[succ]);
+        //     });
+        // }
     };
 
     Graph.prototype.hasEdge = function (from, to) {
