@@ -91,9 +91,10 @@ define(function (require, exports) {
     /* Remove (from , to), return false if edge doesn't exist */
     Graph.prototype.removeEdge = function (from, to) {
         if (this.hasNode(from) && this.hasNode(to) && this.hasEdge(from, to)){
-            const fromId = getId(from), toId = getId(to);
-            this.succ[fromId] = numset.remove(this.succ[fromId], toId);
-            this.pred[toId] = numset.remove(this.pred[toId], fromId);
+            this.graph.removeEdge(cf(from), cf(to))
+            // const fromId = getId(from), toId = getId(to);
+            // this.succ[fromId] = numset.remove(this.succ[fromId], toId);
+            // this.pred[toId] = numset.remove(this.pred[toId], fromId);
             return true;
         }
         return false;
