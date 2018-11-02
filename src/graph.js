@@ -84,7 +84,8 @@ define(function (require, exports) {
     }
 
     Graph.prototype.hasNode = function (nd) {
-        return nd.attr.hasOwnProperty('node_id');
+        return this.graph.nodes().indexOf(cf(nd)) >= 0
+        // return nd.attr.hasOwnProperty('node_id');
     }
 
     /* Remove (from , to), return false if edge doesn't exist */
