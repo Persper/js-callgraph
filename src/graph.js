@@ -150,10 +150,14 @@ define(function (require, exports) {
     }
 
     Graph.prototype.iterNodes = function (cb) {
-        for (let i = 0; i < this.id2node.length; ++i) {
-            if (this.id2node[i])
-                cb(this.id2node[i]);
+        let nodes = this.graph.nodes();
+        for (let i = 0; i < nodes.length; i++) {
+          cb(nodes[i]);
         }
+        // for (let i = 0; i < this.id2node.length; ++i) {
+        //     if (this.id2node[i])
+        //         cb(this.id2node[i]);
+        // }
     }
 
     exports.Graph = Graph;
