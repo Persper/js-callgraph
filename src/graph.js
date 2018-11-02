@@ -103,14 +103,18 @@ define(function (require, exports) {
     /* Remove all outward edges of a node */
     Graph.prototype.removeOutEdges = function (nd) {
         if (this.hasNode(nd)){
-            const nid = getId(nd);
-            // Remove itself from other nodes' pred sets
-            let cb = function (succ) {
-                this.pred[succ] = numset.remove(this.pred[succ], nid);
-            };
-            numset.iter(this.succ[nid], cb.bind(this));
-            // Empty its own succ set
-            this.succ[nid] = undefined;
+            let adjacency = this.graph.adjacent(cf(nd));
+            for (let i = 0; i < adjacency; i++) {
+              this.graph.removeEdge(cf(nd), adjacency[i]);
+            }
+            // const nid = getId(nd);
+            // // Remove itself from other nodes' pred sets
+            // let cb = function (succ) {
+            //     this.pred[succ] = numset.remove(this.pred[succ], nid);
+            // };
+            // numset.iter(this.succ[nid], cb.bind(this));
+            // // Empty its own succ set
+            // this.succ[nid] = undefined;
             return true;
         }
         return false;
