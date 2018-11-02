@@ -14,11 +14,15 @@ if (typeof define !== 'function') {
 }
 
 define(function (require, exports) {
+    var graph = require("graph-data-structure");
+    var astutil = require('./astutil');
+    var cf = astutil.cf;
     var numset = require('./numset');
 
     function Graph() {
-        this.succ = [];
-        this.pred = [];
+        this.graph = graph();
+        // this.succ = [];
+        // this.pred = [];
     }
 
     var id2node = Graph.prototype.id2node = [];
