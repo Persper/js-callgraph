@@ -139,10 +139,11 @@ define(function (require, exports) {
     /* Remove a node and all associated edges from graph */
     Graph.prototype.removeNode = function (nd) {
         if (this.hasNode(nd)) {
-            this.removeInEdges(nd);
-            this.removeOutEdges(nd);
-            this.id2node[getId(nd)] = null;
-            delete nd.attr.node_id;
+            this.graph.removeNode(cf(nd));
+            // this.removeInEdges(nd);
+            // this.removeOutEdges(nd);
+            // this.id2node[getId(nd)] = null;
+            // delete nd.attr.node_id;
             return true;
         }
         return false;
