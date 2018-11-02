@@ -70,11 +70,12 @@ define(function (require, exports) {
     };
 
     Graph.prototype.hasEdge = function (from, to) {
-        if (!this.hasNode(from) || !this.hasNode(to))
-          return false;
-
-        var fromId = nodeId(from), toId = nodeId(to);
-        return numset.contains(this.succ[fromId], toId);
+        return this.graph.adjacent(cf(from)).indexOf(cf(to)) >= 0;
+        // if (!this.hasNode(from) || !this.hasNode(to))
+        //   return false;
+        //
+        // var fromId = nodeId(from), toId = nodeId(to);
+        // return numset.contains(this.succ[fromId], toId);
     };
 
     /* Only call this function if nd already in the graph */
