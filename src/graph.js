@@ -45,11 +45,12 @@ define(function (require, exports) {
     }
 
     Graph.prototype.addEdge = function (from, to) {
-        var fromId = nodeId(from), toId = nodeId(to);
-        if (fromId === toId)
-            return;
-        this.succ[fromId] = numset.add(this.succ[fromId], toId);
-        this.pred[toId] = numset.add(this.pred[toId], fromId);
+        this.graph.addEdge(cf(from), cf(to))
+        // var fromId = nodeId(from), toId = nodeId(to);
+        // if (fromId === toId)
+        //     return;
+        // this.succ[fromId] = numset.add(this.succ[fromId], toId);
+        // this.pred[toId] = numset.add(this.pred[toId], fromId);
     };
 
     Graph.prototype.addEdges = function (from, tos) {
