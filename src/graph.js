@@ -177,6 +177,15 @@ define(function (require, exports) {
         }
     }
 
+    Graph.prototype.getNodes = function() {
+      let str_nodes = this.graph.nodes();
+      let nodes = [];
+      for (let i = 0; i < str_nodes.length; i++)
+        nodes.push(this.node_pairings[str_nodes[i]]);
+
+      return nodes;
+    }
+
     exports.Graph = Graph;
     return exports;
 });
