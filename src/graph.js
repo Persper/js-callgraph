@@ -106,6 +106,17 @@ define(function (require, exports) {
         return nd.attr.node_id;
     }
 
+    Graph.prototype.succ = function (nd) {
+      let adj = this.graph.adjacent(cf(nd));
+
+      let lst = [];
+
+      for (let i = 0; i < adj.length; i++)
+        lst.push(this.node_pairings[adj[i]])
+
+      return lst
+    }
+
     Graph.prototype.hasNode = function (nd) {
         return cf(nd) in this.node_pairings;
     }
