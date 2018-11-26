@@ -8,12 +8,8 @@
  *******************************************************************************/
 
 const graph = require('../../src/graph');
-
-function Node(name) {
-  this.name = name;
-  this.attr = {};
-}
-
+const flowgraph = require('../../src/flowgraph');
+const astutil = require('../../src/astutil');
 /*
 test('TEST FORMAT', () => {
   const G = new graph.Graph();
@@ -24,65 +20,235 @@ test('TEST FORMAT', () => {
 });
 */
 
+fn1 = {
+            "type": "FunctionDeclaration",
+            "id": {
+                "type": "Identifier",
+                "name": "f",
+                "range": [
+                    9,
+                    10
+                ],
+                "loc": {
+                    "start": {
+                        "line": 1,
+                        "column": 9
+                    },
+                    "end": {
+                        "line": 1,
+                        "column": 10
+                    }
+                }
+            },
+            "params": [],
+            "body": {
+                "type": "BlockStatement",
+                "body": [],
+                "range": [
+                    13,
+                    15
+                ],
+                "loc": {
+                    "start": {
+                        "line": 1,
+                        "column": 13
+                    },
+                    "end": {
+                        "line": 1,
+                        "column": 15
+                    }
+                }
+            },
+            "generator": false,
+            "expression": false,
+            "async": false,
+            "range": [
+                0,
+                15
+            ],
+            "loc": {
+                "start": {
+                    "line": 1,
+                    "column": 0
+                },
+                "end": {
+                    "line": 1,
+                    "column": 15
+                }
+            }
+        }
+fn2 = {
+            "type": "FunctionDeclaration",
+            "id": {
+                "type": "Identifier",
+                "name": "g",
+                "range": [
+                    10,
+                    11
+                ],
+                "loc": {
+                    "start": {
+                        "line": 2,
+                        "column": 9
+                    },
+                    "end": {
+                        "line": 2,
+                        "column": 10
+                    }
+                }
+            },
+            "params": [],
+            "body": {
+                "type": "BlockStatement",
+                "body": [],
+                "range": [
+                    14,
+                    16
+                ],
+                "loc": {
+                    "start": {
+                        "line": 2,
+                        "column": 13
+                    },
+                    "end": {
+                        "line": 2,
+                        "column": 15
+                    }
+                }
+            },
+            "generator": false,
+            "expression": false,
+            "async": false,
+            "range": [
+                1,
+                16
+            ],
+            "loc": {
+                "start": {
+                    "line": 2,
+                    "column": 0
+                },
+                "end": {
+                    "line": 2,
+                    "column": 15
+                }
+            }
+        }
+
+fn3 = {
+            "type": "FunctionDeclaration",
+            "id": {
+                "type": "Identifier",
+                "name": "h",
+                "range": [
+                    11,
+                    12
+                ],
+                "loc": {
+                    "start": {
+                        "line": 3,
+                        "column": 9
+                    },
+                    "end": {
+                        "line": 3,
+                        "column": 10
+                    }
+                }
+            },
+            "params": [],
+            "body": {
+                "type": "BlockStatement",
+                "body": [],
+                "range": [
+                    15,
+                    17
+                ],
+                "loc": {
+                    "start": {
+                        "line": 3,
+                        "column": 13
+                    },
+                    "end": {
+                        "line": 3,
+                        "column": 15
+                    }
+                }
+            },
+            "generator": false,
+            "expression": false,
+            "async": false,
+            "range": [
+                2,
+                17
+            ],
+            "loc": {
+                "start": {
+                    "line": 3,
+                    "column": 0
+                },
+                "end": {
+                    "line": 3,
+                    "column": 15
+                }
+            }
+        }
+
+fn1.attr = {}
+fn2.attr = {}
+fn3.attr = {}
+
+fn_vertex1 = flowgraph.funcVertex(fn1);
+fn_vertex2 = flowgraph.funcVertex(fn2);
+fn_vertex3 = flowgraph.funcVertex(fn3);
+
+fv1 = fn_vertex1;
+fv2 = fn_vertex2;
+fv3 = fn_vertex3;
+
 test('Add edge between two nodes and check graph has nodes', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
+  G.addEdge(fv1, fv2);
 
-  G.addEdge(nodeA, nodeB);
-
-  expect(G.hasNode(nodeA)).toBe(true);
-  expect(G.hasNode(nodeB)).toBe(true);
+  expect(G.hasNode(fv1)).toBe(true);
+  expect(G.hasNode(fv2)).toBe(true);
 });
 
 test('Add edge between two nodes and check graph has edge between them', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
+  G.addEdge(fv1, fv2);
 
-  G.addEdge(nodeA, nodeB);
-
-  expect(G.hasEdge(nodeA, nodeB)).toBe(true);
+  expect(G.hasEdge(fv1, fv2)).toBe(true);
 });
 
 test('Add edge, remove it and verify it is removed', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
+  G.addEdge(fv1, fv2);
 
-  G.addEdge(nodeA, nodeB);
+  expect(G.removeEdge(fv1, fv2)).toBe(true);
 
-  expect(G.removeEdge(nodeA, nodeB)).toBe(true);
-
-  expect(G.hasEdge(nodeA, nodeB)).toBe(false);
+  expect(G.hasEdge(fv1, fv2)).toBe(false);
 });
 
 test('Add edge, remove one of the nodes and verify it is removed', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
+  G.addEdge(fv1, fv2);
 
-  G.addEdge(nodeA, nodeB);
+  expect(G.removeNode(fv2)).toBe(true);
 
-  expect(G.removeNode(nodeB)).toBe(true);
-
-  expect(G.hasNode(nodeB)).toBe(false);
-  expect(G.hasEdge(nodeA, nodeB)).toBe(false);
+  expect(G.hasNode(fv2)).toBe(false);
+  expect(G.hasEdge(fv1, fv2)).toBe(false);
 });
 
 test('Add edge and verify the reverse direction edge is not in the graph', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
+  G.addEdge(fv1, fv2);
 
-  G.addEdge(nodeA, nodeB);
-
-  expect(G.hasEdge(nodeB, nodeA)).toBe(false);
+  expect(G.hasEdge(fv2, fv1)).toBe(false);
 });
 
 test('Add many edges, remove the nodes and verify they are all removed', () => {
@@ -90,8 +256,18 @@ test('Add many edges, remove the nodes and verify they are all removed', () => {
 
   var nodes = [];
 
+  function make_pp(s) {
+    return function() {
+      return 'Func(' + s + ')'
+    }
+  }
+
   for (var i = 0; i < 1000; ++i)
-    nodes[i] = new Node( i.toString() );
+    nodes[i] = {
+      'name': i.toString(),
+      'type': 'FuncVertex',
+      'attr': {pp: make_pp(i.toString())  },
+    };
 
   for (var i = 0; i < 999; ++i)
     G.addEdge(nodes[i], nodes[i + 1]);
@@ -111,8 +287,18 @@ test('Add many edges, remove the edges and verify they are all removed', () => {
 
   var nodes = [];
 
+  function make_pp(s) {
+    return function() {
+      return 'Func(' + s + ')'
+    }
+  }
+
   for (var i = 0; i < 1000; ++i)
-    nodes[i] = new Node( i.toString() );
+    nodes[i] = {
+      'name': i.toString(),
+      'type': 'FuncVertex',
+      'attr': {pp: make_pp(i.toString())  },
+    };
 
   for (var i = 0; i < 999; ++i)
     G.addEdge(nodes[i], nodes[i + 1]);
@@ -130,128 +316,105 @@ test('Add many edges, remove the edges and verify they are all removed', () => {
 test('Add edges, remove outgoing edges and verify they are removed', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
-  var nodeC = new Node('C');
+  G.addEdge(fv1, fv2);
+  G.addEdge(fv2, fv1);
 
-  G.addEdge(nodeA, nodeB);
-  G.addEdge(nodeB, nodeA);
+  G.addEdge(fv1, fv3);
+  G.addEdge(fv3, fv1);
 
-  G.addEdge(nodeA, nodeC);
-  G.addEdge(nodeC, nodeA);
+  G.addEdge(fv2, fv3);
+  G.addEdge(fv3, fv2);
 
-  G.addEdge(nodeB, nodeC);
-  G.addEdge(nodeC, nodeB);
+  expect(G.removeOutEdges(fv1)).toBe(true);
 
-  expect(G.removeOutEdges(nodeA)).toBe(true);
+  expect(G.hasEdge(fv1, fv2)).toBe(false);
+  expect(G.hasEdge(fv2, fv1)).toBe(true);
 
-  expect(G.hasEdge(nodeA, nodeB)).toBe(false);
-  expect(G.hasEdge(nodeB, nodeA)).toBe(true);
+  expect(G.hasEdge(fv1, fv3)).toBe(false);
+  expect(G.hasEdge(fv3, fv1)).toBe(true);
 
-  expect(G.hasEdge(nodeA, nodeC)).toBe(false);
-  expect(G.hasEdge(nodeC, nodeA)).toBe(true);
-
-  expect(G.hasEdge(nodeB, nodeC)).toBe(true);
-  expect(G.hasEdge(nodeC, nodeB)).toBe(true);
+  expect(G.hasEdge(fv2, fv3)).toBe(true);
+  expect(G.hasEdge(fv3, fv2)).toBe(true);
 
 });
 
 test('Add edges, remove ingoing edges and verify they are removed', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
-  var nodeC = new Node('C');
+  G.addEdge(fv1, fv2);
+  G.addEdge(fv2, fv1);
 
-  G.addEdge(nodeA, nodeB);
-  G.addEdge(nodeB, nodeA);
+  G.addEdge(fv1, fv3);
+  G.addEdge(fv3, fv1);
 
-  G.addEdge(nodeA, nodeC);
-  G.addEdge(nodeC, nodeA);
+  G.addEdge(fv2, fv3);
+  G.addEdge(fv3, fv2);
 
-  G.addEdge(nodeB, nodeC);
-  G.addEdge(nodeC, nodeB);
+  expect(G.removeInEdges(fv1)).toBe(true);
 
-  expect(G.removeInEdges(nodeA)).toBe(true);
+  expect(G.hasEdge(fv1, fv2)).toBe(true);
+  expect(G.hasEdge(fv2, fv1)).toBe(false);
 
-  expect(G.hasEdge(nodeA, nodeB)).toBe(true);
-  expect(G.hasEdge(nodeB, nodeA)).toBe(false);
+  expect(G.hasEdge(fv1, fv3)).toBe(true);
+  expect(G.hasEdge(fv3, fv1)).toBe(false);
 
-  expect(G.hasEdge(nodeA, nodeC)).toBe(true);
-  expect(G.hasEdge(nodeC, nodeA)).toBe(false);
-
-  expect(G.hasEdge(nodeB, nodeC)).toBe(true);
-  expect(G.hasEdge(nodeC, nodeB)).toBe(true);
+  expect(G.hasEdge(fv2, fv3)).toBe(true);
+  expect(G.hasEdge(fv3, fv2)).toBe(true);
 });
 
 test('Add nodes and verify they were added', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
-  var nodeC = new Node('C');
+  G.addNode(fv1);
+  G.addNode(fv2);
+  G.addNode(fv3);
 
-  G.addNode(nodeA);
-  G.addNode(nodeB);
-  G.addNode(nodeC);
-
-  expect(G.hasNode(nodeA)).toBe(true);
-  expect(G.hasNode(nodeB)).toBe(true);
-  expect(G.hasNode(nodeC)).toBe(true);
+  expect(G.hasNode(fv1)).toBe(true);
+  expect(G.hasNode(fv2)).toBe(true);
+  expect(G.hasNode(fv3)).toBe(true);
 });
 
 test('Add nodes, remove them and verify they were removed', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
-  var nodeC = new Node('C');
+  G.addNode(fv1);
+  G.addNode(fv2);
+  G.addNode(fv3);
 
-  G.addNode(nodeA);
-  G.addNode(nodeB);
-  G.addNode(nodeC);
+  G.removeNode(fv1);
+  G.removeNode(fv2);
+  G.removeNode(fv3);
 
-  G.removeNode(nodeA);
-  G.removeNode(nodeB);
-  G.removeNode(nodeC);
-
-  expect(G.hasNode(nodeA)).toBe(false);
-  expect(G.hasNode(nodeB)).toBe(false);
-  expect(G.hasNode(nodeC)).toBe(false);
+  expect(G.hasNode(fv1)).toBe(false);
+  expect(G.hasNode(fv2)).toBe(false);
+  expect(G.hasNode(fv3)).toBe(false);
 });
 
 
 test('Add nodes, add edge, verify graph has edges and nodes', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
+  G.addNode(fv1);
+  G.addNode(fv2);
 
-  G.addNode(nodeA);
-  G.addNode(nodeB);
+  G.addEdge(fv1, fv2);
 
-  G.addEdge(nodeA, nodeB);
+  expect(G.hasNode(fv1)).toBe(true);
+  expect(G.hasNode(fv2)).toBe(true);
 
-  expect(G.hasNode(nodeA)).toBe(true);
-  expect(G.hasNode(nodeB)).toBe(true);
-
-  expect(G.hasEdge(nodeA, nodeB)).toBe(true);
+  expect(G.hasEdge(fv1, fv2)).toBe(true);
 });
 
 test('Add nodes, applies function to all nodes and verifies changes are made', () => {
   const G = new graph.Graph();
 
-  var nodeA = new Node('A');
-  var nodeB = new Node('B');
-  var nodeC = new Node('C');
+  G.addNode(fv1);
+  G.addNode(fv2);
+  G.addNode(fv3);
 
-  G.addNode(nodeA);
-  G.addNode(nodeB);
-  G.addNode(nodeC);
+  G.iterNodes((nd) => { nd.func.id.name = nd.func.id.name.toLowerCase(); });
 
-  G.iterNodes((nd) => { nd.name = nd.name.toLowerCase(); });
-
-  expect(nodeA.name).toBe('a');
-  expect(nodeB.name).toBe('b');
-  expect(nodeC.name).toBe('c');
+  expect(fv1.func.id.name).toBe('f');
+  expect(fv2.func.id.name).toBe('g');
+  expect(fv3.func.id.name).toBe('h');
 });
