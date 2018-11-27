@@ -69,15 +69,15 @@ define(function (require, exports) {
 
                   if (popped[index] == 1) {
                     m[i] = new Set(m[i])
-                    for (let elem of m[index].entries()) {
-                      m[i].add(elem[0]);
+                    for (let elem of m[index].values()) {
+                      m[i].add(elem);
                     }
                     m[i].add(index);
                     t[i] = new Set(t[i])
-                    for (let elem of t[index].entries())
-                      t[i].add(elem[0]);
-                    for (let elem of m[i].entries())
-                      t[i].delete(elem[0]);
+                    for (let elem of t[index].values())
+                      t[i].add(elem);
+                    for (let elem of m[i].values())
+                      t[i].delete(elem);
                   } else {
                     t[i] = new Set(t[i].add(index));
                   }
@@ -135,12 +135,12 @@ define(function (require, exports) {
                     visit1(src_id);
 
                 var tc = new Set(m[src_id]);
-                for (let elem of t[src_id].entries())
+                for (let elem of t[src_id].values())
                   tc.add(elem);
 
                 let ret = new Array();
-                for (let elem of tc.entries()) {
-                  ret.push(enum_nodes[elem[0]]);
+                for (let elem of tc.values()) {
+                  ret.push(enum_nodes[elem]);
                 }
 
                 return ret;
@@ -161,11 +161,11 @@ define(function (require, exports) {
                   visit1(src_id);
 
               var tc = new Set(m[src_id]);
-              for (let elem of t[src_id].entries())
+              for (let elem of t[src_id].values())
                 tc.add(elem);
 
-              for (let elem of tc.entries())
-                  cb(enum_nodes[elem[0]]);
+              for (let elem of tc.values())
+                  cb(enum_nodes[elem]);
             },
             reaches: function (src, dest) {
                 var src_id = src.reachability_id,
@@ -175,11 +175,12 @@ define(function (require, exports) {
                     visit1(src_id);
 
                 var tc = new Set(m[src_id]);
-                for (let elem of t[src_id].entries())
+                for (let elem of t[src_id].values())
                   tc.add(elem);
 
                 return tc.has(des_id);
             }
         };
     };
+    return exports;
 });
