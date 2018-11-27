@@ -28,8 +28,10 @@ define(function (require, exports) {
 
         let n = nodes.length;
 
-        for (let i = 0; i < n; i++)
+        for (let i = 0; i < n; i++) {
             enum_nodes[i] = nodes[i];
+            nodes[i].reachability_id = i;
+        }
 
         let visited = new Array(n).fill(0),
            visited2 = new Array(n).fill(0),
@@ -56,7 +58,7 @@ define(function (require, exports) {
                 let succ = graph.succ(enum_nodes[i])
 
                 for (let j= 0; j < succ.length; j++) {
-                  let index = nodes.indexOf(succ[j]);
+                  let index = succ[j].reachability_id;
                   if (nodePred && !nodePred(succ[j]))
                     continue;
                   if (m[i].has(index) || t[i].has(index))
@@ -104,7 +106,7 @@ define(function (require, exports) {
               let succ = graph.succ(enum_nodes[i])
 
               for (let j= 0; j < succ.length; j++) {
-                let index = nodes.indexOf(succ[j]);
+                let index = succ[j].reachability_id;
                 if (nodePred && !nodePred(succ[j]))
                   return;
                 if (visited2[index] == 0 && t[index].size !== 0)
@@ -117,15 +119,16 @@ define(function (require, exports) {
         }
         return {
             getReachable: function (src) {
-                var src_id = enum_nodes.indexOf(src);
-                if (src_id == -1) {
+                var src_id = src.reachability_id;
+                if (src_id === undefined) {
                   enum_nodes.push(src);
                   visited.push(0);
                   visited2.push(0);
                   popped.push(0);
                   m.push(new Set());
                   t.push(new Set());
-                  src_id = enum_nodes.indexOf(src);
+                  src.reachability_id = enum_nodes.length - 1;
+                  src_id = src.reachability_id;
                 }
 
                 if (visited[src_id] == 0)
@@ -143,15 +146,16 @@ define(function (require, exports) {
                 return ret;
             },
             iterReachable: function (src, cb) {
-              var src_id = enum_nodes.indexOf(src);
-              if (src_id == -1) {
+              var src_id = src.reachability_id;
+              if (src_id === undefined) {
                 enum_nodes.push(src);
                 visited.push(0);
                 visited2.push(0);
                 popped.push(0);
                 m.push(new Set());
                 t.push(new Set());
-                src_id = enum_nodes.indexOf(src);
+                src.reachability_id = enum_nodes.length - 1;
+                src_id = src.reachability_id;
               }
               if (visited[src_id] == 0)
                   visit1(src_id);
@@ -164,8 +168,8 @@ define(function (require, exports) {
                   cb(enum_nodes[elem[0]]);
             },
             reaches: function (src, dest) {
-                var src_id = enum_nodes.indexOf(src),
-                   dest_id = enum_nodes.indexOf(dest);
+                var src_id = src.reachability_id,
+                   dest_id = dest.reachability_id;
 
                 if (visited[src_id] == 0)
                     visit1(src_id);
