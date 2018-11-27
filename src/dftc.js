@@ -18,13 +18,12 @@ if (typeof define !== 'function') {
 }
 
 define(function (require, exports) {
-    var numset = require('./numset'),
-        Graph = require('./graph').Graph;
+    var numset = require('./numset');
 
-    Graph.prototype.reachability = function (nodePred) {
+    exports.reachability = function (graph, nodePred) {
         let enum_nodes = new Array();
 
-        let nodes = this.getNodes();
+        let nodes = graph.getNodes();
 
         let n = nodes.length;
 
@@ -48,8 +47,6 @@ define(function (require, exports) {
         function add(a, b) {
           return a + b;
         }
-
-        var graph = this;
 
         function visit1(i) {
             visited[i] = 1;
