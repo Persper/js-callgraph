@@ -21,7 +21,8 @@ define(function (require, exports) {
         natives = require('./natives'),
         flowgraph = require('./flowgraph'),
         callgraph = require('./callgraph'),
-        mod = require('./module');
+        mod = require('./module'),
+        dftc = require('./dftc');
 
     function addInterproceduralFlowEdges(ast, fg) {
         fg = fg || new graph.Graph();
@@ -30,7 +31,7 @@ define(function (require, exports) {
         do {
             changed = false;
 
-            var reach = fg.reachability(function (nd) {
+            var reach = dftc.reachability(fg, function (nd) {
                 return nd.type !== 'UnknownVertex';
             });
 

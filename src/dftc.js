@@ -18,95 +18,166 @@ if (typeof define !== 'function') {
 }
 
 define(function (require, exports) {
-    var numset = require('./numset'),
-        Graph = require('./graph').Graph;
+    var numset = require('./numset');
 
-    Graph.prototype.reachability = function (nodePred) {
-        var self = this;
-        var visited, visited2, popped, global,
-            m = [], t = [];
+    exports.reachability = function (graph, nodePred) {
+        let enum_nodes = new Array();
 
-        function visit1(v) {
-            visited = numset.add(visited, v);
+        let nodes = graph.getNodes();
 
-            if (!nodePred || nodePred(self.id2node[v]))
-            // TODO: think through whether we need to do this loop more than once;
-            // the paper isn't very clear on this
-                numset.iter(self.succ[v], function (w) {
-                    if (nodePred && !nodePred(self.id2node[w]))
-                        return;
-                    if (numset.contains(m[v], w) || numset.contains(t[v], w))
-                        return;
+        let n = nodes.length;
 
-                    if (!numset.contains(visited, w))
-                        visit1(w);
+        for (let i = 0; i < n; i++) {
+            enum_nodes[i] = nodes[i];
+            nodes[i].reachability_id = i;
+        }
 
-                    if (numset.contains(popped, w)) {
-                        m[v] = numset.add(numset.addAll(m[v], m[w]), w);
-                        t[v] = numset.removeAll(numset.addAll(t[v], t[w]), m[v]);
-                    } else {
-                        t[v] = numset.add(t[v], w);
+        let visited = new Array(n).fill(0),
+           visited2 = new Array(n).fill(0),
+             popped = new Array(n).fill(0),
+             globol = new Set(),
+                  m = [],
+                  t = [];
+
+        for (let i = 0; i < n; i++) {
+            m.push(new Set());
+            t.push(new Set());
+        }
+
+        function add(a, b) {
+          return a + b;
+        }
+
+        function visit1(i) {
+            visited[i] = 1;
+
+            if (!nodePred || nodePred(enum_nodes[i])) {
+                let succ = graph.succ(enum_nodes[i])
+
+                for (let j= 0; j < succ.length; j++) {
+                  let index = succ[j].reachability_id;
+                  if (nodePred && !nodePred(succ[j]))
+                    continue;
+                  if (m[i].has(index) || t[i].has(index))
+                    continue;
+
+                  if (visited[index] == 0)
+                    visit1(index);
+
+                  if (popped[index] == 1) {
+                    m[i] = new Set(m[i])
+                    for (let elem of m[index].values()) {
+                      m[i].add(elem);
                     }
-                });
-
-            if (numset.contains(t[v], v)) {
-                if (numset.size(t[v]) === 1) {
-                    m[v] = numset.add(m[v], v);
-                    t[v] = void(0);
-                    global = m[v];
-                    visit2(v);
-                } else {
-                    t[v] = numset.remove(t[v], v);
-                    m[v] = numset.add(m[v], v);
+                    m[i].add(index);
+                    t[i] = new Set(t[i])
+                    for (let elem of t[index].values())
+                      t[i].add(elem);
+                    for (let elem of m[i].values())
+                      t[i].delete(elem);
+                  } else {
+                    t[i] = new Set(t[i].add(index));
+                  }
                 }
+              }
+
+            if(t[i].has(i)) {
+              if (t[i].size === 1) {
+                m[i].add(i);
+                t[i] = new Set();
+                globol = new Set(m[i]);
+                visit2(i);
+              } else {
+                t[i].delete(i);
+                m[i].add(i);
+              }
             }
 
-            popped = numset.add(popped, v);
+            popped[i] = 1;
         }
 
-        function visit2(v) {
-            visited2 = numset.add(visited2, v);
+        function visit2(i) {
+            visited2[i] = 1;
 
-            if (!nodePred || nodePred(self.id2node[v]))
-                numset.iter(self.succ[v], function (w) {
-                    if (nodePred && !nodePred(self.id2node[w]))
-                        return;
-                    if (!numset.contains(visited2, w) && numset.size(t[w]) !== 0)
-                        visit2(w);
-                });
+            if (!nodePred || nodePred(enum_nodes[i])) {
+              let succ = graph.succ(enum_nodes[i])
 
-            m[v] = numset.copy(global);
-            t[v] = void(0);
+              for (let j= 0; j < succ.length; j++) {
+                let index = succ[j].reachability_id;
+                if (nodePred && !nodePred(succ[j]))
+                  return;
+                if (visited2[index] == 0 && t[index].size !== 0)
+                  visit2(index);
+              }
+            }
+
+            m[i] = new Set(globol);
+            t[i] = new Set();
         }
-
         return {
             getReachable: function (src) {
-                var src_id = self.nodeId(src);
-                if (!numset.contains(visited, src_id))
+                var src_id = src.reachability_id;
+                if (src_id === undefined) {
+                  enum_nodes.push(src);
+                  visited.push(0);
+                  visited2.push(0);
+                  popped.push(0);
+                  m.push(new Set());
+                  t.push(new Set());
+                  src.reachability_id = enum_nodes.length - 1;
+                  src_id = src.reachability_id;
+                }
+
+                if (visited[src_id] == 0)
                     visit1(src_id);
-                var tc = numset.addAll(m[src_id], t[src_id]);
-                return numset.map(tc, function (dest_id) {
-                    return self.id2node[dest_id];
-                });
+
+                var tc = new Set(m[src_id]);
+                for (let elem of t[src_id].values())
+                  tc.add(elem);
+
+                let ret = new Array();
+                for (let elem of tc.values()) {
+                  ret.push(enum_nodes[elem]);
+                }
+
+                return ret;
             },
             iterReachable: function (src, cb) {
-                var src_id = self.nodeId(src);
-                if (!numset.contains(visited, src_id))
-                    visit1(src_id);
-                var tc = numset.addAll(m[src_id], t[src_id]);
-                numset.iter(tc, function (dest_id) {
-                    cb(self.id2node[dest_id]);
-                });
+              var src_id = src.reachability_id;
+              if (src_id === undefined) {
+                enum_nodes.push(src);
+                visited.push(0);
+                visited2.push(0);
+                popped.push(0);
+                m.push(new Set());
+                t.push(new Set());
+                src.reachability_id = enum_nodes.length - 1;
+                src_id = src.reachability_id;
+              }
+              if (visited[src_id] == 0)
+                  visit1(src_id);
+
+              var tc = new Set(m[src_id]);
+              for (let elem of t[src_id].values())
+                tc.add(elem);
+
+              for (let elem of tc.values())
+                  cb(enum_nodes[elem]);
             },
             reaches: function (src, dest) {
-                var src_id = self.nodeId(src), dest_id = nodeId(dest);
-                if (!numset.contains(visited, src_id))
+                var src_id = src.reachability_id,
+                   dest_id = dest.reachability_id;
+
+                if (visited[src_id] == 0)
                     visit1(src_id);
-                var tc = numset.addAll(m[src_id], t[src_id]);
-                return numset.some(tc, function (id) {
-                    return id === dest_id;
-                });
+
+                var tc = new Set(m[src_id]);
+                for (let elem of t[src_id].values())
+                  tc.add(elem);
+
+                return tc.has(des_id);
             }
         };
     };
+    return exports;
 });

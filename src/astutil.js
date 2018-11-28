@@ -468,3 +468,4 @@ module.exports.isModuleExports = isModuleExports;
 module.exports.isCallTo = isCallTo;
 module.exports.getReturnValues = getReturnValues;
 module.exports.isFunction= isFunction;
+module.exports.cf= cf;
