@@ -126,7 +126,7 @@ define(function (require, exports) {
 
                 });
             });
-            this.files = Array.from(new Set(filteredfiles));
+            files = Array.from(new Set(filteredfiles));
         }
 
         args.strategy = args.strategy || 'ONESHOT';
