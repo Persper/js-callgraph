@@ -87,6 +87,20 @@ define(function (require, exports) {
       this.graph.removeNode(old_cf);
     }
 
+    Graph.prototype.merge = function (graph) {
+      let nodes = graph.getNodes();
+
+      for (let i = 0; i < nodes.length; i++) {
+        this.addNode(nodes[i]);
+      }
+
+      let gs = graph.serialize();
+
+      for (let i = 0; i < gs['links'].length; i++) {
+        this.graph.addEdge(gs['links'][i]['source'], gs['links'][i]['target'])
+      }
+    }
+
     Graph.prototype.iter = function (cb) {
         let edges = this.graph.serialize()['links'];
 
