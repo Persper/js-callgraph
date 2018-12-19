@@ -27,6 +27,7 @@ define(function (require, exports) {
     function Graph() {
         this.graph = new graph();
         this.node_pairings = {};
+        this.edge_annotations = {};
     }
 
     var id2node = Graph.prototype.id2node = [];
@@ -47,16 +48,22 @@ define(function (require, exports) {
       this.graph.addNode(cf(nd));
     }
 
-    Graph.prototype.addEdge = function (from, to) {
+    Graph.prototype.addEdge = function (from, to, annote) {
         this.addNode(from);
         this.addNode(to);
 
         this.graph.addEdge(cf(from), cf(to));
+
+        if (annote !== undefined)
+          this.edge_annotations[cf(from) + ' -> ' + cf(to)] = annote;
     };
 
-    Graph.prototype.addEdges = function (from, tos) {
+    Graph.prototype.addEdges = function (from, tos, annotations) {
         for (var i = 0; i < tos.length; ++i)
-            this.addEdge(from, tos[i]);
+            if (annotations !== undefined)
+              this.addEdge(from, tos[i], annotations[i]);
+            else
+              this.addEdge(from, tos[i]);
     };
 
     Graph.prototype.update = function (old_cf, new_nd) {
@@ -78,6 +85,20 @@ define(function (require, exports) {
           this.graph.addEdge(gs['links'][i]['source'], cf(new_nd));
       }
       this.graph.removeNode(old_cf);
+    }
+
+    Graph.prototype.merge = function (graph) {
+      let nodes = graph.getNodes();
+
+      for (let i = 0; i < nodes.length; i++) {
+        this.addNode(nodes[i]);
+      }
+
+      let gs = graph.serialize();
+
+      for (let i = 0; i < gs['links'].length; i++) {
+        this.graph.addEdge(gs['links'][i]['source'], gs['links'][i]['target'])
+      }
     }
 
     Graph.prototype.iter = function (cb) {
