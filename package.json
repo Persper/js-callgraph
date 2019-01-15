@@ -1,8 +1,8 @@
 {
   "name": "@persper/js-callgraph",
-  "version": "1.0.1",
+  "version": "1.1.1",
   "description": "Builds static call graph for Javascript with a field-based algorithm.",
-  "main": "js-callgraph.js",
+  "main": "index.js",
   "dependencies": {
     "@babel/core": "^7.1.2",
     "@babel/plugin-proposal-class-properties": "^7.1.0",
@@ -18,7 +18,8 @@
     "npm": "^5.10.0",
     "sloc": "^0.2.0",
     "source-map": "^0.7.3",
-    "graph-data-structure": "^1.8.0"
+    "graph-data-structure": "^1.8.0",
+    "escodegen": "^1.11.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",

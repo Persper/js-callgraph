@@ -1,8 +1,6 @@
 #!/usr/bin/python3
 
-import os
-import sys
-import glob
+import os, sys, glob, time
 from os.path import isfile, join, dirname, isdir, basename
 from process import precision_recall
 
@@ -38,6 +36,8 @@ def find_truth_file(test_file):
     else:
         return None
 
+start = time.time()
+
 for d in test_dirs:
     print('\n' + '='*5, d, '='*5 + '\n')
     d = join(test_root_dir, d)
@@ -57,9 +57,12 @@ for d in test_dirs:
                 print('\rFAILED: ' + test_file + ' ❌\n')
                 num_failed += 1
 
+end = time.time()
+
 print()
 print('Number passed: ' + str(num_passed))
 print('Number failed: ' + str(num_failed))
+print('Total time: ' + str(end - start))
 
 if num_failed > 0:
     exit(1)
