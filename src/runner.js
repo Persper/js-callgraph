@@ -153,8 +153,12 @@ define(function (require, exports) {
             cg = semioptimistic.buildCallGraph(ast);
         if (args.time) console.timeEnd("callgraph");
 
-        if (args.fg)
-            console.log(cg.fg.dotify());
+        if (args.fg){
+            let serializedGraph = cg.fg.graph.serialize();
+            serializedGraph.links.forEach((link) => {
+                console.log(link.source, "=>", link.target);
+            });
+        }
 
         if (args.countCB)
             callbackCounter.countCallbacks(ast);
