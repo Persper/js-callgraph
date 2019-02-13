@@ -24,7 +24,7 @@ define(function (require, exports) {
         mod = require('./module'),
         dftc = require('./dftc');
 
-    function addInterproceduralFlowEdges(ast, fg) {
+    function addInterproceduralFlowEdges(ast, fg, annote) {
         fg = fg || new graph.Graph();
 
         var changed;

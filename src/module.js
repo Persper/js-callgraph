@@ -286,20 +286,20 @@ Args:
 Todo:
     Do we need to handle cases other than nd being of type 'FunctionDeclaration'?
 */
-function connectDefaultImport(expFuncs, fg, srcFname, idNode) {
+function connectDefaultImport(expFuncs, fg, srcFname, idNode, annote) {
     if (!(srcFname in expFuncs))
         return;
     for (let expr of expFuncs[srcFname]['default']) {
         if (expr.type === 'FunctionDeclaration') {
-            fg.addEdge(flowgraph.funcVertex(expr), flowgraph.vertexFor(idNode));
+            fg.addEdge(flowgraph.funcVertex(expr), flowgraph.vertexFor(idNode), annote);
         } else if (expr.type === 'ClassDeclaration' || expr.type === 'ClassExpression') {
             let body = expr.body.body
             for (var i = 0; i < body.length; ++i)
               if (body[i].kind === 'constructor') {
-                  fg.addEdge(flowgraph.funcVertex(body[i].value), flowgraph.vertexFor(idNode));
+                  fg.addEdge(flowgraph.funcVertex(body[i].value), flowgraph.vertexFor(idNode), annote);
                 }
         } else {
-          fg.addEdge(flowgraph.vertexFor(expr), flowgraph.vertexFor(idNode));
+          fg.addEdge(flowgraph.vertexFor(expr), flowgraph.vertexFor(idNode), annote);
         }
     }
 }
@@ -312,12 +312,12 @@ Args:
     importedName - A string, the original name of the identifer being imported
                  - can be used to search expFuncs[srcFame]['named']
 */
-function connectNamedImport(expFuncs, fg, srcFname, local, importedName) {
+function connectNamedImport(expFuncs, fg, srcFname, local, importedName, annote) {
     if (!(srcFname in expFuncs))
         return;
 
     for (let redirectFname of expFuncs[srcFname]['redirect'])
-        connectNamedImport(expFuncs, fg, redirectFname, local, importedName);
+        connectNamedImport(expFuncs, fg, redirectFname, local, importedName, annote);
 
     let named = expFuncs[srcFname]['named'];
 
@@ -329,22 +329,23 @@ function connectNamedImport(expFuncs, fg, srcFname, local, importedName) {
     if (!named.hasOwnProperty(importedName))
         return;
 
-    fg.addEdge(flowgraph.vertexFor(named[importedName]), flowgraph.vertexFor(local));
+    fg.addEdge(flowgraph.vertexFor(named[importedName]), flowgraph.vertexFor(local), annote);
 }
 
-function connectEntireImport(expFuncs, fg, srcFname) {
+function connectEntireImport(expFuncs, fg, srcFname, annote) {
     if (!(srcFname in expFuncs))
         return;
 
     for (let redirectFname of expFuncs[srcFname]['redirect'])
-        connectEntireImport(expFuncs, fg, redirectFname);
+        connectEntireImport(expFuncs, fg, redirectFname, annote);
 
     let named = expFuncs[srcFname]['named'];
 
     for (let exportedName in named)
         fg.addEdge(
             flowgraph.vertexFor(named[exportedName]),
-            flowgraph.propVertex({ type: 'Literal', value: exportedName })
+            flowgraph.propVertex({ type: 'Literal', value: exportedName }),
+            annote
         );
 }
 
@@ -484,7 +485,7 @@ Postcondition:
     edges connecting imports to the corresponding
     exported value have been added to the flowgraph
 */
-function connectImports(fg, expFuncs, impFuncs) {
+function connectImports(fg, expFuncs, impFuncs, annote) {
     // console.log(expFuncs);
     // console.log(impFuncs);
     for (let fname in impFuncs) {
@@ -495,14 +496,14 @@ function connectImports(fg, expFuncs, impFuncs) {
             let imp = impFuncs[fname][srcFname];
 
             for (let idNode of imp['default'])
-                connectDefaultImport(expFuncs, fg, srcFname, idNode);
+                connectDefaultImport(expFuncs, fg, srcFname, idNode, annote);
 
             for (let importedName in imp['named'])
                 for (let local of imp['named'][importedName])
-                    connectNamedImport(expFuncs, fg, srcFname, local, importedName);
+                    connectNamedImport(expFuncs, fg, srcFname, local, importedName, annote);
 
             if (imp['entire'])
-                connectEntireImport(expFuncs, fg, srcFname);
+                connectEntireImport(expFuncs, fg, srcFname, annote);
         }
     }
 }

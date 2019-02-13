@@ -22,7 +22,7 @@ define(function (require, exports) {
         symtab = require('./symtab');
 
     /* Set up intraprocedural flow */
-    function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
+    function addIntraproceduralFlowGraphEdges(ast, flow_graph, annote) {
         flow_graph = flow_graph || new graph.Graph();
         astutil.visit(ast, function (nd) {
             switch (nd.type) {
@@ -30,36 +30,36 @@ define(function (require, exports) {
                     for (var i = 0; i < nd.elements.length; ++i)
                         if (nd.elements[i])
                             flow_graph.addEdge(vertexFor(nd.elements[i]), propVertex({ type: 'Literal',
-                                value: i }));
+                                value: i }), annote);
                     break;
 
                 // R1
                 case 'AssignmentExpression':
                     if (nd.operator === '=')
-                        flow_graph.addEdges(vertexFor(nd.right), [vertexFor(nd.left), vertexFor(nd)]);
+                        flow_graph.addEdges(vertexFor(nd.right), [vertexFor(nd.left), vertexFor(nd)], [annote, annote]);
                     break;
 
                 // R9
                 case 'CallExpression':
                     if (nd.callee.type === 'MemberExpression')
-                        flow_graph.addEdge(vertexFor(nd.callee.object), argVertex(nd, 0));
+                        flow_graph.addEdge(vertexFor(nd.callee.object), argVertex(nd, 0), annote);
 
                 // R8 FALL THROUGH
                 case 'NewExpression':
-                    flow_graph.addEdge(vertexFor(nd.callee), calleeVertex(nd));
+                    flow_graph.addEdge(vertexFor(nd.callee), calleeVertex(nd), annote);
                     for (var i = 0; i < nd.arguments.length; ++i)
-                        flow_graph.addEdge(vertexFor(nd.arguments[i]), argVertex(nd, i + 1));
-                    flow_graph.addEdge(resVertex(nd), vertexFor(nd));
+                        flow_graph.addEdge(vertexFor(nd.arguments[i]), argVertex(nd, i + 1), annote);
+                    flow_graph.addEdge(resVertex(nd), vertexFor(nd), annote);
                     break;
 
                 case 'CatchClause':
-                    flow_graph.addEdge(unknownVertex(), varVertex(nd.param));
+                    flow_graph.addEdge(unknownVertex(), varVertex(nd.param), annote);
                     break;
 
                 // R3
                 case 'ConditionalExpression':
-                    flow_graph.addEdge(vertexFor(nd.consequent), vertexFor(nd));
-                    flow_graph.addEdge(vertexFor(nd.alternate), vertexFor(nd));
+                    flow_graph.addEdge(vertexFor(nd.consequent), vertexFor(nd), annote);
+                    flow_graph.addEdge(vertexFor(nd.alternate), vertexFor(nd), annote);
                     break;
 
                 // R7
@@ -69,7 +69,7 @@ define(function (require, exports) {
                     if (nd.id)
                         for (let i = 0; i < body.length; ++i)
                             if (body[i].kind === 'constructor')
-                                flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id));
+                                flow_graph.addEdge(funcVertex(body[i].value), vertexFor(nd.id), annote);
                     break;
 
                 case 'FunctionDeclaration':
@@ -78,22 +78,22 @@ define(function (require, exports) {
                        as it will not have an id but will be
                        a FunctionDeclaration in ES6 */
                     if (nd.id)
-                      flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id));
+                      flow_graph.addEdge(funcVertex(nd), vertexFor(nd.id), annote);
                     break;
 
                 // R6
                 case 'FunctionExpression':
                 case 'ArrowFunctionExpression':
-                    flow_graph.addEdge(funcVertex(nd), exprVertex(nd));
+                    flow_graph.addEdge(funcVertex(nd), exprVertex(nd), annote);
                     if (nd.id)
-                        flow_graph.addEdge(funcVertex(nd), varVertex(nd.id));
+                        flow_graph.addEdge(funcVertex(nd), varVertex(nd.id), annote);
                     break;
 
                 // R2, R4
                 case 'LogicalExpression':
                     if (nd.operator === '||')
-                        flow_graph.addEdge(vertexFor(nd.left), vertexFor(nd));
-                    flow_graph.addEdge(vertexFor(nd.right), vertexFor(nd));
+                        flow_graph.addEdge(vertexFor(nd.left), vertexFor(nd), annote);
+                    flow_graph.addEdge(vertexFor(nd.right), vertexFor(nd), annote);
                     break;
 
                 // R5
@@ -102,7 +102,7 @@ define(function (require, exports) {
                         if (prop.kind === 'init') {
                             // Temporary fix for computed property names
                             if (prop.key.type === 'Identifier' || prop.key.type == 'Literal')
-                                flow_graph.addEdge(vertexFor(prop.value), propVertex(prop.key));
+                                flow_graph.addEdge(vertexFor(prop.value), propVertex(prop.key), annote);
                         }
                     });
                     break;
@@ -110,22 +110,22 @@ define(function (require, exports) {
                 // R10
                 case 'ReturnStatement':
                     if (nd.argument)
-                        flow_graph.addEdge(vertexFor(nd.argument), retVertex(nd.attr.enclosingFunction));
+                        flow_graph.addEdge(vertexFor(nd.argument), retVertex(nd.attr.enclosingFunction), annote);
                     break;
 
                 case 'SequenceExpression':
-                    flow_graph.addEdge(vertexFor(nd.expressions[nd.expressions.length - 1]), vertexFor(nd));
+                    flow_graph.addEdge(vertexFor(nd.expressions[nd.expressions.length - 1]), vertexFor(nd), annote);
                     break;
 
                 case 'ThrowStatement':
-                    flow_graph.addEdge(vertexFor(nd.argument), unknownVertex());
+                    flow_graph.addEdge(vertexFor(nd.argument), unknownVertex(), annote);
                     break;
 
                 case 'VariableDeclarator':
                     // Only handle the case that nd.id is an Identifer
                     // ObjectPattern and ArrayPattern are handled separately
                     if (nd.id.type === 'Identifier' && nd.init)
-                        flow_graph.addEdge(vertexFor(nd.init), vertexFor(nd.id));
+                        flow_graph.addEdge(vertexFor(nd.init), vertexFor(nd.id), annote);
                     break;
 
                 // ES6 rule, similar to object expression
@@ -133,7 +133,7 @@ define(function (require, exports) {
                 case 'ObjectPattern':
                     for (let prop of nd.properties)
                         // Assuming prop.key and prop.value are Identifers
-                        flow_graph.addEdge(propVertex(prop.key), vertexFor(prop.value));
+                        flow_graph.addEdge(propVertex(prop.key), vertexFor(prop.value), annote);
                     break;
 
                 // ES6 rule, similar to array expression
@@ -144,14 +144,15 @@ define(function (require, exports) {
                         if (nd.elements[i])
                             flow_graph.addEdge(
                                 propVertex({ type: 'Literal', value: i }),
-                                vertexFor(nd.elements[i])
+                                vertexFor(nd.elements[i]),
+                                annote
                             );
                     }
                     break;
 
                 case 'MethodDefinition':
                     if (nd.key.type === 'Identifier')
-                        flow_graph.addEdge(funcVertex(nd.value), propVertex(nd.key))
+                        flow_graph.addEdge(funcVertex(nd.value), propVertex(nd.key), annote)
                     break;
 
                 case 'WithStatement':
