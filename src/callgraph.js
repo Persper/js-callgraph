@@ -52,7 +52,17 @@ define(function (require, exports) {
 
         flowgraph.getNativeVertices().forEach(processFuncVertex);
 
-        var unknown_r = reach.getReachable(flowgraph.unknownVertex());
+        // the following if condition is an ad-hoc fix to the problem of unknownVertex
+        // details: when reach.getReachable is called, the src node's reachability_id attribute will be set
+        // but since unknownVertex is re-used between queries, its reachability_id attribute would be already set
+        // in the second or following calls to reach.getReachable and thus bypass the normal procedures
+        // this ad-hoc fix checks whether unknownVertex's reachability_id attribute is undefined or not
+        // before calling reach.getReachable
+        let unknownVertex = flowgraph.unknownVertex();
+        if (unknownVertex.reachability_id !== undefined) {
+            unknownVertex.reachability_id = undefined;
+        }
+        var unknown_r = reach.getReachable(unknownVertex);
         unknown_r.forEach(function (nd) {
             if (nd.type === 'CalleeVertex')
                 unknown[unknown.length] = nd;
