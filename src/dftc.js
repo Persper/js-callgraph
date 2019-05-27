@@ -18,7 +18,7 @@ if (typeof define !== 'function') {
 }
 
 define(function (require, exports) {
-    var numset = require('./numset');
+  const { nd2str } = require('./graph');
 
     exports.reachability = function (graph, nodePred) {
         let enum_nodes = new Array();
@@ -27,9 +27,11 @@ define(function (require, exports) {
 
         let n = nodes.length;
 
+        const str2rid = {};
+
         for (let i = 0; i < n; i++) {
             enum_nodes[i] = nodes[i];
-            nodes[i].reachability_id = i;
+            str2rid[nd2str(nodes[i])] = i;
         }
 
         let visited = new Array(n).fill(0),
@@ -44,10 +46,6 @@ define(function (require, exports) {
             t.push(new Set());
         }
 
-        function add(a, b) {
-          return a + b;
-        }
-
         function visit1(i) {
             visited[i] = 1;
 
@@ -55,7 +53,7 @@ define(function (require, exports) {
                 let succ = graph.succ(enum_nodes[i])
 
                 for (let j= 0; j < succ.length; j++) {
-                  let index = succ[j].reachability_id;
+                  let index = str2rid[nd2str(succ[j])];
                   if (nodePred && !nodePred(succ[j]))
                     continue;
                   if (m[i].has(index) || t[i].has(index))
@@ -103,7 +101,7 @@ define(function (require, exports) {
               let succ = graph.succ(enum_nodes[i])
 
               for (let j= 0; j < succ.length; j++) {
-                let index = succ[j].reachability_id;
+                let index = str2rid[nd2str(succ[j])];
                 if (nodePred && !nodePred(succ[j]))
                   return;
                 if (visited2[index] == 0 && t[index].size !== 0)
@@ -116,17 +114,17 @@ define(function (require, exports) {
         }
         return {
             getReachable: function (src) {
-                var src_id = src.reachability_id;
-                if (src_id === undefined) {
+                const nodeStr = nd2str(src);
+                if (!(nodeStr in str2rid)) {
                   enum_nodes.push(src);
                   visited.push(0);
                   visited2.push(0);
                   popped.push(0);
                   m.push(new Set());
                   t.push(new Set());
-                  src.reachability_id = enum_nodes.length - 1;
-                  src_id = src.reachability_id;
+                  str2rid[nodeStr] = enum_nodes.length - 1;
                 }
+                const src_id = str2rid[nodeStr];
 
                 if (visited[src_id] == 0)
                     visit1(src_id);
@@ -143,17 +141,18 @@ define(function (require, exports) {
                 return ret;
             },
             iterReachable: function (src, cb) {
-              var src_id = src.reachability_id;
-              if (src_id === undefined) {
+              const nodeStr = nd2str(src);
+              if (!(nodeStr in str2rid)) {
                 enum_nodes.push(src);
                 visited.push(0);
                 visited2.push(0);
                 popped.push(0);
                 m.push(new Set());
                 t.push(new Set());
-                src.reachability_id = enum_nodes.length - 1;
-                src_id = src.reachability_id;
+                str2rid[nodeStr] = enum_nodes.length - 1;
               }
+              const src_id = str2rid[nodeStr];
+
               if (visited[src_id] == 0)
                   visit1(src_id);
 
@@ -165,8 +164,8 @@ define(function (require, exports) {
                   cb(enum_nodes[elem]);
             },
             reaches: function (src, dest) {
-                var src_id = src.reachability_id,
-                   dest_id = dest.reachability_id;
+              const src_id = str2rid[nd2str(src)];
+              const dest_id = str2rid[nd2str(dest)];
 
                 if (visited[src_id] == 0)
                     visit1(src_id);
@@ -175,7 +174,7 @@ define(function (require, exports) {
                 for (let elem of t[src_id].values())
                   tc.add(elem);
 
-                return tc.has(des_id);
+                return tc.has(dest_id);
             }
         };
     };

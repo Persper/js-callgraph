@@ -208,5 +208,6 @@ define(function (require, exports) {
     }
 
     exports.Graph = Graph;
+    exports.nd2str = nodeToString;
     return exports;
 });
