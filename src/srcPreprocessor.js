@@ -15,7 +15,7 @@
  * All preprocessors should retain line numbers.
  */
 
-const babel = require('babel-core');
+const babel = require('@babel/core');
 
 const nameToFunc = {
 	'flow': stripFlowPrep,
@@ -45,7 +45,7 @@ function applyPreps(src, fname, prepNames) {
 
 function stripFlowPrep(src) {
     return babel.transform(src, {
-        presets: ['flow'],
+        presets: ["@babel/preset-flow"],
         retainLines: true,
         parserOpts: {strictMode: false}
     }).code;

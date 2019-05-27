@@ -11,15 +11,14 @@
     "JSONStream": "1.3.3",
     "amdefine": "^1.0.1",
     "argparse": "^1.0.10",
-    "babel-core": "^7.0.0-bridge.0",
     "body-parser": "^1.18.2",
+    "escodegen": "^1.11.0",
     "esprima": "^4.0.0",
     "express": "^4.16.3",
+    "graph-data-structure": "^1.8.0",
     "npm": "^5.10.0",
     "sloc": "^0.2.0",
-    "source-map": "^0.7.3",
-    "graph-data-structure": "^1.8.0",
-    "escodegen": "^1.11.0"
+    "source-map": "^0.7.3"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
