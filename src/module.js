@@ -148,6 +148,29 @@ function addDefaultExport(expFuncs, fname, nd) {
     expFuncs[fname]['default'].push(nd);
 }
 
+
+/*
+To avoid the exported/imported function name colliding with Object Prototype's own properties,
+we prepend '$' to exported/imported function name before inserting it into
+impFuncs[fname][srcFname]['named'] and expFuncs[fname]['named'].
+
+Example:
+    If a developer exports a function called `hasOwnProperty`, it would override
+    the `hasOwnProperty` property of impFuncs[fname][srcFname]['named'] when we insert it, and break the code
+    Now we have a test for this case, please see tests/import-export/es6/es6-import-hasOwnProperty.js
+*/
+function mangle(funcName) {
+    return '$' + funcName;
+}
+
+/*
+Since connectEntireImport needs to use exportedName to construct PropVertex,
+we need to unmangle exportedName first before using it.
+*/
+function unmangle(funcName) {
+    return funcName.substring(1, funcName.length);
+}
+
 /* Add a named export to expFuncs
 
 expFuncs[fname]['named'][exportedName] is an ast node of type "Identifier"
@@ -173,6 +196,7 @@ function addNamedExport(expFuncs, fname, local, exportedName) {
     because exportedName can be properties of named's prototype,
     for example, 'toString'.
     */
+    exportedName = mangle(exportedName);
     if (expFuncs[fname]['named'].hasOwnProperty(exportedName))
         console.log('WARNING: Re-assignment in addNamedExport.');
 
@@ -245,6 +269,7 @@ function addNamedImport(impFuncs, fname, srcFname, local, importedName) {
     because importedName can be properties of named's prototype,
     for example, 'toString'.
     */
+    importedName = mangle(importedName);
     if (named.hasOwnProperty(importedName))
         named[importedName].push(local);
     else
@@ -344,7 +369,7 @@ function connectEntireImport(expFuncs, fg, srcFname) {
     for (let exportedName in named)
         fg.addEdge(
             flowgraph.vertexFor(named[exportedName]),
-            flowgraph.propVertex({ type: 'Literal', value: exportedName })
+            flowgraph.propVertex({ type: 'Literal', value: unmangle(exportedName) })
         );
 }
 
