@@ -10,7 +10,6 @@
 
 const esprima = require('esprima');
 const fs = require('fs');
-const escodegen = require('escodegen');
 const prep = require('./srcPreprocessor');
 
 /* AST visitor */
@@ -263,20 +262,13 @@ const cf = funcObj => {
            (funcObj.charRange[1] - funcObj.charRange[0]);
 };
 
-// astToCode is used by getFunctions
-const astToCode = astNode => {
-    return escodegen.generate(astNode, {
-        'compact': true,
-        'comment': false
-    });
-}
-
 /* Return a list of objects storing function info in root
 
 Args:
     root - An ast node of type 'ProgramCollection',
          - the output of astFromSrc function,
          - thus, root.programs.length is equal to 1
+    src  - A string, the corresponding source code of `root`
 
 Returns:
     A list of objects, each with the following properties
@@ -289,7 +281,7 @@ Returns:
         'cf': a string representing the colon format id
     }
 */
-function getFunctions(root) {
+function getFunctions(root, src) {
     const funcs = [];
     const funcNodes = root.attr.functions;
 
@@ -310,7 +302,7 @@ function getFunctions(root) {
             'file': fn.attr.enclosingFile,
             'range': [startLine, endLine],
             'charRange': fn.range,
-            'code': astToCode(fn),
+            'code': src.substring(fn.range[0], fn.range[1]),
             'encFuncName': encFuncName(fn.attr.enclosingFunction)
         });
     }
