@@ -2,7 +2,7 @@
 
 
 [![Build Status](https://travis-ci.org/Persper/js-callgraph.svg?branch=master)](https://travis-ci.org/Persper/js-callgraph)
-[![NPM version](https://img.shields.io/badge/npm-v1.1.5-blue.svg)](https://www.npmjs.com/package/@persper/js-callgraph)
+[![NPM version](https://img.shields.io/badge/npm-v1.2.0-blue.svg)](https://www.npmjs.com/package/@persper/js-callgraph)
 [![License](https://img.shields.io/badge/license-EPL--2.0-green.svg)](https://www.eclipse.org/legal/epl-2.0/)
 
 This project implements a field-based call graph construction algorithm for JavaScript as described in
@@ -25,6 +25,7 @@ This repo builds upon [Max Schaefer](https://github.com/xiemaisi)'s original [ac
 * More flexible CLI
 	* Take directory parameter
 	* Support filtering files by regex
+* Vue.js support (.vue files)
 * More tests
 
 ## Get Started (CLI)
