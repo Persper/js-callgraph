@@ -7,6 +7,13 @@ reg3 = re.compile("import \'(.*)\'(?! from)")
 reg4 = re.compile("export .* from \'(.*)\'")
 
 
+def match_to_path(match):
+    if match.endswith('.js') or match.endswith('.ts') or match.endswith('.vue'):
+        return match
+    else:
+        return match + '.js'
+
+
 def get_requires(path):
     """ Returns list of imports in path """
     f = path.open()
@@ -18,10 +25,15 @@ def get_requires(path):
     matches3 = reg3.findall(text)
     matches4 = reg4.findall(text)
 
-    lst1 = [m + '.js' for m in matches1]
-    lst2 = [m + '.js' for m in matches2]
-    lst3 = [m + '.js' for m in matches3]
-    lst4 = [m + '.js' for m in matches4]
+    # lst1 = [m + '.js' for m in matches1]
+    # lst2 = [m + '.js' for m in matches2]
+    # lst3 = [m + '.js' for m in matches3]
+    # lst4 = [m + '.js' for m in matches4]
+
+    lst1 = [match_to_path(m) for m in matches1]
+    lst2 = [match_to_path(m) for m in matches2]
+    lst3 = [match_to_path(m) for m in matches3]
+    lst4 = [match_to_path(m) for m in matches4]
 
     lst = lst1 + lst2 + lst3 + lst4
 
