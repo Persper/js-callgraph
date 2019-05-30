@@ -1,2 +1,2 @@
-global-as-prop.js:global:7 -> global-as-prop.js:anon:5
-global-as-prop.js:global:8 -> global-as-prop.js:anon:4
+global-as-prop.js:global:14 -> global-as-prop.js:a:12
+global-as-prop.js:global:15 -> global-as-prop.js:anon:11

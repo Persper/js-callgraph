@@ -85,6 +85,52 @@ function init(root) {
             enclosingFile = nd.attr.filename;
         }
 
+        /* Method Definition (Case 1)
+
+        This case is covered by test case: tests/basics/method-def.truth
+
+        Example:
+
+            var obj = {
+                methodName: function () {
+                    return 42;
+                }
+            }
+
+        Esprima AST:
+
+            interface Property {
+                type: 'Property';
+                key: Expression;
+                computed: boolean;
+                value: Expression | null;
+                kind: 'get' | 'set' | 'init';
+                method: false;
+                shorthand: boolean;
+            }
+        */
+        if (nd.type === 'FunctionExpression' && parent.type === 'Property') {
+            if (!parent.computed) {
+                if (parent.key.type === 'Identifier'){
+                    nd.id = parent.key;
+                }
+                else if (parent.key.type === 'Literal') {
+                    // create a new `Identifier` AST node and set it to `FunctionExpression`'s id
+                    nd.id = {
+                        type: 'Identifier',
+                        name: parent.key.value,
+                        range: parent.key.range,
+                        loc: parent.key.loc
+                    };
+                }
+                else {
+                    console.log("WARNING: unexpected key type of 'Property'.");
+                }
+            }
+            else
+                console.log("WARNING: Computed property for method definition, not yet supported.");
+        }
+
         if (nd.type === 'FunctionDeclaration' ||
             nd.type === 'FunctionExpression'  ||
             nd.type === 'ArrowFunctionExpression') {
@@ -101,17 +147,28 @@ function init(root) {
             return false;
         }
 
-        // Method Definition
-        // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Method_definitions
-        //
-        // interface MethodDefinition {
-        //     type: 'MethodDefinition';
-        //     key: Expression | null;
-        //     computed: boolean;
-        //     value: FunctionExpression | null;
-        //     kind: 'method' | 'constructor';
-        //     static: boolean;
-        // }
+        /* Method Definition (Case 2)
+        Ref: https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Method_definitions
+
+        Example:
+
+            class Apple {
+                color () {
+                    return 'red';
+                }
+            }
+
+        Esprima AST:
+
+            interface MethodDefinition {
+                type: 'MethodDefinition';
+                key: Expression | null;
+                computed: boolean;
+                value: FunctionExpression | null;
+                kind: 'method' | 'constructor';
+                static: boolean;
+            }
+        */
         if (nd.type === 'MethodDefinition')
             if (!nd.computed)
                 nd.value.id = nd.key;
