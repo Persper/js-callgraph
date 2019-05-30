@@ -25,7 +25,7 @@ define(function (require, exports) {
             var target = nativeFlows[native];
             flow_graph.addEdge(
                 flowgraph.nativeVertex(native),
-                flowgraph.globVertex({
+                flowgraph.propVertex({
                     type: 'Identifier',
                     name: target
                 })
