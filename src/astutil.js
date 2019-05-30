@@ -10,6 +10,7 @@
 
 const esprima = require('esprima');
 const fs = require('fs');
+const vueParser = require('vue-parser');
 const prep = require('./srcPreprocessor');
 
 /* AST visitor */
@@ -230,6 +231,16 @@ Return:
 function buildProgram (fname, src) {
     // trim hashbang
     src = prep.trimHashbangPrep(src);
+    // extract script from .vue file
+    try {
+        if (fname.endsWith('.vue'))
+            src = vueParser.parse(src, 'script');
+    }
+    catch (err) {
+        reportError('WARNING: Extracting <script> from .vue failed.', err);
+        return null;
+    }
+
     // transpile typescript
     try {
         if (fname.endsWith('.ts'))

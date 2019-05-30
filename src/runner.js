@@ -208,7 +208,7 @@ define(function (require, exports) {
             else if (fs.statSync(file).isDirectory()) {
                 filelist = utils.collectFiles(file, filelist);
             }
-            else if (file.endsWith(".js") || file.endsWith(".ts")) {
+            else if (file.endsWith(".js") || file.endsWith(".ts") || file.endsWith(".vue")) {
                 filelist.push(file);
             }
         });

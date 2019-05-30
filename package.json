@@ -18,7 +18,8 @@
     "graph-data-structure": "^1.8.0",
     "npm": "^5.10.0",
     "sloc": "^0.2.0",
-    "source-map": "^0.7.3"
+    "source-map": "^0.7.3",
+    "vue-parser": "^1.1.6"
   },
   "devDependencies": {
     "@babel/cli": "^7.0.0",
