@@ -23,7 +23,7 @@ define(function (require, exports) {
 
     /* Set up intraprocedural flow */
     function addIntraproceduralFlowGraphEdges(ast, flow_graph) {
-        flow_graph = flow_graph || new graph.Graph();
+        flow_graph = flow_graph || new graph.FlowGraph();
         astutil.visit(ast, function (nd) {
             switch (nd.type) {
                 case 'ArrayExpression':

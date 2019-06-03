@@ -25,7 +25,7 @@ define(function (require, exports) {
         dftc = require('./dftc');
 
     function addInterproceduralFlowEdges(ast, fg) {
-        fg = fg || new graph.Graph();
+        fg = fg || new graph.FlowGraph();
 
         var changed;
         do {
@@ -95,7 +95,7 @@ define(function (require, exports) {
     }
 
     function buildCallGraph(ast) {
-        var fg = new graph.Graph();
+        var fg = new graph.FlowGraph();
         natives.addNativeFlowEdges(fg);
         flowgraph.addIntraproceduralFlowGraphEdges(ast, fg);
 

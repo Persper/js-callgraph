@@ -53,7 +53,7 @@ define(function (require, exports) {
     }
 
     function buildCallGraph(ast, noOneShot) {
-        var fg = new graph.Graph();
+        var fg = new graph.FlowGraph();
         natives.addNativeFlowEdges(fg);
         if (!noOneShot)
             addOneShotEdges(ast, fg);
