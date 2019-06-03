@@ -170,28 +170,66 @@ define(function (require, exports) {
             return true;
         }
         return false;
-    }
+    };
 
     Graph.prototype.iterNodes = function (cb) {
         let nodes = this.graph.nodes();
         for (let i = 0; i < nodes.length; i++) {
-          let cfn = nodes[i];
-          let n = this.node_pairings[cfn];
-          cb(n);
-          this.update(cfn, n);
+            let cfn = nodes[i];
+            let n = this.node_pairings[cfn];
+            cb(n);
+            this.update(cfn, n);
+        }
+    };
+
+    Graph.prototype.getNodes = function() {
+        let str_nodes = this.graph.nodes();
+        let nodes = [];
+        for (let i = 0; i < str_nodes.length; i++)
+            nodes.push(this.node_pairings[str_nodes[i]]);
+
+        return nodes;
+    };
+
+    /* Get enclosingFile of a node in flow graph by querying its associated AST node */
+    function getEnclosingFile (nd) {
+        if (nd.hasOwnProperty('node')) {
+            return nd.node.attr.enclosingFile;
+        } else if (nd.hasOwnProperty('call')) {
+            return nd.call.attr.enclosingFile;
+        } else if (nd.hasOwnProperty('func')) {
+            return nd.func.attr.enclosingFile;
+        } else {
+            // Native, Prop and Unknown vertices
+            return null;
         }
     }
 
-    Graph.prototype.getNodes = function() {
-      let str_nodes = this.graph.nodes();
-      let nodes = [];
-      for (let i = 0; i < str_nodes.length; i++)
-        nodes.push(this.node_pairings[str_nodes[i]]);
+    class FlowGraph extends Graph {
+        constructor() {
+            super();
+            this._fileToNodes = {};
+        }
 
-      return nodes;
+        addEdge(from, to, annote) {
+            super.addEdge(from, to, annote);
+            this._updateFileToNodes(from);
+            this._updateFileToNodes(to);
+        }
+
+        _updateFileToNodes(fgNode) {
+            const enclosingFile = getEnclosingFile(fgNode);
+            if (enclosingFile === null)
+                return;
+            if (!(enclosingFile in this._fileToNodes))
+                this._fileToNodes[enclosingFile] = new Set();
+            this._fileToNodes[enclosingFile].add(fgNode);
+        }
     }
 
+
     exports.Graph = Graph;
+    exports.FlowGraph = FlowGraph;
     exports.nd2str = nodeToString;
     return exports;
 });
