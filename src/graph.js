@@ -8,18 +8,16 @@
  * http://www.eclipse.org/legal/epl-2.0.
  *******************************************************************************/
 
-/* Graphs represented using adjacency sets. */
-if (typeof define !== 'function') {
+ /* Graphs represented using adjacency sets. */
+ if (typeof define !== 'function') {
     var define = require('amdefine')(module);
 }
 
 define(function (require, exports) {
     var graph = require("graph-data-structure");
-    var astutil = require('./astutil');
-    var numset = require('./numset');
 
     function nodeToString(nd) {
-      return nd.attr.pp();
+        return nd.attr.pp();
     }
 
     var cf = nodeToString;
@@ -30,22 +28,13 @@ define(function (require, exports) {
         this.edge_annotations = {};
     }
 
-    var id2node = Graph.prototype.id2node = [];
-    var nextNodeId = 1;
-    var nodeId = Graph.prototype.nodeId = function nodeId(nd) {
-        var id = nd.attr.hasOwnProperty('node_id') ? nd.attr.node_id
-            : (nd.attr.node_id = nextNodeId++);
-        id2node[+id] = nd;
-        return id;
-    };
-
     /* Adds the node to the graph if not already there */
     Graph.prototype.addNode = function (nd) {
-      if (this.hasNode(nd))
-        return;
+        if (this.hasNode(nd))
+            return;
 
-      this.node_pairings[cf(nd)] = nd;
-      this.graph.addNode(cf(nd));
+        this.node_pairings[cf(nd)] = nd;
+        this.graph.addNode(cf(nd));
     }
 
     Graph.prototype.addEdge = function (from, to, annote) {
@@ -55,66 +44,66 @@ define(function (require, exports) {
         this.graph.addEdge(cf(from), cf(to));
 
         if (annote !== undefined)
-          this.edge_annotations[cf(from) + ' -> ' + cf(to)] = annote;
+            this.edge_annotations[cf(from) + ' -> ' + cf(to)] = annote;
     };
 
     Graph.prototype.addEdges = function (from, tos, annotations) {
         for (var i = 0; i < tos.length; ++i)
             if (annotations !== undefined)
-              this.addEdge(from, tos[i], annotations[i]);
+                this.addEdge(from, tos[i], annotations[i]);
             else
-              this.addEdge(from, tos[i]);
+                this.addEdge(from, tos[i]);
     };
 
     Graph.prototype.update = function (old_cf, new_nd) {
-      if (!(old_cf in this.node_pairings) || cf(new_nd) == old_cf)
-        return;
+        if (!(old_cf in this.node_pairings) || cf(new_nd) == old_cf)
+            return;
 
-      this.node_pairings[cf(new_nd)] = new_nd;
-      delete this.node_pairings[old_cf];
+        this.node_pairings[cf(new_nd)] = new_nd;
+        delete this.node_pairings[old_cf];
 
-      this.graph.addNode(cf(new_nd));
+        this.graph.addNode(cf(new_nd));
 
-      let gs = this.graph.serialize();
+        let gs = this.graph.serialize();
 
-      for (let i = 0; i < gs['links'].length; i++) {
-        if (gs['links'][i]['source'] == old_cf)
-          this.graph.addEdge(cf(new_nd), gs['links'][i]['target']);
+        for (let i = 0; i < gs['links'].length; i++) {
+            if (gs['links'][i]['source'] == old_cf)
+                this.graph.addEdge(cf(new_nd), gs['links'][i]['target']);
 
-        if (gs['links'][i]['target'] == old_cf)
-          this.graph.addEdge(gs['links'][i]['source'], cf(new_nd));
-      }
-      this.graph.removeNode(old_cf);
+            if (gs['links'][i]['target'] == old_cf)
+                this.graph.addEdge(gs['links'][i]['source'], cf(new_nd));
+        }
+        this.graph.removeNode(old_cf);
     }
 
     Graph.prototype.merge = function (graph) {
-      let nodes = graph.getNodes();
+        let nodes = graph.getNodes();
 
-      for (let i = 0; i < nodes.length; i++) {
-        this.addNode(nodes[i]);
-      }
+        for (let i = 0; i < nodes.length; i++) {
+            this.addNode(nodes[i]);
+        }
 
-      let gs = graph.serialize();
+        let gs = graph.serialize();
 
-      for (let i = 0; i < gs['links'].length; i++) {
-        this.graph.addEdge(gs['links'][i]['source'], gs['links'][i]['target'])
-      }
-    }
+        for (let i = 0; i < gs['links'].length; i++) {
+            this.graph.addEdge(gs['links'][i]['source'], gs['links'][i]['target'])
+        }
+    };
 
     Graph.prototype.iter = function (cb) {
         let edges = this.graph.serialize()['links'];
 
         for (let i = 0; i < edges.length; i++) {
-          let from = edges[i]['source'];
-          let to = edges[i]['target'];
+            let from = edges[i]['source'];
+            let to = edges[i]['target'];
 
-          let from_nd = this.node_pairings[from];
-          let to_nd = this.node_pairings[to];
+            let from_nd = this.node_pairings[from];
+            let to_nd = this.node_pairings[to];
 
-          cb(from_nd, to_nd);
+            cb(from_nd, to_nd);
 
-          this.update(from, from_nd);
-          this.update(to, to_nd);
+            this.update(from, from_nd);
+            this.update(to, to_nd);
         }
     };
 
@@ -122,20 +111,15 @@ define(function (require, exports) {
         return this.graph.adjacent(cf(from)).indexOf(cf(to)) >= 0;
     };
 
-    /* Only call this function if nd already in the graph */
-    function getId (nd) {
-        return nd.attr.node_id;
-    }
-
     Graph.prototype.succ = function (nd) {
-      let adj = this.graph.adjacent(cf(nd));
+        let adj = this.graph.adjacent(cf(nd));
 
-      let lst = [];
+        let lst = [];
 
-      for (let i = 0; i < adj.length; i++)
-        lst.push(this.node_pairings[adj[i]])
+        for (let i = 0; i < adj.length; i++)
+            lst.push(this.node_pairings[adj[i]])
 
-      return lst
+        return lst;
     }
 
     Graph.prototype.hasNode = function (nd) {
@@ -157,12 +141,12 @@ define(function (require, exports) {
             let adjacency = this.graph.adjacent(cf(nd));
 
             for (let i = 0; i < adjacency.length; i++) {
-              this.graph.removeEdge(cf(nd), adjacency[i]);
+                this.graph.removeEdge(cf(nd), adjacency[i]);
             }
             return true;
         }
         return false;
-    }
+    };
 
     /* Remove all inward edges of a node */
     Graph.prototype.removeInEdges = function (nd) {
@@ -170,13 +154,13 @@ define(function (require, exports) {
             let gs = this.graph.serialize();
 
             for (let i = 0; i < gs['links'].length; i++) {
-              if (gs['links'][i]['target'] == cf(nd))
-                this.graph.removeEdge(gs['links'][i]['source'], cf(nd));
+                if (gs['links'][i]['target'] == cf(nd))
+                    this.graph.removeEdge(gs['links'][i]['source'], cf(nd));
             }
             return true;
         }
         return false;
-    }
+    };
 
     /* Remove a node and all associated edges from graph */
     Graph.prototype.removeNode = function (nd) {
