@@ -225,6 +225,17 @@ define(function (require, exports) {
                 this._fileToNodes[enclosingFile] = new Set();
             this._fileToNodes[enclosingFile].add(fgNode);
         }
+
+        removeNodesInFile(fileName) {
+            if (fileName in this._fileToNodes) {
+                for (let fgNode of this._fileToNodes[fileName]) {
+                    super.removeNode(fgNode);
+                }
+            }
+            else {
+                console.log("WARNING: fileName doesn't exist in _fileToNodes.");
+            }
+        }
     }
 
 
