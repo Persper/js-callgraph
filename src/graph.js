@@ -14,7 +14,86 @@
 }
 
 define(function (require, exports) {
-    var graph = require("graph-data-structure");
+    const { LinkedList } = require('./linkedList');
+
+    class BasicGraph {
+        constructor() {
+           this._pred = {};
+           this._succ = {};
+        }
+
+        addNode(node) {
+            this._pred[node] = this.pred(node);
+            this._succ[node] = this.succ(node);
+        }
+
+        // Remove all associated edges
+        // Does nothing if the node doesn not exist
+        removeNode(node) {
+            if (this._pred[node]) {
+                for (let p of this._pred[node]) {
+                    this._succ[p].remove(node);
+                }
+                delete this._pred[node];
+            }
+            if (this._succ[node]) {
+                for (let s of this._succ[node]) {
+                    this._pred[s].remove(node);
+                }
+                delete this._succ[node];
+            }
+        }
+
+        pred(node) {
+           return this._pred[node] || new LinkedList();
+        }
+
+        succ(node) {
+            return this._succ[node] || new LinkedList();
+        }
+
+        addEdge(u, v) {
+            this.addNode(u);
+            this.addNode(v);
+            this._succ[u].add(v);
+            this._pred[v].add(u);
+        }
+
+        // Does not remove the nodes
+        // Does nothing if the edge does not exist
+        removeEdge(u, v) {
+            if (this._succ[u]) {
+                this._succ[u].remove(v);
+            }
+            if (this._pred[v]) {
+                this._pred[v].remove(u);
+            }
+        }
+
+        nodes() {
+            return Object.keys(this._pred);
+        }
+
+        serialize() {
+            let serialized = {
+                nodes: this.nodes().map((id) => {
+                    return {id: id};
+                }),
+                links: []
+            }
+
+            serialized.nodes.forEach((node) => {
+                let source = node.id;
+                for (let target of this._succ[source]) {
+                    serialized.links.push({
+                        source: source,
+                        target: target
+                    });
+                }
+            });
+            return serialized;
+        }
+    }
 
     function nodeToString(nd) {
         return nd.attr.pp();
@@ -23,7 +102,7 @@ define(function (require, exports) {
     var cf = nodeToString;
 
     function Graph() {
-        this.graph = new graph();
+        this.graph = new BasicGraph();
         this.node_pairings = {};
         this.edge_annotations = {};
     }
@@ -55,70 +134,26 @@ define(function (require, exports) {
                 this.addEdge(from, tos[i]);
     };
 
-    Graph.prototype.update = function (old_cf, new_nd) {
-        if (!(old_cf in this.node_pairings) || cf(new_nd) == old_cf)
-            return;
-
-        this.node_pairings[cf(new_nd)] = new_nd;
-        delete this.node_pairings[old_cf];
-
-        this.graph.addNode(cf(new_nd));
-
-        let gs = this.graph.serialize();
-
-        for (let i = 0; i < gs['links'].length; i++) {
-            if (gs['links'][i]['source'] == old_cf)
-                this.graph.addEdge(cf(new_nd), gs['links'][i]['target']);
-
-            if (gs['links'][i]['target'] == old_cf)
-                this.graph.addEdge(gs['links'][i]['source'], cf(new_nd));
-        }
-        this.graph.removeNode(old_cf);
-    }
-
-    Graph.prototype.merge = function (graph) {
-        let nodes = graph.getNodes();
-
-        for (let i = 0; i < nodes.length; i++) {
-            this.addNode(nodes[i]);
-        }
-
-        let gs = graph.serialize();
-
-        for (let i = 0; i < gs['links'].length; i++) {
-            this.graph.addEdge(gs['links'][i]['source'], gs['links'][i]['target'])
-        }
-    };
-
     Graph.prototype.iter = function (cb) {
-        let edges = this.graph.serialize()['links'];
-
-        for (let i = 0; i < edges.length; i++) {
-            let from = edges[i]['source'];
-            let to = edges[i]['target'];
-
-            let from_nd = this.node_pairings[from];
-            let to_nd = this.node_pairings[to];
-
-            cb(from_nd, to_nd);
-
-            this.update(from, from_nd);
-            this.update(to, to_nd);
+        const nodes = this.graph.nodes();
+        for (let u of nodes) {
+            for (let v of this.graph.succ(u)) {
+                let u_nd = this.node_pairings[u];
+                let v_nd = this.node_pairings[v];
+                cb(u_nd, v_nd);
+            }
         }
     };
 
     Graph.prototype.hasEdge = function (from, to) {
-        return this.graph.adjacent(cf(from)).indexOf(cf(to)) >= 0;
+        return this.graph.succ(cf(from)).has(cf(to));
     };
 
     Graph.prototype.succ = function (nd) {
-        let adj = this.graph.adjacent(cf(nd));
-
+        let succ = this.graph.succ(cf(nd));
         let lst = [];
-
-        for (let i = 0; i < adj.length; i++)
-            lst.push(this.node_pairings[adj[i]])
-
+        for (let s of succ)
+            lst.push(this.node_pairings[s])
         return lst;
     }
 
@@ -130,33 +165,6 @@ define(function (require, exports) {
     Graph.prototype.removeEdge = function (from, to) {
         if (this.hasNode(from) && this.hasNode(to) && this.hasEdge(from, to)){
             this.graph.removeEdge(cf(from), cf(to))
-            return true;
-        }
-        return false;
-    };
-
-    /* Remove all outward edges of a node */
-    Graph.prototype.removeOutEdges = function (nd) {
-        if (this.hasNode(nd)){
-            let adjacency = this.graph.adjacent(cf(nd));
-
-            for (let i = 0; i < adjacency.length; i++) {
-                this.graph.removeEdge(cf(nd), adjacency[i]);
-            }
-            return true;
-        }
-        return false;
-    };
-
-    /* Remove all inward edges of a node */
-    Graph.prototype.removeInEdges = function (nd) {
-        if (this.hasNode(nd)){
-            let gs = this.graph.serialize();
-
-            for (let i = 0; i < gs['links'].length; i++) {
-                if (gs['links'][i]['target'] == cf(nd))
-                    this.graph.removeEdge(gs['links'][i]['source'], cf(nd));
-            }
             return true;
         }
         return false;
@@ -178,7 +186,6 @@ define(function (require, exports) {
             let cfn = nodes[i];
             let n = this.node_pairings[cfn];
             cb(n);
-            this.update(cfn, n);
         }
     };
 

@@ -313,55 +313,6 @@ test('Add many edges, remove the edges and verify they are all removed', () => {
     expect(G.hasEdge(nodes[i], nodes[i + 1])).toBe(false);
 });
 
-test('Add edges, remove outgoing edges and verify they are removed', () => {
-  const G = new graph.Graph();
-
-  G.addEdge(fv1, fv2);
-  G.addEdge(fv2, fv1);
-
-  G.addEdge(fv1, fv3);
-  G.addEdge(fv3, fv1);
-
-  G.addEdge(fv2, fv3);
-  G.addEdge(fv3, fv2);
-
-  expect(G.removeOutEdges(fv1)).toBe(true);
-
-  expect(G.hasEdge(fv1, fv2)).toBe(false);
-  expect(G.hasEdge(fv2, fv1)).toBe(true);
-
-  expect(G.hasEdge(fv1, fv3)).toBe(false);
-  expect(G.hasEdge(fv3, fv1)).toBe(true);
-
-  expect(G.hasEdge(fv2, fv3)).toBe(true);
-  expect(G.hasEdge(fv3, fv2)).toBe(true);
-
-});
-
-test('Add edges, remove ingoing edges and verify they are removed', () => {
-  const G = new graph.Graph();
-
-  G.addEdge(fv1, fv2);
-  G.addEdge(fv2, fv1);
-
-  G.addEdge(fv1, fv3);
-  G.addEdge(fv3, fv1);
-
-  G.addEdge(fv2, fv3);
-  G.addEdge(fv3, fv2);
-
-  expect(G.removeInEdges(fv1)).toBe(true);
-
-  expect(G.hasEdge(fv1, fv2)).toBe(true);
-  expect(G.hasEdge(fv2, fv1)).toBe(false);
-
-  expect(G.hasEdge(fv1, fv3)).toBe(true);
-  expect(G.hasEdge(fv3, fv1)).toBe(false);
-
-  expect(G.hasEdge(fv2, fv3)).toBe(true);
-  expect(G.hasEdge(fv3, fv2)).toBe(true);
-});
-
 test('Add nodes and verify they were added', () => {
   const G = new graph.Graph();
 
@@ -389,7 +340,6 @@ test('Add nodes, remove them and verify they were removed', () => {
   expect(G.hasNode(fv2)).toBe(false);
   expect(G.hasNode(fv3)).toBe(false);
 });
-
 
 test('Add nodes, add edge, verify graph has edges and nodes', () => {
   const G = new graph.Graph();

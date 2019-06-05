@@ -15,7 +15,6 @@
     "body-parser": "^1.18.2",
     "esprima": "^4.0.0",
     "express": "^4.16.3",
-    "graph-data-structure": "^1.8.0",
     "npm": "^5.10.0",
     "sloc": "^0.2.0",
     "source-map": "^0.7.3",
