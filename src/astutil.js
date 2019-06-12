@@ -170,10 +170,21 @@ function init(root) {
             }
         */
         if (nd.type === 'MethodDefinition')
-            if (!nd.computed)
-                nd.value.id = nd.key;
-            else
+            if (!nd.computed) {
+                if (nd.key.type === 'Identifier') {
+                    nd.value.id = nd.key;
+                }
+                else if (nd.key.type === 'Literal') {
+                    // this case is covered by test case: tests/unexpected/stringiterator.truth
+                    console.log("WARNING: invalid syntax, method name is of type Literal instead of Identifier.");
+                }
+                else {
+                    console.log("WARNING: unexpected key type of 'MethodDefinition'.");
+                }
+            }
+            else {
                 console.log("WARNING: Computed property for method definition, not yet supported.");
+            }
 
         if (nd.type === 'CallExpression' || nd.type === 'NewExpression')
             root.attr.calls.push(nd);
