@@ -1,6 +1,6 @@
 {
   "name": "@persper/js-callgraph",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Builds static call graph for Javascript with a field-based algorithm.",
   "main": "index.js",
   "dependencies": {
