@@ -30,7 +30,12 @@ def callgraph_formatted(files, keep='', natives=True):
 
     frmttd_lines = []
     for line in lines:
-        frmttd_lines.append(format_output(line))
+        # ignore exceptions caused by formatting js output other than call edges (for example, warnings)
+        try:
+            frmttd_line = format_output(line)
+        except:
+            continue
+        frmttd_lines.append(frmttd_line)
 
     if keep:
         reg = re.compile(keep + r':.*:[0-9]+ ->.*')
