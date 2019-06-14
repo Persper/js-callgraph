@@ -33,7 +33,7 @@ def precision_recall(test_file, expected_output):
     # Reading in expected output file and comparing with output
     f = open(expected_output)
 
-    lines = [line[:-1] for line in f if 'Native' not in line]
+    lines = [line.rstrip('\n') for line in f if 'Native' not in line]
 
     output_lines = set(fo)
     expected_lines = set(lines)
