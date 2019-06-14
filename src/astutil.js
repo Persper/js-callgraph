@@ -499,13 +499,60 @@ Relevant docs:
     }
 */
 function getReturnValues(fn) {
-    let fn_body = fn.body.body;
     let lst = [];
+    let fn_body = fn.body;
+    /* There're two cases here:
+    Case 1. fn_body is of type 'BlockStatement'
+        this is the most common case, for example
+        const f = () => {return 1;};
+    Case 2. fn_body is not of type 'BlockStatement'
+        this case is covered by test case:
+            tests/import-export/define/arrow-func-no-block-statement-require.truth
+        const f = () => 1;
 
-    for (var i = 0; i < fn_body.length; i++)
-        if (fn_body[i].type === 'ReturnStatement')
-            lst.push(fn_body[i].argument);
-
+        Esprima output:
+        {
+            "type": "Program",
+            "body": [
+                {
+                    "type": "VariableDeclaration",
+                    "declarations": [
+                        {
+                            "type": "VariableDeclarator",
+                            "id": {
+                                "type": "Identifier",
+                                "name": "f"
+                            },
+                            "init": {
+                                "type": "ArrowFunctionExpression",
+                                "id": null,
+                                "params": [],
+                                "body": {
+                                    "type": "Literal",
+                                    "value": 1,
+                                    "raw": "1"
+                                },
+                                "generator": false,
+                                "expression": true,
+                                "async": false
+                            }
+                        }
+                    ],
+                    "kind": "const"
+                }
+            ],
+            "sourceType": "script"
+        }
+    */
+    if (fn_body.type === 'BlockStatement') {
+        let block = fn_body.body;
+        for (var i = 0; i < block.length; i++)
+                if (block[i].type === 'ReturnStatement')
+                    lst.push(block[i].argument);
+    }
+    else {
+        lst.push(fn_body);
+    }
     return lst;
 }
 
