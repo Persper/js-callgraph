@@ -231,7 +231,7 @@ function ppPos(nd) {
 }
 
 /* Build as AST from a collection of source files */
-function astFromFiles(files) {
+function astFromFiles(files, tolerant=false) {
     const ast = {
         type: 'ProgramCollection',
         programs: [],
@@ -240,7 +240,7 @@ function astFromFiles(files) {
 
     for (let file of files) {
         let src = fs.readFileSync(file, 'utf-8');
-        ast.programs.push(buildProgram(file, src));
+        ast.programs.push(buildProgram(file, src, tolerant));
     }
     init(ast);
     return ast;
@@ -279,11 +279,12 @@ function reportError(msg, err) {
 To avoid confusion caused by too many different parsing settings,
 please call this function whenever possible instead of rewriting esprima.parseModule...
 */
-function parse(src) {
+function parse(src, tolerant=false) {
     return esprima.parseModule(src, {
         loc: true,
         range: true,
-        jsx: true
+        jsx: true,
+        tolerant: tolerant
     });
 }
 
@@ -296,7 +297,7 @@ Return:
     If succeeded, return an ast node of type 'Program'.
     If failed, return null.
 */
-function buildProgram (fname, src) {
+function buildProgram (fname, src, tolerant=false) {
     // trim hashbang
     src = prep.trimHashbangPrep(src);
     // extract script from .vue file
@@ -322,7 +323,7 @@ function buildProgram (fname, src) {
     // parse javascript
     let prog;
     try {
-        prog = parse(src);
+        prog = parse(src, tolerant);
     }
     catch(err) {
         reportError('Warning: Esprima failed to parse ' + fname, err);

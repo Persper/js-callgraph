@@ -138,7 +138,7 @@ define(function (require, exports) {
             args.strategy = 'DEMAND';
         }
         if (args.time) console.time("parsing  ");
-        var ast = astutil.astFromFiles(files);
+        var ast = astutil.astFromFiles(files, args.tolerant);
         if (args.time) console.timeEnd("parsing  ");
 
         if (args.time) console.time("bindings ");

@@ -78,6 +78,15 @@ argParser.addArgument(
     }
 );
 
+argParser.addArgument(
+    ['--tolerant'],
+    {
+        action: "storeTrue",
+        nargs: 0,
+        help: 'Enable parsing in tolerant mode'
+    }
+);
+
 let r = argParser.parseKnownArgs();
 const args = r[0];
 const inputList = r[1];
