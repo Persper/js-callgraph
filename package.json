@@ -15,7 +15,7 @@
     "body-parser": "^1.18.2",
     "esprima": "^4.0.0",
     "express": "^4.16.3",
-    "npm": "^5.10.0",
+    "npm": "^6.14.6",
     "sloc": "^0.2.0",
     "source-map": "^0.7.3",
     "vue-parser": "^1.1.6"
