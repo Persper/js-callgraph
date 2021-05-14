@@ -4,27 +4,27 @@
   "description": "Builds static call graph for Javascript with a field-based algorithm.",
   "main": "index.js",
   "dependencies": {
-    "@babel/core": "^7.1.2",
-    "@babel/plugin-proposal-class-properties": "^7.1.0",
-    "@babel/preset-flow": "^7.0.0",
-    "@babel/preset-typescript": "^7.1.0",
-    "JSONStream": "1.3.3",
-    "argparse": "^1.0.10",
+    "@babel/core": "^7.14.2",
+    "@babel/plugin-proposal-class-properties": "^7.13.0",
+    "@babel/preset-flow": "^7.13.13",
+    "@babel/preset-typescript": "^7.13.0",
+    "JSONStream": "^1.3.5",
+    "amdefine": "^1.0.1",
+    "argparse": "^2.0.1",
     "babel-core": "^6.26.3",
-    "body-parser": "^1.18.2",
-    "esprima": "^4.0.0",
-    "express": "^4.16.3",
-    "npm": "^5.10.0",
-    "sloc": "^0.2.0",
+    "body-parser": "^1.19.0",
+    "esprima": "^4.0.1",
+    "express": "^4.17.1",
+    "sloc": "^0.2.1",
     "source-map": "^0.7.3",
     "vue-parser": "^1.1.6"
   },
   "devDependencies": {
-    "@babel/cli": "^7.0.0",
-    "jest": "^23.1.0"
+    "@babel/cli": "^7.13.16",
+    "jest": "^26.6.3"
   },
   "scripts": {
-    "test": "jest && python3.7 ./tests/test.py"
+    "test": "jest && python ./tests/test.py"
   },
   "jest": {
     "testRegex": "tests/input/jest/.*\\.(js|jsx)$"
