@@ -179,19 +179,28 @@ define(function (require, exports) {
                 if (!filename.endsWith(".json")) {
                     filename += ".json";
                 }
-                fs.writeFile(filename, JSON.stringify(result, null, 2), function (err) {
-                    if (err) {
-                        /*
-                        When happened something wrong (usually out of memory when we want print
-                        the result into a file), then we try to file with JSONStream.
-                         */
-                        let transformStream = JSONStream.stringify();
-                        let outputStream = fs.createWriteStream(filename);
-                        transformStream.pipe(outputStream);
-                        result.forEach(transformStream.write);
-                        transformStream.end();
+
+                var json_out = "";
+
+                fs.writeFileSync(filename, "[", { flag: 'w+' }); /* Write initial JSON header and create file */
+
+                for (var indx = 0; indx < result.length - 1; indx++) {
+                    var current = JSON.stringify(result[indx], null, 2) + ",";
+
+                    /* Most recent string length limit = 2^29 - 16
+                        https://github.com/v8/v8/commit/ea56bf5513d0cbd2a35a9035c5c2996272b8b728 */
+                    if (json_out.length >= 2 ** 29 - 16 - current.length) {
+                        fs.writeFileSync(filename, json_out, { flag: 'a' });
+                        json_out = "";
                     }
-                });
+
+                    json_out += current;
+                }
+
+                fs.writeFileSync(filename, json_out, { flag: 'a' });
+
+                json_out = JSON.stringify(result[result.length - 1], null, 2) + "]";
+                fs.writeFileSync(filename, json_out, { flag: 'a' }); /* Write final JSON bytes */
 
             }
             return result;
