@@ -9,12 +9,14 @@ NODE_PROGRAM = 'js-callgraph'
 
 def callgraph(files):
     """Returns raw standard output from callgraph generator"""
-    program = ['node', NODE_PROGRAM, '--cg', *files, '--strategy', 'DEMAND']
+    # program = ['node', NODE_PROGRAM, '--cg', *files, '--strategy', 'DEMAND']
+    # program = ['node', NODE_PROGRAM, '--cg', *files, '--strategy', 'ONESHOT']
+    cp = subprocess.run(program, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    process = subprocess.run(program, stdout=subprocess.PIPE,
-                             stderr=subprocess.PIPE)
+    if cp.returncode != 0:
+        print(cp.stderr.decode("utf-8"))
 
-    return process.stdout
+    return cp.stdout
 
 
 def callgraph_formatted(files, keep='', natives=True):

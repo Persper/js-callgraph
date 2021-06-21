@@ -1,7 +1,11 @@
 #!/usr/bin/python3
 
-import os, sys, glob, time
-from os.path import isfile, join, dirname, isdir, basename
+import glob
+import os
+import sys
+import time
+from os.path import join, dirname, basename
+
 from process import precision_recall
 
 # -------------- Configuration --------------
@@ -25,10 +29,16 @@ langs = ['*.js', '*.ts', '*.vue']
 print()
 print('RUNNING REGRESSION TESTS')
 
+is_windows = sys.platform.startswith('win')
 test_root_dir = dirname(sys.argv[0])
 num_passed = 0
 num_failed = 0
 
+def platform_dependent_symbols(status):
+    if status == 'ok':
+        return "ok" if is_windows else "✓"
+    if status == 'fail':
+        return "fail" if is_windows else "❌"
 
 def find_truth_file(test_file):
     truth_file = test_file.rsplit('.', 1)[0] + '.truth'
@@ -52,10 +62,10 @@ for d in test_dirs:
 
             print(basename(test_file), end='')
             if precision == 100 and recall == 100:
-                print('\r' + test_file + ' ✓')
+                print('\r' + test_file + ' ' + platform_dependent_symbols('ok'))
                 num_passed += 1
             else:
-                print('\rFAILED: ' + test_file + ' ❌\n')
+                print('\rFAILED: ' + test_file + ' '+ platform_dependent_symbols('fail') +'\n')
                 num_failed += 1
 
 end = time.time()

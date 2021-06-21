@@ -45,14 +45,16 @@ def precision_recall(test_file, expected_output):
         missing_output = expected_lines - output_lines
         extra_output = output_lines - expected_lines
 
-        print()
+        print("Intersection")
 
         for l in intersection:
             print('\t' + l)
 
+        print("Unexpected output")
         for l in extra_output:
             print('\t+', l)
 
+        print("Missing output")
         for l in missing_output:
             print('\t-', l)
 
