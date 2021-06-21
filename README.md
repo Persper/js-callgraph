@@ -1,7 +1,7 @@
 # Field-based Call Graph Construction for JavaScript #
 
 
-[![Build Status](https://travis-ci.org/Persper/js-callgraph.svg?branch=master)](https://travis-ci.org/Persper/js-callgraph)
+[![Build Status](https://travis-ci.com/gaborantal/js-callgraph.svg?branch=master)](https://travis-ci.com/github/gaborantal/js-callgraph)
 [![NPM version](https://img.shields.io/badge/npm-v1.3.2-blue.svg)](https://www.npmjs.com/package/@persper/js-callgraph)
 [![License](https://img.shields.io/badge/license-EPL--2.0-green.svg)](https://www.eclipse.org/legal/epl-2.0/)
 
