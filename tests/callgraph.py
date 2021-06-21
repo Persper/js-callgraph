@@ -9,7 +9,7 @@ NODE_PROGRAM = 'js-callgraph'
 
 def callgraph(files):
     """Returns raw standard output from callgraph generator"""
-    # program = ['node', NODE_PROGRAM, '--cg', *files, '--strategy', 'DEMAND']
+    program = ['node', NODE_PROGRAM, '--cg', *files, '--strategy', 'DEMAND']
     # program = ['node', NODE_PROGRAM, '--cg', *files, '--strategy', 'ONESHOT']
     cp = subprocess.run(program, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
