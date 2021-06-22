@@ -28,7 +28,7 @@
     "test": "jest && python3 ./tests/test.py"
   },
   "jest": {
-    "testRegex": "tests/jest/.*\\.(js|jsx)$"
+    "testRegex": "tests/input/jest/.*\\.(js|jsx)$"
   },
   "repository": {
     "type": "git",

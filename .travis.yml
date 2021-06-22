@@ -1,8 +1,14 @@
 language: node_js
+addons:
+  apt:
+    sources:
+      - deadsnakes
+    packages:
+      - python3.7
 node_js:
   - 14
-python:
-  - "3.6"
+before_install:
+  - python3.7 --version
 install:
   - npm install
 script:
