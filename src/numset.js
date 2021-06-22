@@ -13,16 +13,10 @@
  * Allows to easily switch to a different implementation.
  */
 
-if (typeof define !== 'function') {
-    var define = require('amdefine')(module);
-}
 
-define(function (require, exports) {
     // var impl = require('./olist');
-    var impl = require('./set');
+var impl = require('./set');
 
-    for (var p in impl)
-        exports[p] = impl[p];
+for (var p in impl)
+    exports[p] = impl[p];
 
-    return exports;
-});

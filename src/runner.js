@@ -171,7 +171,7 @@ let build = function () {
             if (consoleOutput)
                 console.log(pp(call) + " -> " + pp(fn));
         });
-        if (this.args.output !== undefined) {
+        if (this.args.output !== null) {
             let filename = this.args.output[0];
             if (!filename.endsWith(".json")) {
                 filename += ".json";
