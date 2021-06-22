@@ -1,0 +1,2 @@
+main.js:global:2 -> lib.js:square:2
+main.js:global:3 -> lib.js:diag:5

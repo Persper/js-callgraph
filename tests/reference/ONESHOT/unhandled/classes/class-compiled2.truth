@@ -1,0 +1,12 @@
+class-compiled2.js:global:3 -> class-compiled2.js:anon:3
+class-compiled2.js:defineProperties:3 -> Native
+class-compiled2.js:anon:3 -> class-compiled2.js:defineProperties:3
+class-compiled2.js:anon:3 -> class-compiled2.js:defineProperties:3
+class-compiled2.js:_classCallCheck:5 -> Native
+class-compiled2.js:global:7 -> class-compiled2.js:anon:7
+class-compiled2.js:Rectangle:9 -> class-compiled2.js:_classCallCheck:5
+class-compiled2.js:anon:17 -> class-compiled2.js:_createClass:3
+class-compiled2.js:get:27 -> class-compiled2.js:calcArea:21
+class-compiled2.js:global:34 -> class-compiled2.js:Rectangle:8
+class-compiled2.js:global:36 -> Native
+class-compiled2.js:global:36 -> class-compiled2.js:calcArea:21

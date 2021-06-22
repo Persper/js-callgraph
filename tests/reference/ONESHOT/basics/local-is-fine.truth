@@ -1,0 +1,3 @@
+local-is-fine.js:global:2 -> local-is-fine.js:anon:2
+local-is-fine.js:anon:5 -> local-is-fine.js:anon:3
+local-is-fine.js:anon:6 -> local-is-fine.js:a:4

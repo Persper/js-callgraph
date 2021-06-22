@@ -1,0 +1,4 @@
+class-getter.js:area:8 -> class-getter.js:calcArea:11
+class-getter.js:global:16 -> class-getter.js:constructor:2
+class-getter.js:global:18 -> Native
+class-getter.js:global:18 -> class-getter.js:area:7
