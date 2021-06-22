@@ -14,86 +14,96 @@ const ArgumentParser = require('argparse').ArgumentParser;
 const fs = require('fs');
 
 let argParser = new ArgumentParser({
-    addHelp: true,
+    add_help: true,
     description: 'Call graph generator'
 });
 
-argParser.addArgument(
-    ['--fg'],
+argParser.add_argument(
+    '--fg',
     {
-        nargs: 0,
+        action: 'store_true',
         help: 'print flow graph'
     }
 );
 
-argParser.addArgument(
-    ['--cg'],
+argParser.add_argument(
+    '--cg',
     {
-        nargs: 0,
+        action: 'store_true',
         help: 'print call graph'
     }
 );
 
-argParser.addArgument(
-    ['--time'],
+argParser.add_argument(
+    '--time',
     {
-        nargs: 0,
+        action: 'store_true',
         help: 'print timings'
     }
 );
 
-argParser.addArgument(
-    ['--strategy'],
-    {help: 'interprocedural propagation strategy; one of NONE, ONESHOT (default), DEMAND, and FULL (not yet implemented) '}
+argParser.add_argument(
+    '--strategy',
+    {
+        help: 'interprocedural propagation strategy; one of NONE, ONESHOT (default), DEMAND, and FULL (not yet implemented)'
+    }
 );
 
-argParser.addArgument(
-    ['--countCB'],
+argParser.add_argument(
+    '--countCB',
     {
-        nargs: 0,
+        action: 'store_true',
         help: 'Counts the number of callbacks.'
     }
 );
 
-argParser.addArgument(
-    ['--reqJs'],
+argParser.add_argument(
+    '--reqJs',
     {
-        nargs: 0,
+        action: 'store_true',
         help: 'Make a RequireJS dependency graph.'
     }
 );
 
-argParser.addArgument(
-    ['--output'],
+argParser.add_argument(
+    '--output',
     {
         nargs: 1,
-        help: 'The output file name, which contains the JSON of result. (extension: .json)'
+        help: 'The output file name, which contains the results in JSON format. (extension: .json)'
     }
 );
-argParser.addArgument(
-    ['--filter'],
+argParser.add_argument(
+    '--filter',
     {
         nargs: 1,
         help: 'The filters contains file. The syntax of filtering readable in README.md'
     }
 );
 
-argParser.addArgument(
-    ['--tolerant'],
+argParser.add_argument(
+    '--tolerant',
     {
-        action: "storeTrue",
-        nargs: 0,
+        action: 'store_true',
         help: 'Enable parsing in tolerant mode'
     }
 );
 
-let r = argParser.parseKnownArgs();
+argParser.add_argument(
+    '-v', '--version',
+    {
+        action: 'version',
+        version: '0.0.1'
+    }
+);
+
+let r = argParser.parse_known_args();
 const args = r[0];
 const inputList = r[1];
 
 JCG.setArgs(args);
 JCG.setFiles(inputList);
-if (args.filter !== null) {
+
+if (args.filter !== undefined) {
     let filter = [];
     let filterFile = args.filter[0];
     if (!fs.existsSync(filterFile)) {
