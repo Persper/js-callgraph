@@ -56,7 +56,7 @@ def main():
 
     for mode in ['ONESHOT', 'DEMAND']:
         results[mode] = dict(num_passed=0, num_failed=0, total_time=0.0)
-        print(f'\n==========  {mode} ========== ')
+        print(f'\n==========  {mode} ==========')
         start_current = time.time()
 
         for d in test_dirs:
