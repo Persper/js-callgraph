@@ -291,7 +291,7 @@ function parse(src) {
     return esprima.parseModule(src, {
         loc: true,
         range: true,
-        jsx: true
+        jsx: false
     });
 }
 
@@ -307,6 +307,8 @@ Return:
 function buildProgram (fname, src) {
     // trim hashbang
     src = prep.trimHashbangPrep(src);
+    // Transform JSX
+    src = prep.jsxPrep(src);
     // extract script from .vue file
     try {
         if (fname.endsWith('.vue'))
