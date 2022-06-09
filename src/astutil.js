@@ -227,12 +227,10 @@ function funcname(func) {
 
 // encFunc can be undefined
 function encFuncName(encFunc) {
-    if (encFunc === undefined) {
+    if (encFunc === undefined)
         return "global";
-    } else if (encFunc.id === null)
-        return "anon";
     else
-        return encFunc.id.name
+        return funcname(encFunc);
 }
 
 /* Pretty-print position. */
