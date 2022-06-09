@@ -209,9 +209,19 @@ function isAnon(funcName) {
 function funcname(func) {
     if (func === undefined)
         console.log('WARNING: func undefined in astutil/funcname.');
-    else if (func.id === null)
+    else if (func.id === null) {
+        const parent = func?.attr?.parent;
+        if (parent?.type === 'AssignmentExpression') {
+            if( parent?.left?.type == 'Identifier') {
+                return parent.left.name;
+            }
+        } else if (parent?.type == 'VariableDeclarator') {
+            if( parent?.id?.type == 'Identifier') {
+                return parent.id.name;
+            }
+        }
         return "anon";
-    else
+    } else
         return func.id.name;
 }
 
