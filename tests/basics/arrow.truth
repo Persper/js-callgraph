@@ -1,1 +1,1 @@
-arrow.js:global:3 -> arrow.js:anon:1
+'global' (arrow.js@3:33-46) -> 'arrowFunc' (arrow.js@1:12-30)

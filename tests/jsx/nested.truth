@@ -1,0 +1,4 @@
+'Component' (nested.js@3:108-126) -> 'SubComponent' (nested.js@1:21-31)
+'Root' (nested.js@5:195-218) -> 'InternalComponent' (nested.js@2:59-69)
+'Root' (nested.js@5:161-224) -> 'Component' (nested.js@3:89-126)
+'global' (nested.js@7:227-233) -> 'Root' (nested.js@5:142-224)

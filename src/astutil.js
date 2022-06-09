@@ -209,20 +209,28 @@ function isAnon(funcName) {
 function funcname(func) {
     if (func === undefined)
         console.log('WARNING: func undefined in astutil/funcname.');
-    else if (func.id === null)
+    else if (func.id === null) {
+        const parent = func?.attr?.parent;
+        if (parent?.type === 'AssignmentExpression') {
+            if( parent?.left?.type == 'Identifier') {
+                return parent.left.name;
+            }
+        } else if (parent?.type == 'VariableDeclarator') {
+            if( parent?.id?.type == 'Identifier') {
+                return parent.id.name;
+            }
+        }
         return "anon";
-    else
+    } else
         return func.id.name;
 }
 
 // encFunc can be undefined
 function encFuncName(encFunc) {
-    if (encFunc === undefined) {
+    if (encFunc === undefined)
         return "global";
-    } else if (encFunc.id === null)
-        return "anon";
     else
-        return encFunc.id.name
+        return funcname(encFunc);
 }
 
 /* Pretty-print position. */
@@ -283,7 +291,7 @@ function parse(src) {
     return esprima.parseModule(src, {
         loc: true,
         range: true,
-        jsx: true
+        jsx: false
     });
 }
 
@@ -299,6 +307,8 @@ Return:
 function buildProgram (fname, src) {
     // trim hashbang
     src = prep.trimHashbangPrep(src);
+    // Transform JSX
+    src = prep.jsxPrep(src);
     // extract script from .vue file
     try {
         if (fname.endsWith('.vue'))
